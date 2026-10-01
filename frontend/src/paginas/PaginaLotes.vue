@@ -172,10 +172,34 @@
           </div>
         </div>
 
+        <!-- Filtro por centro de custo -->
+        <div v-if="loteAtivo.itens?.length > 0" class="flex items-center gap-3 mb-4">
+          <label class="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">Centro de custo</label>
+          <div class="w-72">
+            <select
+              v-model="filtroCentro"
+              class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+            >
+              <option :value="null">Todos</option>
+              <option value="sem">Sem centro de custo</option>
+              <option v-for="c in centros" :key="c.id_centro_custo" :value="c.id_centro_custo">
+                {{ c.codigo }} - {{ c.nome }}
+              </option>
+            </select>
+          </div>
+          <span class="text-xs text-slate-400">{{ formatNumero(itensFiltrados.length) }} de {{ formatNumero(loteAtivo.itens.length) }} itens</span>
+        </div>
+
         <!-- Sem itens -->
         <div v-if="!loteAtivo.itens || loteAtivo.itens.length === 0" class="text-center py-16">
           <Package class="mx-auto mb-3 text-slate-400 dark:text-slate-600" :size="40" />
           <p class="text-slate-500 dark:text-slate-500">Nenhum item neste lote</p>
+        </div>
+
+        <!-- Filtro sem resultado -->
+        <div v-else-if="itensFiltrados.length === 0" class="text-center py-16">
+          <Package class="mx-auto mb-3 text-slate-400 dark:text-slate-600" :size="40" />
+          <p class="text-slate-500 dark:text-slate-500">Nenhum item com esse centro de custo neste lote</p>
         </div>
 
         <!-- Tabela de itens (arrastável com o mouse) -->
@@ -204,6 +228,7 @@
                 <th class="text-left pb-3 font-medium">Validade</th>
                 <th class="text-left pb-3 font-medium">Fornecedor</th>
                 <th class="text-left pb-3 font-medium">Localização</th>
+                <th class="text-left pb-3 font-medium">Centro de custo</th>
                 <th class="text-left pb-3 font-medium">Prioridade</th>
                 <th class="text-left pb-3 font-medium">Status</th>
                 <th class="text-left pb-3 font-medium">Ações</th>
@@ -211,7 +236,7 @@
             </thead>
             <draggable
               :list="itensPaginados"
-              :disabled="modoSelecaoItens"
+              :disabled="modoSelecaoItens || filtroCentro !== null"
               tag="tbody"
               item-key="id_item"
               handle=".drag-handle"
@@ -251,6 +276,7 @@
 
                   <td class="py-3 text-slate-500 dark:text-slate-400">{{ item.produto?.fornecedor?.nome || '—' }}</td>
                   <td class="py-3 text-slate-500 dark:text-slate-400">{{ item.localizacao || '—' }}</td>
+                  <td class="py-3 text-slate-500 dark:text-slate-400">{{ item.centro_custo?.codigo || '—' }}</td>
 
                   <td class="py-3">
                     <span
@@ -314,7 +340,7 @@
           v-model:pagina-atual="paginaAtual"
           v-model:por-pagina="itensPorPagina"
           :total-paginas="totalPaginas"
-          :total="loteAtivo.itens.length"
+          :total="itensFiltrados.length"
           rotulo="itens"
         />
       </div>
@@ -509,6 +535,7 @@ import { Plus, Shield, X, PackageMinus, Package, Trash2, Calendar, Pencil, Packa
 import { useAutenticacaoStore } from '@/servicos/autenticacao.store'
 import api from '@/servicos/api'
 import { useNotificacao } from '@/composables/useNotificacao'
+import { useCentrosCusto } from '@/composables/useCentrosCusto'
 import ModalLote            from '@/componentes/ui/ModalLote.vue'
 import ModalAdicionarItem   from '@/componentes/ui/ModalAdicionarItem.vue'
 import ModalEditarItem      from '@/componentes/ui/ModalEditarItem.vue'
@@ -523,6 +550,7 @@ import { formatarData, estaVencido, proximoDoVencimento } from '@/utils/date'
 import { useArrastarParaRolar } from '@/composables/useArrastarParaRolar'
 
 const { elementoRef: tabelaRef, aoIniciar } = useArrastarParaRolar()
+const { centros, carregar: carregarCentros } = useCentrosCusto()
 
 const autenticacao        = useAutenticacaoStore()
 const { sucesso, erro }   = useNotificacao()
@@ -568,7 +596,14 @@ async function excluirLotesSelecionados() {
     await carregarLotes()
   } catch (e) {
     console.error(e)
-    erro('Erro ao excluir lotes selecionados.')
+    erro(e.response?.data?.message || 'Erro ao excluir lotes selecionados.')
+    // lista desatualizada (lote já excluído por outro usuário/aba): recarrega
+    if ([404, 422].includes(e.response?.status)) {
+      modalExcluirVariosAberto.value = false
+      modoSelecaoLotes.value = false
+      lotesSelecionados.value = new Set()
+      await carregarLotes()
+    }
   } finally {
     excluindoVarios.value = false
   }
@@ -580,27 +615,26 @@ const itensSelecionados       = ref(new Set())
 const modalExcluirItensAberto = ref(false)
 const excluindoItens          = ref(false)
 
-// ===== Selecionar todos os itens do lote =====
+// ===== Selecionar todos os itens do lote (respeita o filtro de centro de custo) =====
 const inputSelecionarTodosItens = ref(null)
 
 const todosItensSelecionados = computed(() => {
-  if (!loteAtivo.value?.itens?.length) return false
-  return loteAtivo.value.itens.every((i) => itensSelecionados.value.has(i.id_item))
+  if (!itensFiltrados.value.length) return false
+  return itensFiltrados.value.every((i) => itensSelecionados.value.has(i.id_item))
 })
 
 const algunsItensSelecionados = computed(() => {
-  if (!loteAtivo.value?.itens?.length) return false
+  if (!itensFiltrados.value.length) return false
   return (
-    loteAtivo.value.itens.some((i) => itensSelecionados.value.has(i.id_item)) &&
+    itensFiltrados.value.some((i) => itensSelecionados.value.has(i.id_item)) &&
     !todosItensSelecionados.value
   )
 })
 
 function alternarSelecaoTodosItens() {
-  if (!loteAtivo.value?.itens) return
   itensSelecionados.value = todosItensSelecionados.value
     ? new Set()
-    : new Set(loteAtivo.value.itens.map((i) => i.id_item))
+    : new Set(itensFiltrados.value.map((i) => i.id_item))
 }
 
 // checkbox nativo não tem v-model pra "indeterminate" — seta via DOM direto
@@ -665,19 +699,27 @@ function formatNumero(valor) {
 
 const loteAtivo = computed(() => lotes.value.find(l => l.id_lote === tabAtiva.value) || null)
 
+// ===== Filtro por centro de custo (null = todos | 'sem' = sem centro | id) =====
+const filtroCentro = ref(null)
+
+const itensFiltrados = computed(() => {
+  const itens = loteAtivo.value?.itens ?? []
+  if (filtroCentro.value === null) return itens
+  if (filtroCentro.value === 'sem') return itens.filter(i => !i.id_centro_custo)
+  return itens.filter(i => i.id_centro_custo === filtroCentro.value)
+})
+
 // ===== Paginação de itens (controles ficam no componente Paginacao) =====
 const itensPorPagina = ref(10)
 const paginaAtual = ref(1)
 
-const totalPaginas = computed(() => {
-  if (!loteAtivo.value?.itens) return 1
-  return Math.max(1, Math.ceil(loteAtivo.value.itens.length / itensPorPagina.value))
-})
+const totalPaginas = computed(() =>
+  Math.max(1, Math.ceil(itensFiltrados.value.length / itensPorPagina.value))
+)
 
 const itensPaginados = computed(() => {
-  if (!loteAtivo.value?.itens) return []
   const inicio = (paginaAtual.value - 1) * itensPorPagina.value
-  return loteAtivo.value.itens.slice(inicio, inicio + itensPorPagina.value)
+  return itensFiltrados.value.slice(inicio, inicio + itensPorPagina.value)
 })
 
 // ao trocar de lote: volta pra página 1 e limpa a seleção de itens
@@ -690,6 +732,12 @@ watch(tabAtiva, () => {
 // ao mudar itens por página: volta pra página 1 (evita ficar numa página inexistente)
 watch(itensPorPagina, () => {
   paginaAtual.value = 1
+})
+
+// ao mudar o filtro: volta pra página 1 e limpa a seleção
+watch(filtroCentro, () => {
+  paginaAtual.value       = 1
+  itensSelecionados.value = new Set()
 })
 
 // ===== Troca de tab (desvia pra seleção quando ativo) =====
@@ -752,6 +800,9 @@ async function excluirLote() {
   } catch (e) {
     console.error(e)
     erro('Erro ao excluir lote.')
+    modalExcluirLoteAberto.value = false
+    // lista desatualizada (lote já excluído): recarrega
+    if ([404, 422].includes(e.response?.status)) await carregarLotes()
   }
 }
 
@@ -815,7 +866,8 @@ async function carregarLotes() {
   try {
     const resposta = await api.get('/lotes')
     lotes.value = resposta.data
-    if (lotes.value.length > 0 && !tabAtiva.value) {
+    // se a aba ativa não existe mais (lote excluído), cai para o primeiro lote
+    if (lotes.value.length > 0 && !lotes.value.some(l => l.id_lote === tabAtiva.value)) {
       tabAtiva.value = lotes.value[0].id_lote
     }
   } catch (e) {
@@ -826,5 +878,8 @@ async function carregarLotes() {
   }
 }
 
-onMounted(carregarLotes)
+onMounted(() => {
+  carregarLotes()
+  carregarCentros()
+})
 </script>

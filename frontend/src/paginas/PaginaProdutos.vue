@@ -36,6 +36,17 @@
           <option value="">Todas as Categorias</option>
           <option v-for="cat in categoriasDisponiveis" :key="cat" :value="cat">{{ cat }}</option>
         </select>
+
+        <select
+          v-model="filtroCentro"
+          class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg px-4 py-2 text-sm font-medium border-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-slate-500"
+        >
+          <option value="">Todos os Centros de Custo</option>
+          <option value="sem">Sem centro de custo</option>
+          <option v-for="c in centros" :key="c.id_centro_custo" :value="c.id_centro_custo">
+            {{ c.codigo }} - {{ c.nome }}
+          </option>
+        </select>
       </div>
     </div>
 
@@ -75,6 +86,7 @@
             <th class="px-4 py-3">Quantidade Total</th>
             <th class="px-4 py-3">Próxima Validade</th>
             <th class="px-4 py-3">Lotes</th>
+            <th class="px-4 py-3">Centro de Custo</th>
             <th class="px-4 py-3">Status Validade</th>
             <th class="px-4 py-3">Status Estoque</th>
           </tr>
@@ -138,6 +150,9 @@
                   </button>
                 </div>
               </Teleport>
+            </td>
+            <td class="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">
+              {{ item.centros_custo?.length ? item.centros_custo.join(', ') : '—' }}
             </td>
             <td class="px-4 py-3">
               <span :class="badgeValidade(item)">
@@ -235,13 +250,17 @@ import ModalBaixaEstoque from '@/componentes/ui/ModalBaixaEstoque.vue'
 import ModalTransferirItem from '@/componentes/ui/ModalTransferirItem.vue'
 import PaginacaoControles from '@/paginas/PaginacaoControles.vue'
 import { useNotificacao } from '@/composables/useNotificacao'
+import { useCentrosCusto } from '@/composables/useCentrosCusto'
 
 const { erro } = useNotificacao()
+const { centros, carregar: carregarCentros } = useCentrosCusto()
+
 const produtos            = ref([])
 const carregando          = ref(false)
 const termoDeBusca        = ref('')
 const filtroBaixo         = ref(false)
 const filtroCategoria     = ref('')
+const filtroCentro        = ref('') // '' = todos | 'sem' = sem centro | id
 const produtoSelecionado  = ref(null)
 const loteDestaque        = ref(null)
 const dropdownAberto      = ref(null)
@@ -466,9 +485,12 @@ const produtosPaginados = computed(() => {
   return produtosFiltrados.value.slice(inicio, inicio + porPagina.value)
 })
 
-watch([termoDeBusca, filtroBaixo, filtroCategoria], () => {
+watch([termoDeBusca, filtroBaixo, filtroCategoria, filtroCentro], () => {
   paginaAtual.value = 1
 })
+
+// O filtro de centro de custo é feito no backend (recalcula quantidade/lotes/validades)
+watch(filtroCentro, () => carregarProdutos())
 
 const totalVencendo = computed(() =>
   produtos.value.filter(i => {
@@ -489,7 +511,9 @@ const toggleEstoqueBaixo = () => { filtroBaixo.value = !filtroBaixo.value }
 async function carregarProdutos() {
   carregando.value = true
   try {
-    const { data } = await api.get('/produtos')
+    const { data } = await api.get('/produtos', {
+      params: filtroCentro.value ? { id_centro_custo: filtroCentro.value } : {},
+    })
     produtos.value = data
   } catch (e) {
     console.error(e)
@@ -506,6 +530,7 @@ function buscarComAtraso() {
 
 onMounted(() => {
   carregarProdutos()
+  carregarCentros()
   document.addEventListener('click', fecharDropdownAoClicarFora)
 })
 

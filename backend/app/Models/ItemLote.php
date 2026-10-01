@@ -11,6 +11,8 @@ class ItemLote extends Model {
         'id_lote', 'id_produto', 'quantidade',
         'unidade_medida', 'data_validade', 'localizacao',
         'prioridade_abc', 'prioridade_manual', 'ordem',
+        'id_centro_custo',
+    
     ];
 
     protected $casts = [
@@ -25,4 +27,7 @@ class ItemLote extends Model {
     public function lote() {
         return $this->belongsTo(Lote::class, 'id_lote');
     }
+    public function centroCusto() {
+        return $this->belongsTo(CentroCusto::class, 'id_centro_custo', 'id_centro_custo');
+   }
 }   

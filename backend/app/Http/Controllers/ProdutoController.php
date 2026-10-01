@@ -11,14 +11,31 @@ class ProdutoController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'id_centro_custo' => ['nullable', 'regex:/^(sem|\d+)$/'],
+        ]);
+
+        // Aplica o filtro de centro de custo ('sem' = itens sem centro)
+        $aplicarCentro = function ($q) use ($request) {
+            if (!$request->filled('id_centro_custo')) return;
+            $request->id_centro_custo === 'sem'
+                ? $q->whereNull('id_centro_custo')
+                : $q->where('id_centro_custo', (int) $request->id_centro_custo);
+        };
+
         $query = Produto::query()
-            ->withSum('itensLote', 'quantidade')
+            ->withSum(['itensLote as itens_lote_sum_quantidade' => $aplicarCentro], 'quantidade')
             ->with([
                 'categoria',
-                'itensLote' => function ($q) {
-                    $q->with('lote')->orderBy('data_validade', 'asc');
+                'itensLote' => function ($q) use ($aplicarCentro) {
+                    $aplicarCentro($q);
+                    $q->with(['lote', 'centroCusto'])->orderBy('data_validade', 'asc');
                 },
             ]);
+
+        if ($request->filled('id_centro_custo')) {
+            $query->whereHas('itensLote', $aplicarCentro);
+        }
 
         if ($request->boolean('estoque_baixo')) {
             $query->havingRaw('COALESCE(itens_lote_sum_quantidade, 0) <= estoque_minimo');
@@ -43,16 +60,24 @@ class ProdutoController extends Controller
                 ->unique()
                 ->values();
 
+            $produto->centros_custo  = $produto->itensLote
+                ->pluck('centroCusto.codigo')
+                ->filter()
+                ->unique()
+                ->values();
+
             $produto->validades = $itensComValidade
                 ->map(function ($item) {
                     return [
-                        'id_item'       => $item->id_item,
-                        'data_validade' => $item->data_validade,
-                        'quantidade'    => $item->quantidade,
-                        'unidade'       => $item->unidade_medida,
-                        'id_lote'       => $item->lote?->id_lote,
-                        'numero_lote'   => optional($item->lote)->numero_lote,
-                        'localizacao'   => $item->localizacao,
+                        'id_item'         => $item->id_item,
+                        'data_validade'   => $item->data_validade,
+                        'quantidade'      => $item->quantidade,
+                        'unidade'         => $item->unidade_medida,
+                        'id_lote'         => $item->lote?->id_lote,
+                        'numero_lote'     => optional($item->lote)->numero_lote,
+                        'localizacao'     => $item->localizacao,
+                        'id_centro_custo' => $item->id_centro_custo,
+                        'centro_custo'    => $item->centroCusto?->codigo,
                     ];
                 })
                 ->values();

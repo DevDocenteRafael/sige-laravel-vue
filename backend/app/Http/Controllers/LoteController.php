@@ -13,7 +13,7 @@ class LoteController extends Controller
     public function index()
     {
         // Precisa carregar 'itens.produto.fornecedor' — sem isso, item.produto.fornecedor vem null no front
-        $lotes = Lote::with('itens.produto.fornecedor')->orderBy('id_lote', 'asc')->get();
+        $lotes = Lote::with(['itens.produto.fornecedor', 'itens.centroCusto'])->orderBy('id_lote', 'asc')->get();
         return response()->json($lotes);
     }
 

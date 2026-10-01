@@ -38,6 +38,7 @@ class ItemLoteController extends Controller
             'data_validade'     => 'nullable|date|after:today|before:2100-01-01',
             'estoque_minimo'    => 'required_without:id_produto|integer|min:1',
             'percentual_alerta' => 'nullable|integer|min:1|max:100',
+            'id_centro_custo'   => 'nullable|integer|exists:centro_custo,id_centro_custo',
         ], [
             'nome.required_without'           => 'Informe o produto (id_produto) ou os dados de um produto novo.',
             'categoria.required_without'      => 'A categoria é obrigatória ao cadastrar um produto novo.',
@@ -125,6 +126,7 @@ class ItemLoteController extends Controller
                     'unidade_medida'    => $request->unidade_medida ?? 'UN',
                     'data_validade'     => $request->data_validade ?: null,
                     'localizacao'       => $request->localizacao,
+                    'id_centro_custo'   => $request->id_centro_custo ?: null,
                     'prioridade_abc'    => $ehManual ? $request->prioridade_abc : null,
                     'prioridade_manual' => $ehManual,
                 ]);
@@ -157,12 +159,12 @@ class ItemLoteController extends Controller
 
         RecalcularAbcJob::dispatch();
 
-        return response()->json($item->refresh()->load('produto.fornecedor'), 201);
+        return response()->json($item->refresh()->load(['produto.fornecedor', 'centroCusto']), 201);
     }
 
     public function index(int $idLote)
     {
-        $itens = ItemLote::with('produto.fornecedor')
+        $itens = ItemLote::with(['produto.fornecedor', 'centroCusto'])
             ->where('id_lote', $idLote)
             ->orderBy('ordem')
             ->get();
@@ -176,6 +178,7 @@ class ItemLoteController extends Controller
         $request->validate([
             'quantidade'     => 'required|integer|min:0|max:' . self::QUANTIDADE_MAX,
             'data_validade'  => 'nullable|date|before:2100-01-01',
+            'id_centro_custo' => 'nullable|integer|exists:centro_custo,id_centro_custo',
         ], [
             'quantidade.required'  => 'A quantidade é obrigatória.',
             'quantidade.integer'   => 'A quantidade deve ser um número inteiro.',
@@ -189,7 +192,7 @@ class ItemLoteController extends Controller
             $qtdAntiga = $item->quantidade;
             $ehManual  = $request->filled('prioridade_abc');
 
-            $dados = $request->only(['quantidade', 'unidade_medida', 'data_validade', 'localizacao']);
+             $dados = $request->only(['quantidade', 'unidade_medida', 'data_validade', 'localizacao', 'id_centro_custo']);
             $dados['prioridade_manual'] = $ehManual;
             $dados['prioridade_abc']    = $ehManual ? $request->prioridade_abc : null;
 
@@ -208,7 +211,7 @@ class ItemLoteController extends Controller
 
         RecalcularAbcJob::dispatch();
 
-        return response()->json($item->refresh()->load('produto.fornecedor'));
+        return response()->json($item->refresh()->load(['produto.fornecedor', 'centroCusto']));
     }
 
     public function baixa(Request $request, int $id)
@@ -474,6 +477,9 @@ class ItemLoteController extends Controller
 
         if ($itemDestino) {
             $itemDestino->increment('quantidade', $qtd);
+            if (!$itemDestino->id_centro_custo && $itemOrigem->id_centro_custo) {
+                $itemDestino->update(['id_centro_custo' => $itemOrigem->id_centro_custo]);
+            }
 
             if (!$itemDestino->data_validade ||
                 ($itemOrigem->data_validade && $itemOrigem->data_validade->lt($itemDestino->data_validade))) {
@@ -487,6 +493,7 @@ class ItemLoteController extends Controller
                 'unidade_medida' => $itemOrigem->unidade_medida,
                 'data_validade'  => $itemOrigem->data_validade,
                 'localizacao'    => $itemOrigem->localizacao,
+                'id_centro_custo' => $itemOrigem->id_centro_custo,
             ]);
         }
 
@@ -506,14 +513,14 @@ class ItemLoteController extends Controller
         RecalcularAbcJob::dispatch();
 
         return [
-            'item_origem'  => $itemOrigem->refresh()->load('produto.fornecedor'),
-            'item_destino' => $itemDestino->refresh()->load('produto.fornecedor'),
+            'item_origem'  => $itemOrigem->refresh()->load(['produto.fornecedor', 'centroCusto']),
+           'item_destino' => $itemDestino->refresh()->load(['produto.fornecedor', 'centroCusto']),
         ];
     }
 
     public function todos()
     {
-        $itens = ItemLote::with(['produto', 'lote'])
+       $itens = ItemLote::with(['produto', 'lote', 'centroCusto'])
             ->where('quantidade', '>', 0)
             ->orderBy('data_validade', 'asc')
             ->get();

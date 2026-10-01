@@ -56,7 +56,15 @@
             <input v-model="form.localizacao" type="text" class="campo" placeholder="Ex: A-12" />
           </div>
         </div>
-
+<div class="mb-4">
+          <label class="label">Centro de Custo</label>
+          <select v-model="form.id_centro_custo" class="campo">
+            <option :value="null">Sem centro de custo</option>
+            <option v-for="c in centros" :key="c.id_centro_custo" :value="c.id_centro_custo">
+              {{ c.codigo }} — {{ c.nome }}
+            </option>
+          </select>
+        </div>
         <div class="mb-6">
           <label class="label">Prioridade Manual</label>
           <select v-model="form.prioridade_abc" class="campo">
@@ -122,13 +130,16 @@ import { X } from 'lucide-vue-next'
 import api from '@/servicos/api'
 import ModalConfirmacao from '@/componentes/ui/ModalConfirmacao.vue'
 import { useModalArrastavel } from '@/composables/useModalArrastavel'
-
+import { useCentrosCusto } from '@/composables/useCentrosCusto'
+import { onMounted } from 'vue'
 const props = defineProps({
   item: { type: Object, required: true },
 })
 const emit = defineEmits(['fechar', 'salvo'])
 
 const { aoIniciarArraste, estiloArraste } = useModalArrastavel()
+const { centros, carregar: carregarCentros } = useCentrosCusto()
+onMounted(carregarCentros)
 
 const salvando = ref(false)
 const erro     = ref('')
@@ -157,6 +168,7 @@ const valoresOriginais = {
   unidade_medida:  props.item.unidade_medida || 'UN',
   data_validade:   paraInputDate(props.item.data_validade),
   localizacao:     props.item.localizacao    || '',
+  id_centro_custo: props.item.id_centro_custo ?? null,
   // Se não for manual, o select fica em "Automática" mesmo que exista
   // uma classe calculada gravada no banco — senão ao salvar ela virava manual.
   prioridade_abc:  ehManual ? (props.item.prioridade_abc || '') : '',
@@ -195,6 +207,7 @@ async function salvar() {
       unidade_medida: form.value.unidade_medida,
       data_validade:  form.value.data_validade || null,
       localizacao:    form.value.localizacao || null,
+      id_centro_custo: form.value.id_centro_custo,
     }
 
     // Só envia prioridade_abc quando o usuário escolheu manualmente.

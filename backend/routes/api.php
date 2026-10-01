@@ -18,7 +18,10 @@ use App\Http\Controllers\ImportacaoController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\CentroCustoController;
 
+Route::apiResource('centros-custo', CentroCustoController::class)
+    ->parameters(['centros-custo' => 'centroCusto']);
 // ─── Auth ──────────────────────────────────────────────────────
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
