@@ -12,7 +12,6 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use Carbon\Carbon;
 
 class ImportacaoController extends Controller
@@ -34,35 +33,31 @@ class ImportacaoController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Planilha');
 
-        $headers = ['CÓDIGO', 'DESCRIÇÃO', 'UNIDADE', 'SALDO', 'ESTOQUE MÍNIMO', 'VALIDADE'];
+        $headers = ['CÓDIGO', 'DESCRIÇÃO', 'UNIDADE', 'SALDO', 'ESTOQUE MÍNIMO', 'VALIDADE', 'CENTRO DE CUSTO'];
         $sheet->fromArray($headers, null, 'A1');
-        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:F1')->getFill()
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setRGB('D9E2F3');
 
         $sheet->fromArray(
-            ['ES0610000000001', 'ABAIXADOR DE MADEIRA PARA LÍNGUA', 'PCT', 6, 2, '31/12/2024'],
+            ['ES0610000000001', 'ABAIXADOR DE MADEIRA PARA LÍNGUA', 'PCT', 6, 2, '31/12/2024', 'CC-001'],
             null,
             'A2'
         );
-        $sheet->getStyle('A2:F2')->getFill()
+        $sheet->getStyle('A2:G2')->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setRGB('FFF2CC');
 
-        $sheet->fromArray(['', 'ACETONA 500ML', 'UN', 2, 1, '06/2026'], null, 'A3');
-        $sheet->getStyle('A3:F3')->getFill()
+        $sheet->fromArray(['', 'ACETONA 500ML', 'UN', 2, 1, '06/2026', 'CC-002'], null, 'A3');
+        $sheet->getStyle('A3:G3')->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setRGB('FFF2CC');
 
         $sheet->setCellValue('B4', 'LETRA A');
         $sheet->getStyle('B4')->getFont()->setItalic(true)->setBold(true);
 
-        for ($row = 5; $row <= 33; $row++) {
-            $sheet->setCellValueExplicit("D{$row}", '', DataType::TYPE_STRING);
-        }
-
-        foreach (['A' => 22, 'B' => 45, 'C' => 12, 'D' => 10, 'E' => 16, 'F' => 14] as $col => $width) {
+        foreach (['A' => 22, 'B' => 45, 'C' => 12, 'D' => 10, 'E' => 16, 'F' => 14, 'G' => 20] as $col => $width) {
             $sheet->getColumnDimension($col)->setWidth($width);
         }
         $sheet->freezePane('A2');
@@ -80,6 +75,7 @@ class ImportacaoController extends Controller
             'SALDO: obrigatório. Quantidade em estoque. Linhas sem saldo são ignoradas.',
             'ESTOQUE MÍNIMO: opcional. Quantidade mínima antes do produto ser considerado crítico. Se vazio, assume 0.',
             'VALIDADE: opcional. Aceita datas como 31/12/2025, 2025-12-31, ou "12/2025" (assume dia 1º do mês).',
+            'CENTRO DE CUSTO: opcional. Código ou nome do centro de custo do item.',
             '',
             'Linhas amarelas: exemplos de preenchimento correto — pode apagar antes de importar.',
             '',
@@ -105,6 +101,10 @@ class ImportacaoController extends Controller
         $writer = new Xlsx($spreadsheet);
 
         return response()->streamDownload(function () use ($writer) {
+            // Limpa qualquer saída que tenha vazado antes (espaços, warnings, BOM)
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
             $writer->save('php://output');
         }, 'modelo_importacao_almoxarifado.xlsx', [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -144,6 +144,7 @@ class ImportacaoController extends Controller
                 if (str_contains($col, 'SALDO'))                                   $colMap['saldo']         = $idx;
                 if (str_contains($col, 'MINIMO') || str_contains($col, 'MÍNIMO'))  $colMap['estoque_minimo'] = $idx;
                 if (str_contains($col, 'VALIDADE'))                                $colMap['validade']      = $idx;
+                if (str_contains($col, 'CENTRO'))                                  $colMap['centro_custo']  = $idx;
             }
 
             if (!isset($colMap['descricao'], $colMap['saldo'])) {
@@ -171,6 +172,9 @@ class ImportacaoController extends Controller
                 $unidade        = isset($colMap['unidade'])        ? trim((string)($row[$colMap['unidade']]        ?? 'UN')) : 'UN';
                 $validade       = isset($colMap['validade'])       ? $row[$colMap['validade']]                              : null;
                 $estoqueMinimo  = isset($colMap['estoque_minimo']) ? $row[$colMap['estoque_minimo']]                        : null;
+                $centroCusto    = isset($colMap['centro_custo'])
+                    ? trim((string)($row[$colMap['centro_custo']] ?? ''))
+                    : '';
                 $quantidade     = (int) $saldo;
                 $dataValidade   = $this->converterValidade($validade);
 
@@ -189,6 +193,7 @@ class ImportacaoController extends Controller
                     'quantidade'        => $quantidade,
                     'estoque_minimo'    => is_numeric($estoqueMinimo) ? (int) $estoqueMinimo : 0,
                     'validade'          => $dataValidade,
+                    'centro_custo'      => $centroCusto !== '' ? $centroCusto : null,
                     'produto_existente' => (bool) $produtoExistente, // útil pro frontend avisar na tabela
                 ];
             }
@@ -217,6 +222,7 @@ class ImportacaoController extends Controller
             'itens.*.unidade'             => 'nullable|string',
             'itens.*.estoque_minimo'      => 'nullable|integer|min:0',
             'itens.*.validade'            => 'nullable|date',
+            'itens.*.centro_custo'        => 'nullable|string',
             'lotes'                       => 'required_if:modo,multiplo|array',
             'lotes.*.numero_lote'         => 'nullable|string',
             'lotes.*.data_validade'       => 'nullable|date',
@@ -226,6 +232,7 @@ class ImportacaoController extends Controller
             'lotes.*.itens.*.quantidade'  => 'required_with:lotes.*.itens|integer|min:0',
             'lotes.*.itens.*.unidade'     => 'nullable|string',
             'lotes.*.itens.*.estoque_minimo' => 'nullable|integer|min:0',
+            'lotes.*.itens.*.centro_custo'   => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -311,6 +318,7 @@ class ImportacaoController extends Controller
                     'unidade_medida'    => $it['unidade'] ?? 'UN',
                     'data_validade'     => $validadeItem,
                     'localizacao'       => null,
+                    'id_centro_custo'   => $this->resolverCentroCusto($it['centro_custo'] ?? null),
                     'prioridade_abc'    => null,
                     'prioridade_manual' => false,
                 ]);
@@ -323,6 +331,25 @@ class ImportacaoController extends Controller
         }
 
         return $lote;
+    }
+
+    /**
+     * Converte o texto da planilha em id_centro_custo.
+     * Procura pelo código ou pelo nome (sem diferenciar maiúsculas).
+     * Só vincula centros já cadastrados. Se não achar, o item fica sem centro de custo.
+     */
+    private function resolverCentroCusto(?string $texto): ?int
+    {
+        $texto = trim((string) $texto);
+        if ($texto === '') return null;
+
+        $minusculo = mb_strtolower($texto);
+
+        $centro = \App\Models\CentroCusto::whereRaw('LOWER(codigo) = ?', [$minusculo])
+            ->orWhereRaw('LOWER(nome) = ?', [$minusculo])
+            ->first();
+
+        return $centro?->id_centro_custo;
     }
 
     private function converterValidade(mixed $valor): ?string
@@ -344,6 +371,14 @@ class ImportacaoController extends Controller
 
         if (preg_match('/^(\d{1,2})\/(\d{4})$/', trim((string)$valor), $m)) {
             return $m[2] . '-' . str_pad($m[1], 2, '0', STR_PAD_LEFT) . '-01';
+        }
+
+        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', trim((string)$valor), $m)) {
+            try {
+                return Carbon::createFromFormat('d/m/Y', "{$m[1]}/{$m[2]}/{$m[3]}")->format('Y-m-d');
+            } catch (\Exception $e) {
+                return null;
+            }
         }
 
         try {

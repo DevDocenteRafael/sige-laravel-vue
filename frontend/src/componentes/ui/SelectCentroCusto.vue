@@ -5,17 +5,17 @@
     @change="$emit('update:modelValue', $event.target.value === '' ? null : Number($event.target.value))"
   >
     <option value="">{{ placeholder }}</option>
-    <option v-for="c in centros" :key="c.id_centro_custo" :value="c.id_centro_custo">
-      {{ c.codigo }} - {{ c.nome }}
+    <option v-for="c in opcoes" :key="c.id_centro_custo" :value="c.id_centro_custo">
+      {{ c.codigo }} - {{ c.nome }}{{ c.ativo ? '' : ' (inativo)' }}
     </option>
   </select>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useCentrosCusto } from '@/composables/useCentrosCusto'
 
-defineProps({
+const props = defineProps({
   modelValue: { type: [Number, null], default: null },
   placeholder: { type: String, default: 'Sem centro de custo' },
 })
@@ -23,4 +23,9 @@ defineEmits(['update:modelValue'])
 
 const { centros, carregar } = useCentrosCusto()
 onMounted(carregar)
+
+// Mostra só os ativos, mas mantém o centro já selecionado mesmo se estiver inativo
+const opcoes = computed(() =>
+  centros.value.filter(c => c.ativo || c.id_centro_custo === props.modelValue)
+)
 </script>

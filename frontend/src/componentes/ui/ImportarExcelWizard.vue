@@ -86,6 +86,7 @@
                   <th class="text-right px-3 py-2">Qtd</th>
                   <th class="text-right px-3 py-2">Est. Mínimo</th>
                   <th class="text-left px-3 py-2">Validade</th>
+                  <th class="text-left px-3 py-2">Centro de Custo</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,6 +96,7 @@
                   <td class="px-3 py-1.5 text-right">{{ it.quantidade }} {{ it.unidade }}</td>
                   <td class="px-3 py-1.5 text-right">{{ it.estoque_minimo }}</td>
                   <td class="px-3 py-1.5">{{ it.validade || '—' }}</td>
+                  <td class="px-3 py-1.5">{{ it.centro_custo || '—' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -391,6 +393,7 @@ async function confirmarUnico() {
   carregando.value = true
   erro.value = ''
   try {
+    // itens.value já carrega o campo centro_custo vindo do preview
     const { data } = await api.post('/importacao-exportacao/confirmar', {
       modo: 'unico',
       lote: {
@@ -424,6 +427,7 @@ async function confirmarMultiplo() {
         unidade: it.unidade,
         quantidade: Number(lote.quantidades[it.sku]),
         estoque_minimo: it.estoque_minimo,
+        centro_custo: it.centro_custo ?? null,
       })),
   })).filter(l => l.itens.length > 0)
 

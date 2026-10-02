@@ -13,6 +13,7 @@ const PaginaUsuarios            = () => import('@/paginas/PaginaUsuarios.vue')
 const PaginaPerfil              = () => import('@/paginas/PaginaPerfil.vue')
 const PaginaPerdas              = () => import('@/paginas/PaginaPerdas.vue')
 const PaginaHistorico           = () => import('@/paginas/PaginaHistorico.vue')
+const PaginaCentrosCusto        = () => import('@/paginas/PaginaCentrosCusto.vue')
 const ImportacaoExportacao      = () => import('@/paginas/ImportacaoExportacao.vue')
 const PaginaAuditLogs           = () => import('@/paginas/AuditLogs.vue')
 const LayoutPrincipal           = () => import('@/componentes/layout/LayoutPrincipal.vue')
@@ -38,6 +39,7 @@ const rotas = [
       { path: 'relatorios',     name: 'relatorios',     component: PaginaRelatorios },
       { path: 'rel-avancados',  name: 'rel-avancados',  component: PaginaRelatoriosAvancados },
       { path: 'importexport',   name: 'importexport',   component: ImportacaoExportacao },
+      { path: 'centros-custo',  name: 'centros-custo',  component: PaginaCentrosCusto, meta: { requerPerfil: 'admin' } },
       { path: 'usuarios',       name: 'usuarios',       component: PaginaUsuarios,  meta: { requerPerfil: 'admin' } },
       { path: 'perfil',         name: 'perfil',         component: PaginaPerfil },
       { path: 'log',            name: 'log',            component: PaginaAuditLogs, meta: { requerPerfil: 'admin' } },

@@ -6,7 +6,7 @@ class Produto extends Model {
     protected $table      = 'produto';
     protected $primaryKey = 'id_produto';
     public $timestamps    = false;
-    protected $fillable   = ['nome', 'sku', 'unidade_medida', 'preco_custo', 'estoque_minimo', 'percentual_alerta', 'estoque_atual', 'prioridade_abc', 'id_categoria', 'id_fornecedor'];
+    protected $fillable   = ['nome', 'sku', 'unidade_medida', 'preco_custo', 'estoque_minimo', 'percentual_alerta', 'estoque_atual', 'prioridade_abc', 'id_categoria', 'id_fornecedor', 'id_centro_custo'];
 
     public function categoria() {
         return $this->belongsTo(Categoria::class, 'id_categoria');
@@ -14,6 +14,10 @@ class Produto extends Model {
 
     public function fornecedor() {
         return $this->belongsTo(Fornecedor::class, 'id_fornecedor');
+    }
+
+    public function centroCusto() {
+        return $this->belongsTo(CentroCusto::class, 'id_centro_custo', 'id_centro_custo');
     }
 
     public function lotes() {

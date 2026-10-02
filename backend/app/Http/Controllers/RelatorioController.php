@@ -69,20 +69,26 @@ class RelatorioController extends Controller
     // Lista de itens de lote para a tela de Relatórios (filtros, exportação)
     public function itens()
     {
-        $itens = ItemLote::with(['lote', 'produto.fornecedor'])
+        $itens = ItemLote::with(['lote', 'produto.fornecedor', 'centroCusto'])
             ->get()
             ->map(fn($item) => [
-                'id_item'       => $item->id_item,
-                'lote'          => [
+                'id_item'         => $item->id_item,
+                'lote'            => [
                     'numero_lote'  => $item->lote?->numero_lote,
                     'data_entrada' => $item->lote?->data_entrada,
                 ],
-                'sku'           => $item->produto?->sku,
-                'nome'          => $item->produto?->nome,
-                'quantidade'    => $item->quantidade,
-                'data_validade' => $item->data_validade,
-                'fornecedor'    => $item->produto?->fornecedor?->nome,
-                'localizacao'   => $item->localizacao,
+                'sku'             => $item->produto?->sku,
+                'nome'            => $item->produto?->nome,
+                'quantidade'      => $item->quantidade,
+                'data_validade'   => $item->data_validade,
+                'fornecedor'      => $item->produto?->fornecedor?->nome,
+                'localizacao'     => $item->localizacao,
+               'id_centro_custo' => $item->id_centro_custo,
+'centro_custo'    => $item->centroCusto ? [
+    'id_centro_custo' => $item->centroCusto->id_centro_custo,
+    'codigo'          => $item->centroCusto->codigo,
+    'nome'            => $item->centroCusto->nome,
+] : null,
             ]);
 
         return response()->json($itens);

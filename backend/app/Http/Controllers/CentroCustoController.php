@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CentroCusto;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class CentroCustoController extends Controller
@@ -37,7 +38,16 @@ class CentroCustoController extends Controller
 
     public function destroy(CentroCusto $centroCusto)
     {
-        $centroCusto->delete();
+        try {
+            $centroCusto->delete();
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'Este centro de custo está em uso. Desative-o em vez de excluir.',
+                ], 409);
+            }
+            throw $e;
+        }
 
         return response()->noContent();
     }

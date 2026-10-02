@@ -25,9 +25,8 @@
         </button>
       </div>
 
-    
       <!-- Usuário -->
-<div v-if="expandido" ref="perfilRef" class="px-4 py-4 border-b border-slate-200 dark:border-slate-800 relative">
+      <div v-if="expandido" ref="perfilRef" class="px-4 py-4 border-b border-slate-200 dark:border-slate-800 relative">
         <button
           class="flex items-center gap-3 mb-3 w-full text-left rounded-lg px-1 py-1 -mx-1 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           @click="perfilAberto = !perfilAberto"
@@ -463,11 +462,11 @@
     <main class="flex-1 overflow-auto">
       <RouterView />
     </main>
-<GlobalBusca
-  :is-open="buscaGlobalAberta"
-  :itens-menu="itensDoMenu"
-  @fechar="buscaGlobalAberta = false"
-/>
+    <GlobalBusca
+      :is-open="buscaGlobalAberta"
+      :itens-menu="itensDoMenu"
+      @fechar="buscaGlobalAberta = false"
+    />
 
     <ChatbotWidget />
     <MenuSuporte />
@@ -491,6 +490,7 @@ import {
   Shield,
   ShieldCheck,
   Users,
+  Building2,
   Settings,
   LogOut,
   Menu,
@@ -542,6 +542,7 @@ const itensDoMenu = computed(() => {
     { nome: 'Lotes', rota: '/lotes', nomeRota: 'lotes', icone: PackagePlus },
     { nome: 'Produtos', rota: '/produtos', nomeRota: 'produtos', icone: Package },
     { nome: 'Perdas', rota: '/perdas', nomeRota: 'perdas', icone: Trash2 },
+    { nome: 'Centros de Custo', rota: '/centros-custo', nomeRota: 'centros-custo', icone: Building2 },
     { nome: 'Histórico', rota: '/historico', nomeRota: 'historico', icone: History },
     { nome: 'Relatórios', rota: '/relatorios', nomeRota: 'relatorios', icone: FileText },
     { nome: 'Rel. Avançados', rota: '/rel-avancados', nomeRota: 'rel-avancados', icone: BarChart3 },
@@ -648,10 +649,10 @@ function tempoRelativo(dataValidade) {
 async function carregarNotificacoes() {
   carregando.value = true;
   try {
-   const { data } = await api.get('/produtos');
-const lista = [];
-const produtos = Array.isArray(data) ? data : (data.data ?? []);
-produtos.forEach((item) => {
+    const { data } = await api.get('/produtos');
+    const lista = [];
+    const produtos = Array.isArray(data) ? data : (data.data ?? []);
+    produtos.forEach((item) => {
       if (item.data_validade) {
         const dias = diasParaVencer(item.data_validade);
         if (dias !== null && dias <= 30) {
@@ -725,10 +726,10 @@ function handleKeyboard(e) {
   const shift = e.shiftKey;
   const key = e.key.toLowerCase();
 
- if (e.ctrlKey && key === 'k') {
-  e.preventDefault();
-  buscaGlobalAberta.value = true;
-}
+  if (e.ctrlKey && key === 'k') {
+    e.preventDefault();
+    buscaGlobalAberta.value = true;
+  }
   if (alt && key === 'd') {
     e.preventDefault();
     irPara('dashboard', '/dashboard');

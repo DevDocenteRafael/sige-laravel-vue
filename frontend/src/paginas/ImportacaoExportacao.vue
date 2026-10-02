@@ -46,56 +46,56 @@
         </div>
 
         <!-- Produtos -->
-<div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-  <div>
-    <p class="text-slate-900 dark:text-white font-semibold">Produtos</p>
-    <p class="text-slate-500 dark:text-gray-400 text-sm">Exporta cadastro de produtos com estoque atual</p>
-  </div>
-  <div class="grid grid-cols-2 gap-2">
-    <button
-      :disabled="loadingExport.produtos"
-      class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition text-sm"
-      @click="exportar('produtos-xlsx')"
-    >
-      <i :class="loadingExport.produtos ? 'fas fa-spinner fa-spin' : 'fas fa-file-excel'"></i>
-      Excel
-    </button>
-    <button
-      :disabled="loadingExport.produtos"
-      class="bg-slate-600 hover:bg-slate-700 disabled:opacity-50 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition text-sm"
-      @click="exportar('produtos-csv')"
-    >
-      <i :class="loadingExport.produtos ? 'fas fa-spinner fa-spin' : 'fas fa-file-csv'"></i>
-      CSV
-    </button>
-  </div>
-</div>
+        <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+          <div>
+            <p class="text-slate-900 dark:text-white font-semibold">Produtos</p>
+            <p class="text-slate-500 dark:text-gray-400 text-sm">Exporta cadastro de produtos com estoque atual</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              :disabled="loadingExport.produtos"
+              class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition text-sm"
+              @click="exportar('produtos-xlsx')"
+            >
+              <i :class="loadingExport.produtos ? 'fas fa-spinner fa-spin' : 'fas fa-file-excel'"></i>
+              Excel
+            </button>
+            <button
+              :disabled="loadingExport.produtos"
+              class="bg-slate-600 hover:bg-slate-700 disabled:opacity-50 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition text-sm"
+              @click="exportar('produtos-csv')"
+            >
+              <i :class="loadingExport.produtos ? 'fas fa-spinner fa-spin' : 'fas fa-file-csv'"></i>
+              CSV
+            </button>
+          </div>
+        </div>
 
-       <!-- Movimentações -->
-<div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-  <div>
-    <p class="text-slate-900 dark:text-white font-semibold">Movimentações</p>
-    <p class="text-slate-500 dark:text-gray-400 text-sm">Exporta histórico de entradas e saídas</p>
-  </div>
-  <div class="grid grid-cols-2 gap-2">
-    <button
-      :disabled="loadingExport.movimentacoes"
-      class="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition text-sm"
-      @click="exportar('movimentacoes-xlsx')"
-    >
-      <i :class="loadingExport.movimentacoes ? 'fas fa-spinner fa-spin' : 'fas fa-file-excel'"></i>
-      Excel
-    </button>
-    <button
-      :disabled="loadingExport.movimentacoes"
-      class="bg-slate-600 hover:bg-slate-700 disabled:opacity-50 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition text-sm"
-      @click="exportar('movimentacoes-csv')"
-    >
-      <i :class="loadingExport.movimentacoes ? 'fas fa-spinner fa-spin' : 'fas fa-file-csv'"></i>
-      CSV
-    </button>
-  </div>
-</div>
+        <!-- Movimentações -->
+        <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+          <div>
+            <p class="text-slate-900 dark:text-white font-semibold">Movimentações</p>
+            <p class="text-slate-500 dark:text-gray-400 text-sm">Exporta histórico de entradas e saídas</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              :disabled="loadingExport.movimentacoes"
+              class="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition text-sm"
+              @click="exportar('movimentacoes-xlsx')"
+            >
+              <i :class="loadingExport.movimentacoes ? 'fas fa-spinner fa-spin' : 'fas fa-file-excel'"></i>
+              Excel
+            </button>
+            <button
+              :disabled="loadingExport.movimentacoes"
+              class="bg-slate-600 hover:bg-slate-700 disabled:opacity-50 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition text-sm"
+              @click="exportar('movimentacoes-csv')"
+            >
+              <i :class="loadingExport.movimentacoes ? 'fas fa-spinner fa-spin' : 'fas fa-file-csv'"></i>
+              CSV
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -270,6 +270,23 @@ async function carregarStats() {
   }
 }
 
+// Salva um blob como arquivo
+function salvarBlob(blob, nome) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = nome
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// Confere se o blob é mesmo um xlsx (zip começa com "PK")
+async function ehXlsxValido(blob) {
+  if (!blob || typeof blob.slice !== 'function') return false
+  const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer())
+  return head[0] === 0x50 && head[1] === 0x4b
+}
+
 async function exportar(tipo) {
   const chave = tipo === 'backup' ? 'backup'
     : (tipo === 'produtos-xlsx' || tipo === 'produtos-csv') ? 'produtos'
@@ -277,12 +294,17 @@ async function exportar(tipo) {
   loadingExport.value[chave] = true
   try {
     const response = await api.get(`/importacao-exportacao/exportar/${tipo}`, { responseType: 'blob' })
+    const blob = response.data ?? response
     const ext  = tipo === 'backup' ? 'json' : tipo.endsWith('xlsx') ? 'xlsx' : 'csv'
+
+    if (ext === 'xlsx' && !(await ehXlsxValido(blob))) {
+      console.error('Resposta não é um xlsx:', blob?.text ? await blob.text() : blob)
+      showToast('O servidor não retornou um Excel válido.', 'error')
+      return
+    }
+
     const nome = `${tipo}_${new Date().toISOString().slice(0, 10)}.${ext}`
-    const url  = URL.createObjectURL(new Blob([response.data]))
-    const a    = document.createElement('a')
-    a.href = url; a.download = nome; a.click()
-    URL.revokeObjectURL(url)
+    salvarBlob(new Blob([blob]), nome)
     showToast('Exportação concluída!')
   } catch {
     showToast('Erro ao exportar.', 'error')
@@ -290,19 +312,27 @@ async function exportar(tipo) {
     loadingExport.value[chave] = false
   }
 }
+
 async function baixarModelo() {
   try {
     const response = await api.get('/importacao-exportacao/template', { responseType: 'blob' })
-    const url = URL.createObjectURL(new Blob([response.data]))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'modelo_importacao_almoxarifado.xlsx'
-    a.click()
-    URL.revokeObjectURL(url)
+    const blob = response.data ?? response
+
+    if (!(await ehXlsxValido(blob))) {
+      console.error('Resposta não é um xlsx:', blob?.text ? await blob.text() : blob)
+      showToast('O servidor não retornou um Excel válido. Veja o console (F12).', 'error')
+      return
+    }
+
+    salvarBlob(
+      new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+      'modelo_importacao_almoxarifado.xlsx'
+    )
   } catch {
     showToast('Erro ao baixar modelo.', 'error')
   }
 }
+
 function onArquivoJSON(e) { arquivoJSON.value = e.target.files[0] }
 
 function confirmarRestaurar() {
