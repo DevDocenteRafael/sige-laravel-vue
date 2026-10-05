@@ -8,10 +8,38 @@
         <p class="text-sm text-slate-500 dark:text-slate-400">Análises detalhadas de perdas e classificação ABC</p>
       </div>
       <div ref="menusRoot" class="flex gap-2">
+        <!-- Centro de custo -->
         <div class="relative">
           <button
             class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm px-4 py-2 rounded-lg hover:border-blue-500 transition"
-            @click="dropdownPeriodoAberto = !dropdownPeriodoAberto; dropdownExportAberto = false"
+            @click="dropdownCentroAberto = !dropdownCentroAberto; dropdownPeriodoAberto = false; dropdownExportAberto = false"
+          >
+            <Building2 :size="16" /> <span class="max-w-[160px] truncate">{{ centroLabel }}</span>
+            <ChevronDown :size="16" :class="['transition-transform', dropdownCentroAberto ? 'rotate-180' : '']" />
+          </button>
+          <div
+            v-if="dropdownCentroAberto"
+            class="absolute right-0 z-10 mt-2 w-64 max-h-64 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl p-1"
+          >
+            <div
+              v-for="c in opcoesCentro"
+              :key="c.id ?? 'todos'"
+              class="flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-md cursor-pointer transition"
+              :class="centroSelecionado.id === c.id
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
+              @click="selecionarCentro(c)"
+            >
+              <span class="truncate">{{ c.label }}</span>
+              <Check v-if="centroSelecionado.id === c.id" :size="14" class="shrink-0" />
+            </div>
+          </div>
+        </div>
+
+        <div class="relative">
+          <button
+            class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm px-4 py-2 rounded-lg hover:border-blue-500 transition"
+            @click="dropdownPeriodoAberto = !dropdownPeriodoAberto; dropdownExportAberto = false; dropdownCentroAberto = false"
           >
             <Calendar :size="16" /> {{ periodoLabel }}
             <ChevronDown :size="16" :class="['transition-transform', dropdownPeriodoAberto ? 'rotate-180' : '']" />
@@ -38,7 +66,7 @@
         <div class="relative">
           <button
             class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm px-4 py-2 rounded-lg hover:border-blue-500 transition"
-            @click="dropdownExportAberto = !dropdownExportAberto; dropdownPeriodoAberto = false"
+            @click="dropdownExportAberto = !dropdownExportAberto; dropdownPeriodoAberto = false; dropdownCentroAberto = false"
           >
             <Download :size="16" /> Exportar
             <ChevronDown :size="16" :class="['transition-transform', dropdownExportAberto ? 'rotate-180' : '']" />
@@ -148,6 +176,7 @@
               <tr class="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="text-left px-4 py-3 font-medium">Data</th>
                 <th class="text-left px-4 py-3 font-medium">Produto</th>
+                <th class="text-left px-4 py-3 font-medium">Centro de Custo</th>
                 <th class="text-left px-4 py-3 font-medium">Motivo</th>
                 <th class="text-right px-4 py-3 font-medium">Quantidade</th>
                 <th class="text-left px-4 py-3 font-medium">Responsável</th>
@@ -155,11 +184,12 @@
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
               <tr v-if="!dadosPerdas.perdas?.length">
-                <td colspan="5" class="text-center py-8 text-slate-400 dark:text-slate-500">Nenhuma perda registrada no período</td>
+                <td colspan="6" class="text-center py-8 text-slate-400 dark:text-slate-500">Nenhuma perda registrada no período</td>
               </tr>
               <tr v-for="p in dadosPerdas.perdas" :key="p.id" class="hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">
                 <td class="px-4 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ formatarDataHora(p.data) }}</td>
                 <td class="px-4 py-3 text-slate-900 dark:text-white">{{ p.produto }}</td>
+                <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ p.centro_custo || '—' }}</td>
                 <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ p.motivo }}</td>
                 <td class="px-4 py-3 text-right text-red-600 dark:text-red-400 font-semibold">-{{ formatNumero(p.quantidade) }}</td>
                 <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ p.usuario }}</td>
@@ -234,6 +264,7 @@
                 <th class="text-left px-4 py-3 font-medium">Classe</th>
                 <th class="text-left px-4 py-3 font-medium">Produto</th>
                 <th class="text-left px-4 py-3 font-medium">SKU</th>
+                <th class="text-left px-4 py-3 font-medium">Centro de Custo</th>
                 <th class="text-right px-4 py-3 font-medium">Movimento Total</th>
                 <th class="text-right px-4 py-3 font-medium">% do Total</th>
                 <th class="text-right px-4 py-3 font-medium">% Acumulado</th>
@@ -241,9 +272,9 @@
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
               <tr v-if="!dadosAbc.itens?.length">
-                <td colspan="6" class="text-center py-8 text-slate-400 dark:text-slate-500">Nenhum dado disponível</td>
+                <td colspan="7" class="text-center py-8 text-slate-400 dark:text-slate-500">Nenhum dado disponível</td>
               </tr>
-              <tr v-for="item in dadosAbc.itens" :key="item.id_item" class="hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">
+              <tr v-for="item in itensAbcPagina" :key="item.id_item" class="hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">
                 <td class="px-4 py-3">
                   <span
                     class="w-6 h-6 rounded inline-flex items-center justify-center text-white text-xs font-bold"
@@ -254,12 +285,24 @@
                 </td>
                 <td class="px-4 py-3 text-slate-900 dark:text-white font-medium">{{ item.nome }}</td>
                 <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ item.sku }}</td>
+                <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ item.centro_custo || '—' }}</td>
                 <td class="px-4 py-3 text-right text-slate-900 dark:text-white">{{ formatNumero(item.movimento) }}</td>
                 <td class="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{{ item.percentual }}%</td>
                 <td class="px-4 py-3 text-right text-blue-600 dark:text-blue-400">{{ item.acumulado }}%</td>
               </tr>
             </tbody>
           </table>
+
+          <!-- Paginação -->
+          <div class="px-4 pb-4">
+            <Paginacao
+              v-model:pagina-atual="paginaAbc"
+              v-model:por-pagina="porPaginaAbc"
+              :total-paginas="totalPaginasAbc"
+              :total="formatNumero(totalItensAbc)"
+              rotulo="produtos"
+            />
+          </div>
         </div>
 
         <!-- Legenda ABC -->
@@ -280,9 +323,10 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import api from '@/servicos/api'
 import { useTemaStore } from '@/servicos/tema.store'
+import Paginacao from '@/paginas/PaginacaoControles.vue'
 import {
   Calendar, ChevronDown, Download, TrendingDown, PieChart, AlertCircle, Package, FileText,
-  Check, Table as TableIcon, FileSpreadsheet, FileType2 as FilePdfIcon,
+  Check, Table as TableIcon, FileSpreadsheet, FileType2 as FilePdfIcon, Building2,
 } from 'lucide-vue-next'
 import ExcelJS from 'exceljs'
 import jsPDF from 'jspdf'
@@ -295,6 +339,7 @@ const aba = ref('perdas')
 const carregando = ref(false)
 const dropdownPeriodoAberto = ref(false)
 const dropdownExportAberto  = ref(false)
+const dropdownCentroAberto  = ref(false)
 const menusRoot = ref(null)
 
 const opcoesPeriodo = [
@@ -306,6 +351,32 @@ const opcoesPeriodo = [
 const periodo = ref(opcoesPeriodo[1])
 const periodoLabel = computed(() => periodo.value.label)
 
+// ---- Filtro por centro de custo ----
+const TODOS_CENTROS = { id: null, label: 'Todos os Centros' }
+const opcoesCentro      = ref([TODOS_CENTROS])
+const centroSelecionado = ref(TODOS_CENTROS)
+const centroLabel       = computed(() => centroSelecionado.value.label)
+
+function selecionarCentro(c) {
+  centroSelecionado.value = c
+  dropdownCentroAberto.value = false
+}
+
+async function carregarCentros() {
+  try {
+    const { data } = await api.get('/centros-custo')
+    opcoesCentro.value = [
+      TODOS_CENTROS,
+      ...data.map(c => ({
+        id: c.id_centro_custo,
+        label: `${c.codigo} - ${c.nome}${c.ativo === false ? ' (inativo)' : ''}`,
+      })),
+    ]
+  } catch (e) {
+    console.error('Erro ao carregar centros de custo:', e)
+  }
+}
+
 const opcoesExport = [
   { formato: 'csv',  label: 'CSV',   descricao: 'Texto separado por vírgula', icone: TableIcon,       cor: 'text-green-500',   acao: () => exportarCSV() },
   { formato: 'xlsx', label: 'Excel', descricao: 'Planilha formatada',          icone: FileSpreadsheet,  cor: 'text-emerald-500', acao: () => exportarExcel() },
@@ -314,6 +385,24 @@ const opcoesExport = [
 
 const dadosPerdas = ref({ perdas: [], porMotivo: [], resumo: {} })
 const dadosAbc    = ref({ itens: [], resumo: {} })
+
+// ---- Paginação da aba ABC (feita no front: a API devolve a lista completa) ----
+const paginaAbc    = ref(1)
+const porPaginaAbc = ref(10)
+
+const totalItensAbc = computed(() => dadosAbc.value.itens?.length ?? 0)
+
+const totalPaginasAbc = computed(() =>
+  Math.max(1, Math.ceil(totalItensAbc.value / porPaginaAbc.value))
+)
+
+const itensAbcPagina = computed(() => {
+  const inicio = (paginaAbc.value - 1) * porPaginaAbc.value
+  return (dadosAbc.value.itens ?? []).slice(inicio, inicio + porPaginaAbc.value)
+})
+
+// Ao recarregar os dados, volta para a página 1
+watch(dadosAbc, () => { paginaAbc.value = 1 })
 
 const totalUnidadesPerdas = computed(() =>
   dadosPerdas.value.porMotivo?.reduce((s, m) => s + m.total, 0) ?? 0
@@ -339,17 +428,23 @@ function fecharMenusAoClicarFora(evento) {
   if (menusRoot.value && !menusRoot.value.contains(evento.target)) {
     dropdownPeriodoAberto.value = false
     dropdownExportAberto.value  = false
+    dropdownCentroAberto.value  = false
   }
 }
 
 async function carregarDados() {
   carregando.value = true
   try {
+    const idCentro = centroSelecionado.value.id
     if (aba.value === 'perdas') {
-      const { data } = await api.get('/relatorios-avancados/perdas', { params: { dias: periodo.value.dias } })
+      const params = { dias: periodo.value.dias }
+      if (idCentro) params.id_centro_custo = idCentro
+      const { data } = await api.get('/relatorios-avancados/perdas', { params })
       dadosPerdas.value = data
     } else {
-      const { data } = await api.get('/relatorios-avancados/abc')
+      const params = {}
+      if (idCentro) params.id_centro_custo = idCentro
+      const { data } = await api.get('/relatorios-avancados/abc', { params })
       dadosAbc.value = data
     }
   } catch (e) {
@@ -359,9 +454,10 @@ async function carregarDados() {
   }
 }
 
-watch([aba, periodo], carregarDados)
+watch([aba, periodo, centroSelecionado], carregarDados)
 
 onMounted(() => {
+  carregarCentros()
   carregarDados()
   document.addEventListener('click', fecharMenusAoClicarFora)
 })
@@ -429,29 +525,33 @@ function formatarDataHora(dataISO) {
 
 // =========================================================
 // ======================  EXPORTAÇÃO  ========================
+// (exporta TODOS os itens, não só a página atual)
 // =========================================================
 
 function cabecalhosExport() {
   return aba.value === 'perdas'
-    ? ['Data', 'Produto', 'Motivo', 'Quantidade', 'Responsável']
-    : ['Classe', 'Produto', 'SKU', 'Movimento Total', '% do Total', '% Acumulado']
+    ? ['Data', 'Produto', 'Centro de Custo', 'Motivo', 'Quantidade', 'Responsável']
+    : ['Classe', 'Produto', 'SKU', 'Centro de Custo', 'Movimento Total', '% do Total', '% Acumulado']
 }
 
 function linhasExport() {
   if (aba.value === 'perdas') {
     return (dadosPerdas.value.perdas ?? []).map(p => [
-      formatarDataHora(p.data), p.produto, p.motivo, formatNumero(p.quantidade), p.usuario,
+      formatarDataHora(p.data), p.produto, p.centro_custo || '—', p.motivo, formatNumero(p.quantidade), p.usuario,
     ])
   }
   return (dadosAbc.value.itens ?? []).map(i => [
-    i.classe, i.nome, i.sku, formatNumero(i.movimento), i.percentual + '%', i.acumulado + '%',
+    i.classe, i.nome, i.sku, i.centro_custo || '—', formatNumero(i.movimento), i.percentual + '%', i.acumulado + '%',
   ])
 }
 
 function tituloExport() {
-  return aba.value === 'perdas'
+  const base = aba.value === 'perdas'
     ? `Relatório de Perdas — ${periodoLabel.value}`
     : 'Análise ABC de Produtos'
+  return centroSelecionado.value.id
+    ? `${base} — Centro de Custo: ${centroSelecionado.value.label}`
+    : base
 }
 
 function nomeArquivoExport(ext) {
@@ -487,6 +587,7 @@ async function exportarExcel() {
     ? [
         { header: 'Data', key: 'data', width: 18 },
         { header: 'Produto', key: 'produto', width: 30 },
+        { header: 'Centro de Custo', key: 'centro_custo', width: 24 },
         { header: 'Motivo', key: 'motivo', width: 22 },
         { header: 'Quantidade', key: 'quantidade', width: 14 },
         { header: 'Responsável', key: 'responsavel', width: 20 },
@@ -495,6 +596,7 @@ async function exportarExcel() {
         { header: 'Classe', key: 'classe', width: 10 },
         { header: 'Produto', key: 'produto', width: 30 },
         { header: 'SKU', key: 'sku', width: 14 },
+        { header: 'Centro de Custo', key: 'centro_custo', width: 24 },
         { header: 'Movimento Total', key: 'movimento', width: 16 },
         { header: '% do Total', key: 'percentual', width: 12 },
         { header: '% Acumulado', key: 'acumulado', width: 14 },
@@ -511,6 +613,7 @@ async function exportarExcel() {
       const linha = ws.addRow({
         data: formatarDataHora(p.data),
         produto: p.produto,
+        centro_custo: p.centro_custo || '—',
         motivo: p.motivo,
         quantidade: Number(p.quantidade ?? 0),
         responsavel: p.usuario,
@@ -525,6 +628,7 @@ async function exportarExcel() {
         classe: i.classe,
         produto: i.nome,
         sku: i.sku,
+        centro_custo: i.centro_custo || '—',
         movimento: Number(i.movimento ?? 0),
         percentual: i.percentual / 100,
         acumulado: i.acumulado / 100,
@@ -542,7 +646,7 @@ async function exportarExcel() {
     })
   }
 
-  const ultimaColuna = ehPerdas ? 'E1' : 'F1'
+  const ultimaColuna = ehPerdas ? 'F1' : 'G1'
   ws.autoFilter = { from: 'A1', to: ultimaColuna }
   ws.views = [{ state: 'frozen', ySplit: 1 }]
 
@@ -577,12 +681,12 @@ function exportarPDF() {
     styles: { fontSize: 9, cellPadding: 3 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
     columnStyles: ehPerdas
-      ? { 3: { halign: 'right' } }                                  // Quantidade
-      : { 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' } }, // Movimento/%/%
+      ? { 4: { halign: 'right' } }                                  // Quantidade
+      : { 4: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'right' } }, // Movimento/%/%
     didParseCell: (data) => {
       if (data.section !== 'body') return
 
-      if (ehPerdas && data.column.index === 3) {
+      if (ehPerdas && data.column.index === 4) {
         data.cell.styles.textColor = [198, 40, 40]
         data.cell.styles.fontStyle = 'bold'
       }

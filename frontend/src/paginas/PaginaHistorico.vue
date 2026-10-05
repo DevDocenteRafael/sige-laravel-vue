@@ -39,7 +39,7 @@
           <div class="relative">
             <button
               class="w-full flex items-center justify-between bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition"
-              @click="dropdownTipoAberto = !dropdownTipoAberto; dropdownLoteAberto = false"
+              @click="dropdownTipoAberto = !dropdownTipoAberto; dropdownLoteAberto = false; dropdownCentroAberto = false"
             >
               {{ filtros.tipo }} <ChevronDown :size="16" class="text-slate-400" />
             </button>
@@ -61,7 +61,7 @@
           <div class="relative">
             <button
               class="w-full flex items-center justify-between bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition"
-              @click="dropdownLoteAberto = !dropdownLoteAberto; dropdownTipoAberto = false"
+              @click="dropdownLoteAberto = !dropdownLoteAberto; dropdownTipoAberto = false; dropdownCentroAberto = false"
             >
               {{ filtros.lote }} <ChevronDown :size="16" class="text-slate-400" />
             </button>
@@ -74,6 +74,28 @@
                 @click="selecionarLote(opcao)"
               >
                 {{ opcao }} <Check v-if="filtros.lote === opcao" :size="16" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">Centro de Custo</label>
+          <div class="relative">
+            <button
+              class="w-full flex items-center justify-between bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition"
+              @click="dropdownCentroAberto = !dropdownCentroAberto; dropdownTipoAberto = false; dropdownLoteAberto = false"
+            >
+              <span class="truncate">{{ filtros.centroCusto }}</span> <ChevronDown :size="16" class="text-slate-400 shrink-0" />
+            </button>
+            <div v-if="dropdownCentroAberto" class="absolute z-10 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden max-h-56 overflow-y-auto">
+              <div
+                v-for="opcao in opcoesCentro"
+                :key="opcao"
+                class="flex items-center justify-between px-3 py-2 text-sm cursor-pointer transition"
+                :class="filtros.centroCusto === opcao ? 'bg-blue-600 text-white' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
+                @click="selecionarCentro(opcao)"
+              >
+                {{ opcao }} <Check v-if="filtros.centroCusto === opcao" :size="16" />
               </div>
             </div>
           </div>
@@ -121,6 +143,7 @@
             <th class="text-left px-4 py-3 font-medium">Produto</th>
             <th class="text-left px-4 py-3 font-medium">SKU</th>
             <th class="text-left px-4 py-3 font-medium">Lote</th>
+            <th class="text-left px-4 py-3 font-medium">Centro de Custo</th>
             <th class="text-left px-4 py-3 font-medium">Tipo</th>
             <th class="text-right px-4 py-3 font-medium">Qtd</th>
             <th class="text-left px-4 py-3 font-medium">Forn./Motivo</th>
@@ -134,6 +157,7 @@
             <td class="px-4 py-3 text-slate-900 dark:text-white font-medium">{{ mov.produto }}</td>
             <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ mov.sku }}</td>
             <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ mov.lote }}</td>
+            <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ mov.centro_custo || '—' }}</td>
             <td class="px-4 py-3">
               <span
                 class="px-2 py-0.5 rounded text-xs font-bold"
@@ -207,10 +231,15 @@ const auth  = useAutenticacaoStore()
 const ehRoot = computed(() => auth.ehRoot)
 
 // ----- ESTADO -----
+const SEM_CENTRO = 'Sem centro de custo'
+const TODOS_CENTROS = 'Todos os Centros'
+
 const dropdownTipoAberto = ref(false)
 const dropdownLoteAberto = ref(false)
+const dropdownCentroAberto = ref(false)
 const opcoesTipo = ['Todos', 'Entrada', 'Saída']
 const opcoesLote = ref(['Todos os Lotes'])
+const opcoesCentro = ref([TODOS_CENTROS])
 const movimentacoes = ref([])
 const movParaExcluir = ref(null)
 const excluindo = ref(false)
@@ -219,6 +248,7 @@ const filtros = ref({
   busca: '',
   tipo: 'Todos',
   lote: 'Todos os Lotes',
+  centroCusto: TODOS_CENTROS,
   dataInicial: '',
   dataFinal: ''
 })
@@ -234,6 +264,8 @@ onMounted(async () => {
     movimentacoes.value = data
     const lotes = [...new Set(data.map(m => m.lote).filter(Boolean))]
     opcoesLote.value = ['Todos os Lotes', ...lotes]
+    const centros = [...new Set(data.map(m => m.centro_custo).filter(Boolean))].sort()
+    opcoesCentro.value = [TODOS_CENTROS, SEM_CENTRO, ...centros]
   } catch (e) {
     console.error('Erro ao carregar movimentações:', e)
   }
@@ -265,17 +297,21 @@ const movimentacoesFiltradas = computed(() => {
       mov.sku.toLowerCase().includes(filtros.value.busca.toLowerCase())
     const tipoOk = filtros.value.tipo === 'Todos' || mov.tipo === filtros.value.tipo
     const loteOk = filtros.value.lote === 'Todos os Lotes' || mov.lote === filtros.value.lote
+    const centroOk =
+      filtros.value.centroCusto === TODOS_CENTROS ||
+      (filtros.value.centroCusto === SEM_CENTRO ? !mov.centro_custo : mov.centro_custo === filtros.value.centroCusto)
     const dataMov = mov.data.slice(0, 10)
     const dataInicialOk = !filtros.value.dataInicial || dataMov >= filtros.value.dataInicial
     const dataFinalOk = !filtros.value.dataFinal || dataMov <= filtros.value.dataFinal
-    return buscaOk && tipoOk && loteOk && dataInicialOk && dataFinalOk
+    return buscaOk && tipoOk && loteOk && centroOk && dataInicialOk && dataFinalOk
   })
 })
 
 function selecionarTipo(opcao) { filtros.value.tipo = opcao; dropdownTipoAberto.value = false }
 function selecionarLote(opcao) { filtros.value.lote = opcao; dropdownLoteAberto.value = false }
+function selecionarCentro(opcao) { filtros.value.centroCusto = opcao; dropdownCentroAberto.value = false }
 function limparFiltros() {
-  filtros.value = { busca: '', tipo: 'Todos', lote: 'Todos os Lotes', dataInicial: '', dataFinal: '' }
+  filtros.value = { busca: '', tipo: 'Todos', lote: 'Todos os Lotes', centroCusto: TODOS_CENTROS, dataInicial: '', dataFinal: '' }
 }
 
 function formatarDataHora(dataISO) {
@@ -289,12 +325,12 @@ function formatarDataHora(dataISO) {
   return `${dia}/${mes}/${ano}, ${hora}:${min}`
 }
 
-const CABECALHOS = ['Data', 'Produto', 'SKU', 'Lote', 'Tipo', 'Quantidade', 'Fornecedor/Motivo', 'Usuário']
-const CABECALHOS_PDF = ['Data', 'Produto', 'SKU', 'Lote', 'Tipo', 'Qtd', 'Forn./Motivo', 'Usuário']
+const CABECALHOS = ['Data', 'Produto', 'SKU', 'Lote', 'Centro de Custo', 'Tipo', 'Quantidade', 'Fornecedor/Motivo', 'Usuário']
+const CABECALHOS_PDF = ['Data', 'Produto', 'SKU', 'Lote', 'Centro de Custo', 'Tipo', 'Qtd', 'Forn./Motivo', 'Usuário']
 
 function linhasParaExportar() {
   return movimentacoesFiltradas.value.map((mov) => [
-    formatarDataHora(mov.data), mov.produto, mov.sku, mov.lote,
+    formatarDataHora(mov.data), mov.produto, mov.sku, mov.lote, mov.centro_custo || '—',
     mov.tipo, formatNumero(mov.quantidade), mov.motivo, mov.usuario
   ])
 }
@@ -327,6 +363,7 @@ async function exportarExcel() {
     { header: 'Produto', key: 'produto', width: 30 },
     { header: 'SKU', key: 'sku', width: 16 },
     { header: 'Lote', key: 'lote', width: 14 },
+    { header: 'Centro de Custo', key: 'centro_custo', width: 24 },
     { header: 'Tipo', key: 'tipo', width: 12 },
     { header: 'Quantidade', key: 'quantidade', width: 14 },
     { header: 'Fornecedor/Motivo', key: 'motivo', width: 24 },
@@ -345,6 +382,7 @@ async function exportarExcel() {
       produto: mov.produto,
       sku: mov.sku,
       lote: mov.lote,
+      centro_custo: mov.centro_custo || '—',
       tipo: mov.tipo,
       quantidade: Number(mov.quantidade ?? 0),
       motivo: mov.motivo,
@@ -363,7 +401,7 @@ async function exportarExcel() {
     linha.getCell('quantidade').font = { color: { argb: ehEntrada ? 'FF2E7D32' : 'FFC62828' }, bold: true }
   })
 
-  ws.autoFilter = { from: 'A1', to: 'H1' }
+  ws.autoFilter = { from: 'A1', to: 'I1' }
   ws.views = [{ state: 'frozen', ySplit: 1 }]
 
   const buffer = await wb.xlsx.writeBuffer()
@@ -386,10 +424,10 @@ function exportarPDF() {
     styles: { fontSize: 9, cellPadding: 3 },
     alternateRowStyles: { fillColor: [240, 240, 240] },
     columnStyles: {
-      5: { halign: 'right' }, // Quantidade
+      6: { halign: 'right' }, // Quantidade
     },
     didParseCell: (data) => {
-      if (data.section === 'body' && data.column.index === 4) {
+      if (data.section === 'body' && data.column.index === 5) { // Tipo
         const ehEntrada = String(data.cell.raw) === 'Entrada'
         data.cell.styles.fillColor = ehEntrada ? [46, 125, 50] : [198, 40, 40]
         data.cell.styles.textColor = [255, 255, 255]

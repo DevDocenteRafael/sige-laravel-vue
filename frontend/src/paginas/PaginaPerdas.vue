@@ -81,11 +81,60 @@
         </div>
       </div>
 
+      <!-- Filtros: lista de itens -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+        <div class="relative md:col-span-4">
+          <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+          <input
+            v-model="busca"
+            type="text"
+            placeholder="Pesquisar por nome, SKU ou lote..."
+            class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 transition"
+          />
+        </div>
+
+        <select
+          v-model="filtroLote"
+          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+        >
+          <option value="">Todos os lotes</option>
+          <option :value="SEM_LOTE">Sem lote</option>
+          <option v-for="l in lotesOpcoes" :key="l" :value="l">{{ l }}</option>
+        </select>
+
+        <select
+          v-model="filtroCentroCusto"
+          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+        >
+          <option value="">Todos os centros de custo</option>
+          <option :value="SEM_CC">Sem centro de custo</option>
+          <option v-for="cc in centrosCustoOpcoes" :key="cc.codigo" :value="cc.codigo">{{ cc.rotulo }}</option>
+        </select>
+
+        <select
+          v-model="filtroEstoque"
+          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+        >
+          <option value="todos">Todo o estoque</option>
+          <option value="com">Com estoque</option>
+          <option value="sem">Sem estoque</option>
+        </select>
+      </div>
+
+      <div v-if="filtrosItensAtivos" class="flex justify-end mb-3">
+        <button class="text-xs text-blue-600 dark:text-blue-400 hover:underline" @click="limparFiltrosItens">
+          Limpar filtros
+        </button>
+      </div>
+
       <div v-if="carregandoItens" class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">
         Carregando itens...
       </div>
 
       <div v-else class="space-y-2">
+        <p v-if="itensFiltrados.length === 0" class="text-slate-400 dark:text-slate-500 text-sm text-center py-6">
+          Nenhum item encontrado
+        </p>
         <div
           v-for="item in itensPaginados"
           :key="item.id_item"
@@ -114,6 +163,7 @@
                 SKU: {{ item.produto?.sku || '—' }}
                 &nbsp;&nbsp;Lote: {{ item.lote?.numero_lote || '—' }}
                 &nbsp;&nbsp;Estoque: {{ item.quantidade }} {{ item.unidade_medida }}
+                &nbsp;&nbsp;Centro de Custo: {{ rotuloCentroCusto(item.centro_custo) }}
               </p>
             </div>
           </div>
@@ -134,7 +184,7 @@
         v-model:pagina-atual="paginaAtualItens"
         v-model:por-pagina="itensPorPaginaItens"
         :total-paginas="totalPaginasItens"
-        :total="formatarNumero(itens.length)"
+        :total="formatarNumero(itensFiltrados.length)"
         rotulo="itens"
       />
     </div>
@@ -142,6 +192,49 @@
     <!-- Perdas Recentes -->
     <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
       <h2 class="text-slate-900 dark:text-white font-bold mb-4">Perdas Recentes</h2>
+
+      <!-- Filtros: perdas recentes -->
+      <div v-if="perdas.length > 0" class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
+        <input
+          v-model="buscaPerda"
+          type="text"
+          placeholder="Produto..."
+          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500"
+        />
+        <select
+          v-model="filtroMotivoPerda"
+          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+        >
+          <option value="">Todos os motivos</option>
+          <option v-for="m in motivosOpcoes" :key="m" :value="m">{{ m }}</option>
+        </select>
+        <select
+          v-model="filtroCentroCustoPerda"
+          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+        >
+          <option value="">Todos os centros de custo</option>
+          <option :value="SEM_CC">Sem centro de custo</option>
+          <option v-for="cc in centrosCustoPerdasOpcoes" :key="cc.codigo" :value="cc.codigo">{{ cc.rotulo }}</option>
+        </select>
+        <input
+          v-model="dataInicio"
+          type="date"
+          title="Data inicial"
+          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+        />
+        <input
+          v-model="dataFim"
+          type="date"
+          title="Data final"
+          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+        />
+      </div>
+
+      <div v-if="filtrosPerdasAtivos" class="flex justify-end mb-3">
+        <button class="text-xs text-blue-600 dark:text-blue-400 hover:underline" @click="limparFiltrosPerdas">
+          Limpar filtros
+        </button>
+      </div>
 
       <div v-if="carregandoPerdas" class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">
         Carregando...
@@ -151,10 +244,15 @@
         Nenhuma perda registrada
       </div>
 
+      <p v-else-if="perdasFiltradas.length === 0" class="text-slate-400 dark:text-slate-500 text-sm text-center py-8">
+        Nenhuma perda encontrada com os filtros aplicados
+      </p>
+
       <table v-else class="w-full text-sm">
         <thead>
           <tr class="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-left">
             <th class="pb-3 font-medium">Produto</th>
+            <th class="pb-3 font-medium">Centro de Custo</th>
             <th class="pb-3 font-medium">Quantidade</th>
             <th class="pb-3 font-medium">Motivo</th>
             <th class="pb-3 font-medium">Data</th>
@@ -163,6 +261,7 @@
         <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
           <tr v-for="perda in perdasPaginadas" :key="perda.id_movimentacao" class="hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">
             <td class="py-3 text-slate-900 dark:text-white font-medium">{{ perda.item?.produto?.nome || '—' }}</td>
+            <td class="py-3 text-slate-500 dark:text-slate-400">{{ rotuloCentroCusto(perda.item?.centro_custo) }}</td>
             <td class="py-3 text-red-600 dark:text-red-400 font-bold">-{{ formatarNumero(perda.quantidade) }}</td>
             <td class="py-3 text-slate-600 dark:text-slate-300">{{ perda.observacao || '—' }}</td>
             <td class="py-3 text-slate-500 dark:text-slate-400">{{ formatarData(perda.data_movimentacao) }}</td>
@@ -175,7 +274,7 @@
         v-model:pagina-atual="paginaAtualPerdas"
         v-model:por-pagina="itensPorPaginaPerdas"
         :total-paginas="totalPaginasPerdas"
-        :total="formatarNumero(perdas.length)"
+        :total="formatarNumero(perdasFiltradas.length)"
         rotulo="registros"
       />
     </div>
@@ -193,6 +292,8 @@
         <div class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mb-4">
           <p class="text-slate-500 dark:text-slate-400 text-xs mb-1">Produto</p>
           <p class="text-slate-900 dark:text-white font-bold">{{ itemSelecionado?.produto?.nome }}</p>
+          <p class="text-slate-500 dark:text-slate-400 text-xs mt-2">Centro de Custo</p>
+          <p class="text-slate-900 dark:text-white text-sm font-medium">{{ rotuloCentroCusto(itemSelecionado?.centro_custo) }}</p>
           <p class="text-slate-500 dark:text-slate-400 text-xs mt-2">Estoque disponível</p>
           <p class="text-slate-900 dark:text-white font-bold text-xl">{{ itemSelecionado?.quantidade }} {{ itemSelecionado?.unidade_medida }}</p>
         </div>
@@ -309,7 +410,10 @@
             class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3"
           >
             <div class="flex items-center justify-between mb-2">
-              <p class="text-slate-900 dark:text-white font-semibold text-sm">{{ item.produto?.nome }}</p>
+              <div>
+                <p class="text-slate-900 dark:text-white font-semibold text-sm">{{ item.produto?.nome }}</p>
+                <p class="text-slate-500 dark:text-slate-400 text-xs">Centro de Custo: {{ rotuloCentroCusto(item.centro_custo) }}</p>
+              </div>
               <p class="text-slate-500 dark:text-slate-400 text-xs">Estoque: {{ item.quantidade }} {{ item.unidade_medida }}</p>
             </div>
             <input
@@ -406,8 +510,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watchEffect } from 'vue'
-import { AlertTriangle, Trash2, Calendar, X, Shield } from 'lucide-vue-next'
+import { ref, computed, onMounted, watch, watchEffect } from 'vue'
+import { AlertTriangle, Trash2, Calendar, X, Shield, Search } from 'lucide-vue-next'
 import api from '@/servicos/api'
 import PaginacaoControles from './PaginacaoControles.vue'
 
@@ -429,17 +533,100 @@ const motivoExibicao = computed(() =>
   form.value.motivo === 'Outro' ? form.value.motivoOutro.trim() : form.value.motivo
 )
 
-// ===== Paginação: lista de itens (Registrar Nova Perda) =====
+// Centro de custo é opcional no item: sem centro vira "—"
+function rotuloCentroCusto(cc) {
+  return cc ? `${cc.codigo} - ${cc.nome}` : '—'
+}
+
+// ===== Utilitários de filtro =====
+const SEM_CC = '__sem_cc__'
+
+// Ignora acentos e maiúsculas/minúsculas
+const normalizar = (s) =>
+  String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+// Data local no formato YYYY-MM-DD (mesmo fuso usado em formatarData)
+function dataLocalISO(valor) {
+  const d = new Date(valor)
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
+// ===== Paginação + filtros: lista de itens (Registrar Nova Perda) =====
 const itensPorPaginaItens = ref(10)
 const paginaAtualItens    = ref(1)
 
+const SEM_LOTE = '__sem_lote__'
+
+const busca             = ref('')
+const filtroLote        = ref('')
+const filtroCentroCusto = ref('')
+const filtroEstoque     = ref('todos')
+
+const lotesOpcoes = computed(() =>
+  [...new Set(itens.value.map((i) => i.lote?.numero_lote).filter(Boolean))]
+    .sort((a, b) => String(a).localeCompare(String(b), 'pt-BR', { numeric: true }))
+)
+
+const centrosCustoOpcoes = computed(() => {
+  const mapa = new Map()
+  itens.value.forEach((i) => {
+    if (i.centro_custo) mapa.set(i.centro_custo.codigo, rotuloCentroCusto(i.centro_custo))
+  })
+  return [...mapa]
+    .map(([codigo, rotulo]) => ({ codigo, rotulo }))
+    .sort((a, b) => a.rotulo.localeCompare(b.rotulo, 'pt-BR'))
+})
+
+const itensFiltrados = computed(() => {
+  const termo = normalizar(busca.value.trim())
+
+  return itens.value.filter((i) => {
+    if (termo) {
+      const alvo = normalizar(`${i.produto?.nome ?? ''} ${i.produto?.sku ?? ''} ${i.lote?.numero_lote ?? ''}`)
+      if (!alvo.includes(termo)) return false
+    }
+
+    if (filtroLote.value === SEM_LOTE) {
+      if (i.lote?.numero_lote) return false
+    } else if (filtroLote.value && i.lote?.numero_lote !== filtroLote.value) {
+      return false
+    }
+
+    if (filtroCentroCusto.value === SEM_CC) {
+      if (i.centro_custo) return false
+    } else if (filtroCentroCusto.value && i.centro_custo?.codigo !== filtroCentroCusto.value) {
+      return false
+    }
+
+    if (filtroEstoque.value === 'com' && i.quantidade === 0) return false
+    if (filtroEstoque.value === 'sem' && i.quantidade > 0) return false
+
+    return true
+  })
+})
+
+const filtrosItensAtivos = computed(() =>
+  !!busca.value || !!filtroLote.value || !!filtroCentroCusto.value || filtroEstoque.value !== 'todos'
+)
+
+function limparFiltrosItens() {
+  busca.value = ''
+  filtroLote.value = ''
+  filtroCentroCusto.value = ''
+  filtroEstoque.value = 'todos'
+}
+
+// volta para a página 1 ao mudar qualquer filtro
+watch([busca, filtroLote, filtroCentroCusto, filtroEstoque], () => { paginaAtualItens.value = 1 })
+
 const totalPaginasItens = computed(() =>
-  Math.max(1, Math.ceil(itens.value.length / itensPorPaginaItens.value))
+  Math.max(1, Math.ceil(itensFiltrados.value.length / itensPorPaginaItens.value))
 )
 
 const itensPaginados = computed(() => {
   const inicio = (paginaAtualItens.value - 1) * itensPorPaginaItens.value
-  return itens.value.slice(inicio, inicio + itensPorPaginaItens.value)
+  return itensFiltrados.value.slice(inicio, inicio + itensPorPaginaItens.value)
 })
 
 // evita ficar numa página vazia se a lista encolher (ex: item some após virar 0 em estoque)
@@ -449,17 +636,82 @@ watchEffect(() => {
   }
 })
 
-// ===== Paginação: Perdas Recentes =====
+// ===== Paginação + filtros: Perdas Recentes =====
 const itensPorPaginaPerdas = ref(10)
 const paginaAtualPerdas    = ref(1)
 
+const buscaPerda             = ref('')
+const filtroMotivoPerda      = ref('')
+const filtroCentroCustoPerda = ref('')
+const dataInicio             = ref('')
+const dataFim                = ref('')
+
+const motivosOpcoes = computed(() =>
+  [...new Set(perdas.value.map((p) => p.observacao).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+)
+
+const centrosCustoPerdasOpcoes = computed(() => {
+  const mapa = new Map()
+  perdas.value.forEach((p) => {
+    const cc = p.item?.centro_custo
+    if (cc) mapa.set(cc.codigo, rotuloCentroCusto(cc))
+  })
+  return [...mapa]
+    .map(([codigo, rotulo]) => ({ codigo, rotulo }))
+    .sort((a, b) => a.rotulo.localeCompare(b.rotulo, 'pt-BR'))
+})
+
+const perdasFiltradas = computed(() => {
+  const termo = normalizar(buscaPerda.value.trim())
+
+  return perdas.value.filter((p) => {
+    if (termo && !normalizar(p.item?.produto?.nome).includes(termo)) return false
+
+    if (filtroMotivoPerda.value && p.observacao !== filtroMotivoPerda.value) return false
+
+    const cc = p.item?.centro_custo
+    if (filtroCentroCustoPerda.value === SEM_CC) {
+      if (cc) return false
+    } else if (filtroCentroCustoPerda.value && cc?.codigo !== filtroCentroCustoPerda.value) {
+      return false
+    }
+
+    if (dataInicio.value || dataFim.value) {
+      if (!p.data_movimentacao) return false
+      const dia = dataLocalISO(p.data_movimentacao)
+      if (dataInicio.value && dia < dataInicio.value) return false
+      if (dataFim.value && dia > dataFim.value) return false
+    }
+
+    return true
+  })
+})
+
+const filtrosPerdasAtivos = computed(() =>
+  !!buscaPerda.value || !!filtroMotivoPerda.value || !!filtroCentroCustoPerda.value ||
+  !!dataInicio.value || !!dataFim.value
+)
+
+function limparFiltrosPerdas() {
+  buscaPerda.value = ''
+  filtroMotivoPerda.value = ''
+  filtroCentroCustoPerda.value = ''
+  dataInicio.value = ''
+  dataFim.value = ''
+}
+
+watch([buscaPerda, filtroMotivoPerda, filtroCentroCustoPerda, dataInicio, dataFim], () => {
+  paginaAtualPerdas.value = 1
+})
+
 const totalPaginasPerdas = computed(() =>
-  Math.max(1, Math.ceil(perdas.value.length / itensPorPaginaPerdas.value))
+  Math.max(1, Math.ceil(perdasFiltradas.value.length / itensPorPaginaPerdas.value))
 )
 
 const perdasPaginadas = computed(() => {
   const inicio = (paginaAtualPerdas.value - 1) * itensPorPaginaPerdas.value
-  return perdas.value.slice(inicio, inicio + itensPorPaginaPerdas.value)
+  return perdasFiltradas.value.slice(inicio, inicio + itensPorPaginaPerdas.value)
 })
 
 watchEffect(() => {
