@@ -39,7 +39,7 @@ const rotas = [
       { path: 'relatorios',     name: 'relatorios',     component: PaginaRelatorios },
       { path: 'rel-avancados',  name: 'rel-avancados',  component: PaginaRelatoriosAvancados },
       { path: 'importexport',   name: 'importexport',   component: ImportacaoExportacao },
-      { path: 'centros-custo',  name: 'centros-custo',  component: PaginaCentrosCusto, meta: { requerPerfil: 'admin' } },
+      { path: 'centros-custo',  name: 'centros-custo',  component: PaginaCentrosCusto },
       { path: 'usuarios',       name: 'usuarios',       component: PaginaUsuarios,  meta: { requerPerfil: 'admin' } },
       { path: 'perfil',         name: 'perfil',         component: PaginaPerfil },
       { path: 'log',            name: 'log',            component: PaginaAuditLogs, meta: { requerPerfil: 'admin' } },
