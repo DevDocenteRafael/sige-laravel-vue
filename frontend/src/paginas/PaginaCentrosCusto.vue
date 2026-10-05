@@ -196,7 +196,6 @@
     <div
       v-if="modalAberto"
       class="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-      @mousedown.self="fecharModal"
     >
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-start mb-5">
