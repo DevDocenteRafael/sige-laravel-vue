@@ -172,22 +172,67 @@
           </div>
         </div>
 
-        <!-- Filtro por centro de custo -->
-        <div v-if="loteAtivo.itens?.length > 0" class="flex items-center gap-3 mb-4">
-          <label class="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">Centro de custo</label>
-          <div class="w-72">
+        <!-- Filtros -->
+        <div v-if="loteAtivo.itens?.length > 0" class="mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            <div class="relative md:col-span-2">
+              <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+              <input
+                v-model="busca"
+                type="text"
+                placeholder="Pesquisar por nome ou SKU..."
+                class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 transition"
+              />
+            </div>
+
             <select
               v-model="filtroCentro"
-              class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+              class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
             >
-              <option :value="null">Todos</option>
+              <option :value="null">Todos os centros de custo</option>
               <option value="sem">Sem centro de custo</option>
               <option v-for="c in centros" :key="c.id_centro_custo" :value="c.id_centro_custo">
                 {{ c.codigo }} - {{ c.nome }}
               </option>
             </select>
+
+            <select
+              v-model="filtroEstoque"
+              class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+            >
+              <option value="todos">Todo o estoque</option>
+              <option value="com">Com estoque</option>
+              <option value="sem">Sem estoque</option>
+            </select>
+
+            <select
+              v-model="filtroStatus"
+              class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+            >
+              <option value="todos">Todos os status</option>
+              <option value="vencido">Vencido</option>
+              <option value="vencendo">Vencendo</option>
+              <option value="critico">Estoque crítico</option>
+              <option value="ok">Sem alertas</option>
+            </select>
+
+            <select
+              v-model="filtroPrioridade"
+              class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+            >
+              <option value="">Todas as prioridades</option>
+              <option value="A">Prioridade A</option>
+              <option value="B">Prioridade B</option>
+              <option value="C">Prioridade C</option>
+            </select>
           </div>
-          <span class="text-xs text-slate-400">{{ formatNumero(itensFiltrados.length) }} de {{ formatNumero(loteAtivo.itens.length) }} itens</span>
+
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400">{{ formatNumero(itensFiltrados.length) }} de {{ formatNumero(loteAtivo.itens.length) }} itens</span>
+            <button v-if="filtrosAtivos" class="text-xs text-blue-600 dark:text-blue-400 hover:underline" @click="limparFiltros">
+              Limpar filtros
+            </button>
+          </div>
         </div>
 
         <!-- Sem itens -->
@@ -199,7 +244,7 @@
         <!-- Filtro sem resultado -->
         <div v-else-if="itensFiltrados.length === 0" class="text-center py-16">
           <Package class="mx-auto mb-3 text-slate-400 dark:text-slate-600" :size="40" />
-          <p class="text-slate-500 dark:text-slate-500">Nenhum item com esse centro de custo neste lote</p>
+          <p class="text-slate-500 dark:text-slate-500">Nenhum item encontrado com os filtros aplicados</p>
         </div>
 
         <!-- Tabela de itens (arrastável com o mouse) -->
@@ -236,7 +281,7 @@
             </thead>
             <draggable
               :list="itensPaginados"
-              :disabled="modoSelecaoItens || filtroCentro !== null"
+              :disabled="modoSelecaoItens || filtrosAtivos"
               tag="tbody"
               item-key="id_item"
               handle=".drag-handle"
@@ -531,7 +576,7 @@
 <script setup>
 import draggable from 'vuedraggable'
 import { ref, computed, onMounted, watch, watchEffect } from 'vue'
-import { Plus, Shield, X, PackageMinus, Package, Trash2, Calendar, Pencil, PackageOpen, PackagePlus, ArrowRightLeft, Lock } from 'lucide-vue-next'
+import { Plus, Shield, X, PackageMinus, Package, Trash2, Calendar, Pencil, PackageOpen, PackagePlus, ArrowRightLeft, Lock, Search } from 'lucide-vue-next'
 import { useAutenticacaoStore } from '@/servicos/autenticacao.store'
 import api from '@/servicos/api'
 import { useNotificacao } from '@/composables/useNotificacao'
@@ -615,7 +660,7 @@ const itensSelecionados       = ref(new Set())
 const modalExcluirItensAberto = ref(false)
 const excluindoItens          = ref(false)
 
-// ===== Selecionar todos os itens do lote (respeita o filtro de centro de custo) =====
+// ===== Selecionar todos os itens do lote (respeita os filtros) =====
 const inputSelecionarTodosItens = ref(null)
 
 const todosItensSelecionados = computed(() => {
@@ -699,15 +744,64 @@ function formatNumero(valor) {
 
 const loteAtivo = computed(() => lotes.value.find(l => l.id_lote === tabAtiva.value) || null)
 
-// ===== Filtro por centro de custo (null = todos | 'sem' = sem centro | id) =====
-const filtroCentro = ref(null)
+// ===== Filtros dos itens do lote ativo =====
+const busca         = ref('')
+const filtroCentro  = ref(null)      // null = todos | 'sem' = sem centro | id
+const filtroEstoque = ref('todos')   // todos | com | sem
+const filtroStatus     = ref('todos')   // todos | vencido | vencendo | critico | ok
+const filtroPrioridade = ref('')        // '' = todas | A | B | C
+
+// Mesmas regras dos badges da tabela
+const itemVencido  = (i) => !!i.data_validade && estaVencido(i.data_validade)
+const itemVencendo = (i) => !!i.data_validade && !estaVencido(i.data_validade) && proximoDoVencimento(i.data_validade)
+const itemCritico  = (i) => i.quantidade === 0 || i.quantidade <= (i.produto?.estoque_minimo ?? 0)
+
+// Ignora acentos e maiúsculas/minúsculas
+const normalizar = (s) =>
+  String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 const itensFiltrados = computed(() => {
   const itens = loteAtivo.value?.itens ?? []
-  if (filtroCentro.value === null) return itens
-  if (filtroCentro.value === 'sem') return itens.filter(i => !i.id_centro_custo)
-  return itens.filter(i => i.id_centro_custo === filtroCentro.value)
+  const termo = normalizar(busca.value.trim())
+
+  return itens.filter((i) => {
+    if (termo) {
+      const alvo = normalizar(`${i.produto?.nome ?? ''} ${i.produto?.sku ?? ''}`)
+      if (!alvo.includes(termo)) return false
+    }
+
+    if (filtroCentro.value === 'sem') {
+      if (i.id_centro_custo) return false
+    } else if (filtroCentro.value !== null && i.id_centro_custo !== filtroCentro.value) {
+      return false
+    }
+
+    if (filtroEstoque.value === 'com' && i.quantidade === 0) return false
+    if (filtroEstoque.value === 'sem' && i.quantidade > 0) return false
+
+    if (filtroStatus.value === 'vencido'  && !itemVencido(i))  return false
+    if (filtroStatus.value === 'vencendo' && !itemVencendo(i)) return false
+    if (filtroStatus.value === 'critico'  && !itemCritico(i))  return false
+    if (filtroStatus.value === 'ok' && (itemVencido(i) || itemVencendo(i) || itemCritico(i))) return false
+
+    if (filtroPrioridade.value && (i.prioridade_abc || 'C') !== filtroPrioridade.value) return false
+
+    return true
+  })
 })
+
+const filtrosAtivos = computed(() =>
+  !!busca.value || filtroCentro.value !== null || filtroEstoque.value !== 'todos' ||
+  filtroStatus.value !== 'todos' || !!filtroPrioridade.value
+)
+
+function limparFiltros() {
+  busca.value            = ''
+  filtroCentro.value     = null
+  filtroEstoque.value    = 'todos'
+  filtroStatus.value     = 'todos'
+  filtroPrioridade.value = ''
+}
 
 // ===== Paginação de itens (controles ficam no componente Paginacao) =====
 const itensPorPagina = ref(10)
@@ -722,11 +816,12 @@ const itensPaginados = computed(() => {
   return itensFiltrados.value.slice(inicio, inicio + itensPorPagina.value)
 })
 
-// ao trocar de lote: volta pra página 1 e limpa a seleção de itens
+// ao trocar de lote: volta pra página 1, limpa a seleção de itens e os filtros
 watch(tabAtiva, () => {
   paginaAtual.value       = 1
   modoSelecaoItens.value  = false
   itensSelecionados.value = new Set()
+  limparFiltros()
 })
 
 // ao mudar itens por página: volta pra página 1 (evita ficar numa página inexistente)
@@ -734,10 +829,17 @@ watch(itensPorPagina, () => {
   paginaAtual.value = 1
 })
 
-// ao mudar o filtro: volta pra página 1 e limpa a seleção
-watch(filtroCentro, () => {
+// ao mudar qualquer filtro: volta pra página 1 e limpa a seleção
+watch([busca, filtroCentro, filtroEstoque, filtroStatus, filtroPrioridade], () => {
   paginaAtual.value       = 1
   itensSelecionados.value = new Set()
+})
+
+// evita ficar numa página vazia se a lista encolher
+watchEffect(() => {
+  if (paginaAtual.value > totalPaginas.value) {
+    paginaAtual.value = totalPaginas.value
+  }
 })
 
 // ===== Troca de tab (desvia pra seleção quando ativo) =====
