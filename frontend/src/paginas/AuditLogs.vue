@@ -62,6 +62,10 @@
         <option value="7d">Últimos 7 dias</option>
         <option value="30d">Últimos 30 dias</option>
         <option value="90d">Últimos 90 dias</option>
+        <option value="180d">Últimos 6 meses</option>
+        <option value="365d">Último ano</option>
+        <option value="730d">Últimos 2 anos</option>
+        <option value="all">Todo o período</option>
       </select>
 
       <select
