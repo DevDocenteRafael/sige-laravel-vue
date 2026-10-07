@@ -31,7 +31,7 @@
             class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-sm font-medium"
             @click="alternarModoSelecao"
           >
-            Selecionar
+            Selecionar lotes
           </button>
           <button
             v-if="autenticacao.podeCadastrar"
@@ -145,7 +145,7 @@
                 class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-sm font-medium"
                 @click="alternarModoSelecaoItens"
               >
-                Selecionar
+                Selecionar itens
               </button>
               <button
                 class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
@@ -172,10 +172,12 @@
           </div>
         </div>
 
-        <!-- Filtros -->
-        <div v-if="loteAtivo.itens?.length > 0" class="mb-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-            <div class="relative md:col-span-2">
+        <!-- Busca, filtros e colunas -->
+        <div v-if="loteAtivo.itens?.length > 0" class="mb-4 space-y-3">
+
+          <!-- Linha única: busca + botões -->
+          <div class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-1">
               <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 v-model="busca"
@@ -185,50 +187,142 @@
               />
             </div>
 
-            <select
-              v-model="filtroCentro"
-              class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
-            >
-              <option :value="null">Todos os centros de custo</option>
-              <option value="sem">Sem centro de custo</option>
-              <option v-for="c in centros" :key="c.id_centro_custo" :value="c.id_centro_custo">
-                {{ c.codigo }} - {{ c.nome }}
-              </option>
-            </select>
+            <div class="flex gap-2">
+              <button
+                class="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition"
+                :class="painelAberto === 'filtros' || qtdFiltrosAvancados > 0
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                @click="alternarPainel('filtros')"
+              >
+                <SlidersHorizontal :size="16" />
+                Filtros
+                <span
+                  v-if="qtdFiltrosAvancados > 0"
+                  class="min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[11px] leading-[18px] text-center"
+                >
+                  {{ qtdFiltrosAvancados }}
+                </span>
+                <ChevronDown :size="14" class="transition-transform" :class="painelAberto === 'filtros' ? 'rotate-180' : ''" />
+              </button>
 
-            <select
-              v-model="filtroEstoque"
-              class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
-            >
-              <option value="todos">Todo o estoque</option>
-              <option value="com">Com estoque</option>
-              <option value="sem">Sem estoque</option>
-            </select>
-
-            <select
-              v-model="filtroStatus"
-              class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
-            >
-              <option value="todos">Todos os status</option>
-              <option value="vencido">Vencido</option>
-              <option value="vencendo">Vencendo</option>
-              <option value="critico">Estoque crítico</option>
-              <option value="ok">Sem alertas</option>
-            </select>
-
-            <select
-              v-model="filtroPrioridade"
-              class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
-            >
-              <option value="">Todas as prioridades</option>
-              <option value="A">Prioridade A</option>
-              <option value="B">Prioridade B</option>
-              <option value="C">Prioridade C</option>
-            </select>
+              <button
+                class="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition"
+                :class="painelAberto === 'colunas'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                @click="alternarPainel('colunas')"
+              >
+                <Eye :size="16" />
+                Colunas
+                <ChevronDown :size="14" class="transition-transform" :class="painelAberto === 'colunas' ? 'rotate-180' : ''" />
+              </button>
+            </div>
           </div>
 
-          <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-400">{{ formatNumero(itensFiltrados.length) }} de {{ formatNumero(loteAtivo.itens.length) }} itens</span>
+          <!-- Painel de filtros (uma linha em telas grandes) -->
+          <div
+            v-if="painelAberto === 'filtros'"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3 rounded-lg bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800"
+          >
+            <label class="flex flex-col gap-1">
+              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Centro de custo</span>
+              <select
+                v-model="filtroCentro"
+                class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+              >
+                <option :value="null">Todos</option>
+                <option value="sem">Sem centro de custo</option>
+                <option v-for="c in centros" :key="c.id_centro_custo" :value="c.id_centro_custo">
+                  {{ c.codigo }} - {{ c.nome }}
+                </option>
+              </select>
+            </label>
+
+            <label class="flex flex-col gap-1">
+              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Quantidade</span>
+              <select
+                v-model="filtroEstoque"
+                class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+              >
+                <option value="todos">Todas</option>
+                <option value="com">Com estoque</option>
+                <option value="sem">Sem estoque</option>
+              </select>
+            </label>
+
+            <label class="flex flex-col gap-1">
+              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Situação (validade e estoque)</span>
+              <select
+                v-model="filtroStatus"
+                class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+              >
+                <option value="todos">Todas</option>
+                <option value="vencido">Vencido</option>
+                <option value="vencendo">Vencendo</option>
+                <option value="critico">Estoque crítico</option>
+                <option value="ok">Sem alertas</option>
+              </select>
+            </label>
+
+            <label class="flex flex-col gap-1">
+              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Prioridade</span>
+              <select
+                v-model="filtroPrioridade"
+                class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+              >
+                <option value="">Todas</option>
+                <option value="A">Prioridade A</option>
+                <option value="B">Prioridade B</option>
+                <option value="C">Prioridade C</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Painel de colunas opcionais -->
+          <div
+            v-if="painelAberto === 'colunas'"
+            class="flex items-center gap-x-5 gap-y-2 flex-wrap p-3 rounded-lg bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800"
+          >
+            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Mostrar colunas:</span>
+            <label
+              v-for="col in COLUNAS_OPCIONAIS"
+              :key="col.chave"
+              class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                class="cursor-pointer"
+                :checked="colunasVisiveis[col.chave]"
+                @change="definirColuna(col.chave, $event.target.checked)"
+              />
+              {{ col.rotulo }}
+              <span v-if="!temDado[col.chave]" class="text-xs text-slate-400 dark:text-slate-500">(sem dados neste lote)</span>
+            </label>
+            <button
+              v-if="colunasPersonalizadas"
+              class="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              @click="restaurarColunas"
+            >
+              Automático
+            </button>
+          </div>
+
+          <!-- Contagem, chips dos filtros ativos e limpar -->
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-slate-400">{{ formatNumero(itensFiltrados.length) }} de {{ formatNumero(loteAtivo.itens.length) }} itens</span>
+              <button
+                v-for="chip in chipsFiltros"
+                :key="chip.chave"
+                class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition"
+                :title="'Remover filtro'"
+                @click="removerFiltro(chip.chave)"
+              >
+                {{ chip.rotulo }}
+                <X :size="12" />
+              </button>
+            </div>
             <button v-if="filtrosAtivos" class="text-xs text-blue-600 dark:text-blue-400 hover:underline" @click="limparFiltros">
               Limpar filtros
             </button>
@@ -271,9 +365,9 @@
                 <th class="text-left pb-3 font-medium">Nome</th>
                 <th class="text-left pb-3 font-medium">Qtd</th>
                 <th class="text-left pb-3 font-medium">Validade</th>
-                <th class="text-left pb-3 font-medium">Fornecedor</th>
-                <th class="text-left pb-3 font-medium">Localização</th>
-                <th class="text-left pb-3 font-medium">Centro de custo</th>
+                <th v-if="colunasVisiveis.fornecedor" class="text-left pb-3 font-medium">Fornecedor</th>
+                <th v-if="colunasVisiveis.localizacao" class="text-left pb-3 font-medium">Localização</th>
+                <th v-if="colunasVisiveis.centro" class="text-left pb-3 font-medium">Centro de custo</th>
                 <th class="text-left pb-3 font-medium">Prioridade</th>
                 <th class="text-left pb-3 font-medium">Status</th>
                 <th class="text-left pb-3 font-medium">Ações</th>
@@ -319,9 +413,9 @@
                     <span v-else class="text-slate-400 dark:text-slate-500">—</span>
                   </td>
 
-                  <td class="py-3 text-slate-500 dark:text-slate-400">{{ item.produto?.fornecedor?.nome || '—' }}</td>
-                  <td class="py-3 text-slate-500 dark:text-slate-400">{{ item.localizacao || '—' }}</td>
-                  <td class="py-3 text-slate-500 dark:text-slate-400">{{ item.centro_custo?.codigo || '—' }}</td>
+                  <td v-if="colunasVisiveis.fornecedor" class="py-3 text-slate-500 dark:text-slate-400">{{ item.produto?.fornecedor?.nome || '—' }}</td>
+                  <td v-if="colunasVisiveis.localizacao" class="py-3 text-slate-500 dark:text-slate-400">{{ item.localizacao || '—' }}</td>
+                  <td v-if="colunasVisiveis.centro" class="py-3 text-slate-500 dark:text-slate-400">{{ item.centro_custo?.codigo || '—' }}</td>
 
                   <td class="py-3">
                     <span
@@ -576,7 +670,7 @@
 <script setup>
 import draggable from 'vuedraggable'
 import { ref, computed, onMounted, watch, watchEffect } from 'vue'
-import { Plus, Shield, X, PackageMinus, Package, Trash2, Calendar, Pencil, PackageOpen, PackagePlus, ArrowRightLeft, Lock, Search } from 'lucide-vue-next'
+import { Plus, Shield, X, PackageMinus, Package, Trash2, Calendar, Pencil, PackageOpen, PackagePlus, ArrowRightLeft, Lock, Search, SlidersHorizontal, Eye, ChevronDown } from 'lucide-vue-next'
 import { useAutenticacaoStore } from '@/servicos/autenticacao.store'
 import api from '@/servicos/api'
 import { useNotificacao } from '@/composables/useNotificacao'
@@ -751,6 +845,13 @@ const filtroEstoque = ref('todos')   // todos | com | sem
 const filtroStatus     = ref('todos')   // todos | vencido | vencendo | critico | ok
 const filtroPrioridade = ref('')        // '' = todas | A | B | C
 
+// Painel aberto abaixo da busca: null | 'filtros' | 'colunas'
+const painelAberto = ref(null)
+
+function alternarPainel(nome) {
+  painelAberto.value = painelAberto.value === nome ? null : nome
+}
+
 // Mesmas regras dos badges da tabela
 const itemVencido  = (i) => !!i.data_validade && estaVencido(i.data_validade)
 const itemVencendo = (i) => !!i.data_validade && !estaVencido(i.data_validade) && proximoDoVencimento(i.data_validade)
@@ -795,12 +896,123 @@ const filtrosAtivos = computed(() =>
   filtroStatus.value !== 'todos' || !!filtroPrioridade.value
 )
 
+// Quantidade de filtros do painel (a busca não conta: ela já fica visível no campo)
+const qtdFiltrosAvancados = computed(() =>
+  [
+    filtroCentro.value !== null,
+    filtroEstoque.value !== 'todos',
+    filtroStatus.value !== 'todos',
+    !!filtroPrioridade.value,
+  ].filter(Boolean).length
+)
+
+const ROTULOS_ESTOQUE = { com: 'Com estoque', sem: 'Sem estoque' }
+const ROTULOS_STATUS  = { vencido: 'Vencido', vencendo: 'Vencendo', critico: 'Estoque crítico', ok: 'Sem alertas' }
+
+// Chips removíveis dos filtros ativos
+const chipsFiltros = computed(() => {
+  const chips = []
+
+  if (filtroCentro.value !== null) {
+    let rotulo = 'Sem centro de custo'
+    if (filtroCentro.value !== 'sem') {
+      const c = centros.value?.find((x) => x.id_centro_custo === filtroCentro.value)
+      rotulo = c ? `Centro: ${c.codigo}` : 'Centro de custo'
+    }
+    chips.push({ chave: 'centro', rotulo })
+  }
+  if (filtroEstoque.value !== 'todos') {
+    chips.push({ chave: 'estoque', rotulo: ROTULOS_ESTOQUE[filtroEstoque.value] })
+  }
+  if (filtroStatus.value !== 'todos') {
+    chips.push({ chave: 'status', rotulo: `Situação: ${ROTULOS_STATUS[filtroStatus.value]}` })
+  }
+  if (filtroPrioridade.value) {
+    chips.push({ chave: 'prioridade', rotulo: `Prioridade ${filtroPrioridade.value}` })
+  }
+
+  return chips
+})
+
+function removerFiltro(chave) {
+  if (chave === 'centro')     filtroCentro.value     = null
+  if (chave === 'estoque')    filtroEstoque.value    = 'todos'
+  if (chave === 'status')     filtroStatus.value     = 'todos'
+  if (chave === 'prioridade') filtroPrioridade.value = ''
+}
+
 function limparFiltros() {
   busca.value            = ''
   filtroCentro.value     = null
   filtroEstoque.value    = 'todos'
   filtroStatus.value     = 'todos'
   filtroPrioridade.value = ''
+}
+
+// ===== Colunas opcionais (Fornecedor, Localização, Centro de custo) =====
+// Modo automático: a coluna só aparece se algum item do lote tiver dado.
+// Se o usuário marcar/desmarcar no painel "Colunas", a escolha vale para todos os lotes.
+const CHAVE_COLUNAS = 'sige:lotes-colunas:v1'
+
+const COLUNAS_OPCIONAIS = [
+  { chave: 'fornecedor',  rotulo: 'Fornecedor' },
+  { chave: 'localizacao', rotulo: 'Localização' },
+  { chave: 'centro',      rotulo: 'Centro de custo' },
+]
+
+function carregarPrefColunas() {
+  const padrao = { fornecedor: null, localizacao: null, centro: null }
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CHAVE_COLUNAS) || 'null')
+    if (!salvo) return padrao
+    return {
+      fornecedor:  typeof salvo.fornecedor  === 'boolean' ? salvo.fornecedor  : null,
+      localizacao: typeof salvo.localizacao === 'boolean' ? salvo.localizacao : null,
+      centro:      typeof salvo.centro      === 'boolean' ? salvo.centro      : null,
+    }
+  } catch {
+    return padrao
+  }
+}
+
+const colunasPref = ref(carregarPrefColunas())
+
+function salvarPrefColunas() {
+  try {
+    localStorage.setItem(CHAVE_COLUNAS, JSON.stringify(colunasPref.value))
+  } catch (e) {
+    console.error('Erro ao salvar preferência de colunas:', e)
+  }
+}
+
+// usa todos os itens do lote (não só os filtrados) para as colunas não "pularem" ao filtrar
+const temDado = computed(() => {
+  const itens = loteAtivo.value?.itens ?? []
+  return {
+    fornecedor:  itens.some((i) => !!i.produto?.fornecedor?.nome),
+    localizacao: itens.some((i) => !!i.localizacao),
+    centro:      itens.some((i) => !!i.centro_custo?.codigo),
+  }
+})
+
+const colunasVisiveis = computed(() => ({
+  fornecedor:  colunasPref.value.fornecedor  ?? temDado.value.fornecedor,
+  localizacao: colunasPref.value.localizacao ?? temDado.value.localizacao,
+  centro:      colunasPref.value.centro      ?? temDado.value.centro,
+}))
+
+const colunasPersonalizadas = computed(() =>
+  Object.values(colunasPref.value).some((v) => v !== null)
+)
+
+function definirColuna(chave, visivel) {
+  colunasPref.value = { ...colunasPref.value, [chave]: visivel }
+  salvarPrefColunas()
+}
+
+function restaurarColunas() {
+  colunasPref.value = { fornecedor: null, localizacao: null, centro: null }
+  salvarPrefColunas()
 }
 
 // ===== Paginação de itens (controles ficam no componente Paginacao) =====
