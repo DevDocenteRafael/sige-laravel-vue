@@ -69,7 +69,41 @@
 
       </div>
 
-      <!-- ALERTAS + GRÁFICO DE LINHA -->
+      <!-- DISTRIBUIÇÃO POR CATEGORIA + GRÁFICO DE LINHA -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+              <PieChart class="text-purple-600 dark:text-purple-400" :size="24" />
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">Distribuição por Categoria</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">{{ formatNumero(resumo.totalCategorias || 0) }} categorias</p>
+            </div>
+          </div>
+          <div v-if="semDadosPizza" class="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">
+            Nenhum dado disponível
+          </div>
+          <canvas v-else ref="graficoPizza" height="300"></canvas>
+        </div>
+
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <TrendingUp class="text-blue-600 dark:text-blue-400" :size="24" />
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">Evolução do Estoque</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Últimos 30 dias</p>
+            </div>
+          </div>
+          <canvas ref="graficoLinha" height="300"></canvas>
+        </div>
+
+      </div>
+
+      <!-- ALERTAS CRÍTICOS + MOVIMENTOS -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
@@ -120,45 +154,11 @@
               </div>
             </div>
 
-                    <div v-if="semAlertas" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900 rounded-lg p-4">
+            <div v-if="semAlertas" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900 rounded-lg p-4">
               <p class="text-green-600 dark:text-green-400 font-medium">✓ Nenhum alerta crítico</p>
               <p class="text-green-500 dark:text-green-300 text-sm mt-1">Tudo está funcionando perfeitamente</p>
             </div>
           </div>
-        </div>
-
-        <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <TrendingUp class="text-blue-600 dark:text-blue-400" :size="24" />
-            </div>
-            <div>
-              <h3 class="text-lg font-bold text-slate-900 dark:text-white">Evolução do Estoque</h3>
-              <p class="text-sm text-slate-500 dark:text-slate-400">Últimos 30 dias</p>
-            </div>
-          </div>
-          <canvas ref="graficoLinha" height="300"></canvas>
-        </div>
-
-      </div>
-
-      <!-- GRÁFICO DE PIZZA + MOVIMENTOS -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-              <PieChart class="text-purple-600 dark:text-purple-400" :size="24" />
-            </div>
-            <div>
-              <h3 class="text-lg font-bold text-slate-900 dark:text-white">Distribuição por Categoria</h3>
-              <p class="text-sm text-slate-500 dark:text-slate-400">{{ formatNumero(resumo.totalCategorias || 0) }} categorias</p>
-            </div>
-          </div>
-          <div v-if="semDadosPizza" class="flex items-center justify-center h-64 text-slate-400 dark:text-slate-500">
-            Nenhum dado disponível
-          </div>
-          <canvas v-else ref="graficoPizza" height="300"></canvas>
         </div>
 
         <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
@@ -207,42 +207,41 @@
             </div>
           </div>
 
-         <!-- Filtros: quantidade e categoria -->
-<div class="flex items-center gap-3 flex-wrap">
-  <div class="flex items-center gap-2">
-  <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Mostrar</label>
-  <select
-    :value="modoPersonalizado ? 'personalizado' : opcaoLimite"
-     class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg px-2 py-1.5 text-sm outline-none"
-    @change="aoMudarSelectLimite"
-   
-  >
-    <option v-for="opcao in opcoesLimite" :key="opcao" :value="opcao">{{ opcao }}</option>
-    <option value="personalizado">Personalizado</option>
-  </select>
+          <!-- Filtros: quantidade e categoria -->
+          <div class="flex items-center gap-3 flex-wrap">
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Mostrar</label>
+              <select
+                :value="modoPersonalizado ? 'personalizado' : opcaoLimite"
+                class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg px-2 py-1.5 text-sm outline-none"
+                @change="aoMudarSelectLimite"
+              >
+                <option v-for="opcao in opcoesLimite" :key="opcao" :value="opcao">{{ opcao }}</option>
+                <option value="personalizado">Personalizado</option>
+              </select>
 
-  <input
-    v-if="modoPersonalizado"
-    v-model.number="limitePersonalizado"
-    type="number"
-    min="1"
-    max="1000"
-    placeholder="Qtd"
-    class="w-20 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg px-2 py-1.5 text-sm outline-none"
-  />
-</div>
+              <input
+                v-if="modoPersonalizado"
+                v-model.number="limitePersonalizado"
+                type="number"
+                min="1"
+                max="1000"
+                placeholder="Qtd"
+                class="w-20 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg px-2 py-1.5 text-sm outline-none"
+              />
+            </div>
 
-  <div class="flex items-center gap-2">
-    <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Categoria</label>
-    <select
-      v-model="filtroCategoria"
-      class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg px-2 py-1.5 text-sm outline-none max-w-[180px]"
-    >
-      <option value="todas">Todas</option>
-      <option v-for="cat in categoriasDisponiveis" :key="cat" :value="cat">{{ cat }}</option>
-    </select>
-  </div>
-</div>
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Categoria</label>
+              <select
+                v-model="filtroCategoria"
+                class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg px-2 py-1.5 text-sm outline-none max-w-[180px]"
+              >
+                <option value="todas">Todas</option>
+                <option v-for="cat in categoriasDisponiveis" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div v-if="carregandoTopProdutos" class="flex items-center justify-center h-40 text-slate-400 dark:text-slate-500">
@@ -268,7 +267,6 @@
               v-for="(produto, index) in topProdutos"
               :key="produto.id_produto"
               class="hover:bg-slate-100 dark:hover:bg-slate-800/50 transition"
-
             >
               <td class="py-3 text-slate-400 dark:text-slate-500">{{ index + 1 }}</td>
               <td class="py-3 text-slate-900 dark:text-white font-medium">{{ produto.nome }}</td>
@@ -317,9 +315,9 @@ const opcoesLimite          = ref([5, 10, 20, 50, 100]) // opções fixas do sel
 const opcaoLimite          = ref(10)     // sempre número, só as opções fixas
 const modoPersonalizado    = ref(false)  // toggle separado, sem misturar tipos no select
 const limitePersonalizado  = ref(50)
-const filtroCategoria      = ref('todas')        // ← faltava
-const categoriasDisponiveis = ref([])            // ← faltava
-const carregandoTopProdutos = ref(false)         // ← confirme que esta também está presente
+const filtroCategoria      = ref('todas')
+const categoriasDisponiveis = ref([])
+const carregandoTopProdutos = ref(false)
 
 const filtroLimite = computed(() => {
   if (modoPersonalizado.value) {
