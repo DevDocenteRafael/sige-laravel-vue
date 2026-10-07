@@ -47,9 +47,9 @@ export function useNotificacao() {
     toasts,
     notificar,
     removerToast,
-    sucesso: (msg, duracaoMs) => notificar(msg, 'sucesso', duracaoMs),
-    erro:    (msg, duracaoMs) => notificar(msg, 'erro', duracaoMs),
-    aviso:   (msg, duracaoMs) => notificar(msg, 'aviso', duracaoMs),
+    sucesso: (msg, duracaoMs = 5000) => notificar(msg, 'sucesso', duracaoMs),
+    erro:    (msg, duracaoMs = 6000) => notificar(msg, 'erro', duracaoMs),
+    aviso:   (msg, duracaoMs = 5000) => notificar(msg, 'aviso', duracaoMs),
     info:    (msg, duracaoMs) => notificar(msg, 'info', duracaoMs),
 
     // confirmação

@@ -216,18 +216,24 @@
           <option :value="SEM_CC">Sem centro de custo</option>
           <option v-for="cc in centrosCustoPerdasOpcoes" :key="cc.codigo" :value="cc.codigo">{{ cc.rotulo }}</option>
         </select>
-        <input
-          v-model="dataInicio"
-          type="date"
-          title="Data inicial"
-          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
-        />
-        <input
-          v-model="dataFim"
-          type="date"
-          title="Data final"
-          class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
-        />
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">De</label>
+          <input
+            v-model="dataInicio"
+            type="date"
+            :max="dataFim || undefined"
+            class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+          />
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">até</label>
+          <input
+            v-model="dataFim"
+            type="date"
+            :min="dataInicio || undefined"
+            class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
+          />
+        </div>
       </div>
 
       <div v-if="filtrosPerdasAtivos" class="flex justify-end mb-3">

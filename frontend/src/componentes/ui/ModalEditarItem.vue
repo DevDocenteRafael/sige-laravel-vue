@@ -56,15 +56,17 @@
             <input v-model="form.localizacao" type="text" class="campo" placeholder="Ex: A-12" />
           </div>
         </div>
-<div class="mb-4">
+
+        <div class="mb-4">
           <label class="label">Centro de Custo</label>
           <select v-model="form.id_centro_custo" class="campo">
             <option :value="null">Sem centro de custo</option>
-            <option v-for="c in centros" :key="c.id_centro_custo" :value="c.id_centro_custo">
-              {{ c.codigo }} — {{ c.nome }}
+            <option v-for="c in centrosDisponiveis" :key="c.id_centro_custo" :value="c.id_centro_custo">
+              {{ c.codigo }} — {{ c.nome }}{{ c.ativo ? '' : ' (inativo)' }}
             </option>
           </select>
         </div>
+
         <div class="mb-6">
           <label class="label">Prioridade Manual</label>
           <select v-model="form.prioridade_abc" class="campo">
@@ -125,13 +127,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { X } from 'lucide-vue-next'
 import api from '@/servicos/api'
 import ModalConfirmacao from '@/componentes/ui/ModalConfirmacao.vue'
 import { useModalArrastavel } from '@/composables/useModalArrastavel'
 import { useCentrosCusto } from '@/composables/useCentrosCusto'
-import { onMounted } from 'vue'
+
 const props = defineProps({
   item: { type: Object, required: true },
 })
@@ -140,6 +142,12 @@ const emit = defineEmits(['fechar', 'salvo'])
 const { aoIniciarArraste, estiloArraste } = useModalArrastavel()
 const { centros, carregar: carregarCentros } = useCentrosCusto()
 onMounted(carregarCentros)
+
+// Lista só centros ativos, mas mantém o centro que o item já tem (mesmo inativo),
+// senão o select ficaria em branco ao abrir a edição.
+const centrosDisponiveis = computed(() =>
+  centros.value.filter((c) => c.ativo || c.id_centro_custo === props.item.id_centro_custo)
+)
 
 const salvando = ref(false)
 const erro     = ref('')
@@ -203,10 +211,10 @@ async function salvar() {
   salvando.value = true
   try {
     const dados = {
-      quantidade:     form.value.quantidade,
-      unidade_medida: form.value.unidade_medida,
-      data_validade:  form.value.data_validade || null,
-      localizacao:    form.value.localizacao || null,
+      quantidade:      form.value.quantidade,
+      unidade_medida:  form.value.unidade_medida,
+      data_validade:   form.value.data_validade || null,
+      localizacao:     form.value.localizacao || null,
       id_centro_custo: form.value.id_centro_custo,
     }
 
