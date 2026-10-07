@@ -121,8 +121,9 @@
               <AlertCircle class="text-red-600 dark:text-red-400" :size="20" />
             </div>
             <div>
-              <p class="text-slate-500 dark:text-slate-400 text-xs">Total de Perdas</p>
+              <p class="text-slate-500 dark:text-slate-400 text-xs">Registros de Perda</p>
               <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ formatNumero(dadosPerdas.resumo?.total) }}</p>
+              <p class="text-slate-400 dark:text-slate-500 text-[11px]">{{ periodoLabel }}</p>
             </div>
           </div>
           <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex items-center gap-4">
@@ -132,6 +133,7 @@
             <div>
               <p class="text-slate-500 dark:text-slate-400 text-xs">Unidades Perdidas</p>
               <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ formatNumero(dadosPerdas.resumo?.unidades) }}</p>
+              <p class="text-slate-400 dark:text-slate-500 text-[11px]">{{ periodoLabel }}</p>
             </div>
           </div>
           <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex items-center gap-4">
@@ -139,15 +141,19 @@
               <FileText class="text-blue-600 dark:text-blue-400" :size="20" />
             </div>
             <div>
-              <p class="text-slate-500 dark:text-slate-400 text-xs">Tipos de Perda</p>
+              <p class="text-slate-500 dark:text-slate-400 text-xs">Motivos Distintos</p>
               <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ formatNumero(dadosPerdas.resumo?.tipos) }}</p>
+              <p class="text-slate-400 dark:text-slate-500 text-[11px]">{{ periodoLabel }}</p>
             </div>
           </div>
         </div>
 
         <!-- Perdas por motivo -->
         <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 mb-6">
-          <h2 class="font-semibold text-slate-900 dark:text-white mb-4">Perdas por Motivo</h2>
+          <h2 class="font-semibold text-slate-900 dark:text-white mb-4">
+            Perdas por Motivo
+            <span class="text-xs font-normal text-slate-400 dark:text-slate-500">· {{ periodoLabel }}</span>
+          </h2>
           <div v-if="!dadosPerdas.porMotivo?.length" class="text-center py-8 text-slate-400 dark:text-slate-500">
             Nenhuma perda registrada no período
           </div>
@@ -161,7 +167,9 @@
                 ></div>
               </div>
               <span class="text-slate-500 dark:text-slate-400 text-sm w-24 text-right">{{ formatNumero(m.total) }} unid.</span>
-              <span class="text-slate-400 dark:text-slate-500 text-xs w-16 text-right">{{ formatNumero(m.ocorrencias) }}x</span>
+              <span class="text-slate-400 dark:text-slate-500 text-xs w-24 text-right">
+                {{ formatNumero(m.ocorrencias) }} {{ m.ocorrencias === 1 ? 'registro' : 'registros' }}
+              </span>
             </div>
           </div>
         </div>
@@ -169,7 +177,10 @@
         <!-- Tabela detalhada -->
         <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
           <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800">
-            <h2 class="font-semibold text-slate-900 dark:text-white">Detalhamento de Perdas</h2>
+            <h2 class="font-semibold text-slate-900 dark:text-white">
+              Detalhamento de Perdas
+              <span class="text-xs font-normal text-slate-400 dark:text-slate-500">· {{ periodoLabel }}</span>
+            </h2>
           </div>
           <table class="w-full text-sm">
             <thead>
@@ -343,10 +354,13 @@ const dropdownCentroAberto  = ref(false)
 const menusRoot = ref(null)
 
 const opcoesPeriodo = [
-  { label: 'Últimos 7 dias',  dias: 7  },
-  { label: 'Últimos 30 dias', dias: 30 },
-  { label: 'Últimos 90 dias', dias: 90 },
-  { label: 'Último ano',      dias: 365 },
+  { label: 'Últimos 7 dias',   dias: 7    },
+  { label: 'Últimos 30 dias',  dias: 30   },
+  { label: 'Últimos 90 dias',  dias: 90   },
+  { label: 'Últimos 6 meses',  dias: 180  },
+  { label: 'Último ano',       dias: 365  },
+  { label: 'Últimos 2 anos',   dias: 730  },
+  { label: 'Todo o período',   dias: 3650 },
 ]
 const periodo = ref(opcoesPeriodo[1])
 const periodoLabel = computed(() => periodo.value.label)
