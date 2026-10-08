@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50" @click.self="$emit('fechar')">
+  <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
     <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-lg" :style="estiloArraste">
       <div class="flex justify-between items-center mb-6 cursor-grab active:cursor-grabbing select-none" @mousedown="aoIniciarArraste">
         <h2 class="text-lg font-bold text-white">
