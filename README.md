@@ -66,6 +66,7 @@ Comando: "mkdir bootstrap\cache"
 # 3. Instale as dependencias do Backend (PHP)
 cd Backend
 composer install
+composer require barryvdh/laravel-dompdf
 
 # 4. Crie o arquivo de ambiente a partir do template
 copy .env.example .env
