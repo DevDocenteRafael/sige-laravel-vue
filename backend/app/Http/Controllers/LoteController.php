@@ -76,9 +76,8 @@ class LoteController extends Controller
     public function destroy(int $id)
     {
         $lote = Lote::with('itens')->findOrFail($id);
-        $idsProdutosAfetados = $lote->itens->pluck('id_produto')->unique();
 
-        DB::transaction(function () use ($lote, $id, $idsProdutosAfetados) {
+        DB::transaction(function () use ($lote, $id) {
             // Antes do cascade apagar os item_lote, desconta cada quantidade
             // do estoque_atual do produto correspondente — senão o produto
             // fica com estoque "fantasma" (valor antigo nunca decrementado).
@@ -91,14 +90,6 @@ class LoteController extends Controller
             AuditHelper::log('Exclusao', 'Lote "' . $lote->numero_lote . '" excluido.');
 
             $lote->delete();
-
-            // O cascade já removeu os item_lote junto com o lote. Agora
-            // verifica quais produtos ficaram sem nenhum lote e os remove.
-            foreach ($idsProdutosAfetados as $idProduto) {
-                if (!\App\Models\ItemLote::where('id_produto', $idProduto)->exists()) {
-                    Produto::whereKey($idProduto)->delete();
-                }
-            }
         });
 
         RecalcularAbcJob::dispatchSync();
@@ -117,9 +108,8 @@ class LoteController extends Controller
         ]);
 
         $lotes = Lote::with('itens')->whereIn('id_lote', $request->ids)->get();
-        $idsProdutosAfetados = $lotes->flatMap->itens->pluck('id_produto')->unique();
 
-        DB::transaction(function () use ($request, $lotes, $idsProdutosAfetados) {
+        DB::transaction(function () use ($request, $lotes) {
             foreach ($lotes as $lote) {
                 foreach ($lote->itens as $item) {
                     Produto::whereKey($item->id_produto)->decrement('estoque_atual', $item->quantidade);
@@ -133,14 +123,6 @@ class LoteController extends Controller
             }
 
             Lote::whereIn('id_lote', $request->ids)->delete();
-
-            // O cascade já removeu os item_lote junto com os lotes. Agora
-            // verifica quais produtos ficaram sem nenhum lote e os remove.
-            foreach ($idsProdutosAfetados as $idProduto) {
-                if (!\App\Models\ItemLote::where('id_produto', $idProduto)->exists()) {
-                    Produto::whereKey($idProduto)->delete();
-                }
-            }
         });
 
         RecalcularAbcJob::dispatchSync();

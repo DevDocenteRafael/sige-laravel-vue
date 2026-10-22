@@ -9,15 +9,16 @@
       <div
         class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between min-h-[65px]"
       >
-        <div v-if="expandido" class="flex items-center gap-3">
-          <img :src="logo" alt="Senac" class="h-8" />
-          <div>
-            <h1 class="text-base font-bold text-slate-900 dark:text-white">SIGE</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Controle total do seu estoque</p>
+        <div v-if="expandido" class="flex items-center gap-3 min-w-0">
+          <img :src="logo" alt="Senac" class="h-8 shrink-0" />
+          <div class="min-w-0">
+            <h1 class="text-base font-bold leading-tight text-slate-900 dark:text-white">SIGE</h1>
+            <p class="truncate text-xs text-slate-500 dark:text-slate-400">Controle de estoque</p>
           </div>
         </div>
         <button
-          class="transition p-1 rounded-lg ml-auto text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+          class="transition p-1 rounded-lg ml-auto shrink-0 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+          :title="expandido ? 'Recolher menu' : 'Expandir menu'"
           @click="expandido = !expandido"
         >
           <Menu v-if="!expandido" :size="20" />
@@ -25,37 +26,36 @@
         </button>
       </div>
 
-      <!-- Usuário -->
-      <div v-if="expandido" ref="perfilRef" class="px-4 py-4 border-b border-slate-200 dark:border-slate-800 relative">
+      <!-- Usuário: um único card; clicar abre o painel com e-mail, perfil e "Editar Perfil" -->
+      <div v-if="expandido" ref="perfilRef" class="relative px-3 py-3">
         <button
-          class="flex items-center gap-3 mb-3 w-full text-left rounded-lg px-1 py-1 -mx-1 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          class="group flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-slate-100 dark:hover:bg-slate-800"
+          :aria-expanded="perfilAberto"
           @click="perfilAberto = !perfilAberto"
         >
           <div
-            class="w-9 h-9 rounded-full bg-blue-600 overflow-hidden flex items-center justify-center text-sm font-bold text-white shrink-0"
+            class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-sm font-bold text-white"
           >
             <img
               v-if="usuario?.foto_url"
               :src="usuario.foto_url"
-              class="w-full h-full object-cover"
+              class="h-full w-full object-cover"
             />
             <span v-else>{{ iniciaisDoUsuario }}</span>
           </div>
-          <div class="min-w-0">
-            <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ usuario?.name }}</p>
-            <p class="text-xs capitalize text-slate-500 dark:text-slate-400">
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium text-slate-900 dark:text-white">
+              {{ usuario?.name }}
+            </p>
+            <p class="truncate text-xs capitalize text-slate-500 dark:text-slate-400">
               {{ usuario?.perfil }}
             </p>
           </div>
+          <ChevronsUpDown
+            :size="16"
+            class="shrink-0 text-slate-400 transition group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
+          />
         </button>
-
-        <RouterLink
-          to="/perfil"
-          class="flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          <Settings :size="14" />
-          Editar Perfil
-        </RouterLink>
 
         <!-- Painel com as informações do usuário -->
         <Transition
@@ -68,39 +68,48 @@
         >
           <div
             v-if="perfilAberto"
-            class="absolute left-4 right-4 top-full mt-1 rounded-xl shadow-lg z-50 overflow-hidden
-                   bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+            class="absolute left-3 right-3 top-full z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900"
           >
-            <div class="p-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
-              <div class="w-11 h-11 rounded-full bg-blue-600 overflow-hidden flex items-center justify-center text-sm font-bold text-white shrink-0">
-                <img v-if="usuario?.foto_url" :src="usuario.foto_url" class="w-full h-full object-cover" />
+            <div class="flex items-center gap-3 border-b border-slate-200 p-4 dark:border-slate-800">
+              <div
+                class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-sm font-bold text-white"
+              >
+                <img
+                  v-if="usuario?.foto_url"
+                  :src="usuario.foto_url"
+                  class="h-full w-full object-cover"
+                />
                 <span v-else>{{ iniciaisDoUsuario }}</span>
               </div>
               <div class="min-w-0">
-                <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ usuario?.name }}</p>
-                <p class="text-xs capitalize text-blue-600 dark:text-blue-400">{{ usuario?.perfil }}</p>
+                <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                  {{ usuario?.name }}
+                </p>
+                <p class="text-xs capitalize text-blue-600 dark:text-blue-400">
+                  {{ usuario?.perfil }}
+                </p>
               </div>
             </div>
 
-            <div class="p-4 space-y-2 text-sm">
+            <div class="space-y-2 p-4 text-sm">
               <div class="flex justify-between gap-3">
-                <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                   <Mail :size="13" /> E-mail
                 </span>
-                <span class="text-slate-900 dark:text-white truncate">{{ usuario?.email }}</span>
+                <span class="truncate text-slate-900 dark:text-white">{{ usuario?.email }}</span>
               </div>
               <div class="flex justify-between gap-3">
-                <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                   <ShieldCheck :size="13" /> Perfil
                 </span>
-                <span class="text-slate-900 dark:text-white capitalize">{{ usuario?.perfil }}</span>
+                <span class="capitalize text-slate-900 dark:text-white">{{ usuario?.perfil }}</span>
               </div>
             </div>
 
-            <div class="p-2 border-t border-slate-200 dark:border-slate-800">
+            <div class="border-t border-slate-200 p-2 dark:border-slate-800">
               <RouterLink
                 to="/perfil"
-                class="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                class="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                 @click="perfilAberto = false"
               >
                 <Settings :size="14" />
@@ -112,57 +121,59 @@
       </div>
 
       <!-- Avatar colapsado -->
-      <div v-else class="flex justify-center py-4 border-b border-slate-200 dark:border-slate-800">
+      <div v-else class="flex justify-center py-3">
         <div
-          class="w-8 h-8 rounded-full bg-blue-600 overflow-hidden flex items-center justify-center text-xs font-bold text-white"
+          class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-xs font-bold text-white"
         >
           <img
             v-if="usuario?.foto_url"
             :src="usuario.foto_url"
-            class="w-full h-full object-cover"
+            class="h-full w-full object-cover"
           />
           <span v-else>{{ iniciaisDoUsuario }}</span>
         </div>
       </div>
 
-      <!-- Menu -->
-      <nav class="flex-1 p-2 overflow-y-auto">
-        <ul class="space-y-0.5">
-          <li v-for="item in itensDoMenu" :key="item.rota">
-            <RouterLink
-              :to="item.rota"
-              :title="!expandido ? item.nome : ''"
-              :class="[
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-sm',
-                'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
-                !expandido && 'justify-center',
-              ]"
-              active-class="bg-blue-600 !text-white font-medium hover:bg-blue-600"
-            >
-              <component :is="item.icone" :size="18" class="shrink-0" />
-              <span v-if="expandido">{{ item.nome }}</span>
-            </RouterLink>
-          </li>
-        </ul>
+      <!-- Menu agrupado -->
+      <nav class="flex-1 overflow-y-auto px-2 pb-2">
+        <div
+          v-for="(grupo, indice) in gruposDoMenu"
+          :key="grupo.nome ?? 'principal'"
+          :class="indice > 0 && (expandido ? 'mt-4' : 'mt-2')"
+        >
+          <p
+            v-if="grupo.nome && expandido"
+            class="mb-1 px-3 text-xs font-medium text-slate-400 dark:text-slate-500"
+          >
+            {{ grupo.nome }}
+          </p>
+          <div
+            v-else-if="indice > 0 && !expandido"
+            class="mx-3 mb-2 border-t border-slate-200 dark:border-slate-800"
+          />
+
+          <ul class="space-y-0.5">
+            <li v-for="item in grupo.itens" :key="item.rota">
+              <RouterLink
+                :to="item.rota"
+                :title="!expandido ? item.nome : ''"
+                :class="[
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-sm',
+                  'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
+                  !expandido && 'justify-center',
+                ]"
+                active-class="bg-blue-600 !text-white font-medium hover:bg-blue-600"
+              >
+                <component :is="item.icone" :size="18" class="shrink-0" />
+                <span v-if="expandido">{{ item.nome }}</span>
+              </RouterLink>
+            </li>
+          </ul>
+        </div>
       </nav>
 
-      <!-- Rodapé -->
+      <!-- Rodapé (Modo Claro e Atalhos ficam no botão flutuante) -->
       <div class="p-2 border-t border-slate-200 dark:border-slate-800 space-y-0.5">
-        <!-- Tema -->
-        <button
-          :title="!expandido ? (tema.temaClaro ? 'Modo Escuro' : 'Modo Claro') : ''"
-          :class="[
-            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-sm',
-            'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
-            !expandido && 'justify-center',
-          ]"
-          @click="tema.toggleTema"
-        >
-          <Sun v-if="tema.temaClaro" :size="18" class="shrink-0" />
-          <Moon v-else :size="18" class="shrink-0" />
-          <span v-if="expandido">{{ tema.temaClaro ? 'Modo Escuro' : 'Modo Claro' }}</span>
-        </button>
-
         <!-- Notificações -->
         <button
           :title="!expandido ? 'Notificações' : ''"
@@ -182,20 +193,6 @@
             >
           </div>
           <span v-if="expandido">Notificações</span>
-        </button>
-
-        <!-- Atalhos -->
-        <button
-          :title="!expandido ? 'Atalhos' : ''"
-          :class="[
-            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-sm',
-            'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
-            !expandido && 'justify-center',
-          ]"
-          @click="painelAtalhosAberto = true"
-        >
-          <Keyboard :size="18" class="shrink-0" />
-          <span v-if="expandido">Atalhos</span>
         </button>
 
         <!-- Sair -->
@@ -469,18 +466,19 @@
     />
 
     <ChatbotWidget />
-    <MenuSuporte />
+    <MenuSuporte @abrir-atalhos="painelAtalhosAberto = true" />
   </div>
 </template>
 
 <script setup>
 import ChatbotWidget from '@/componentes/ui/ChatbotWidget.vue';
 import MenuSuporte from '@/componentes/ui/MenuSuporte.vue';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { RouterLink, RouterView, useRouter } from 'vue-router';
 import {
   LayoutDashboard,
   PackagePlus,
+  ClipboardCheck,
   Package,
   Trash2,
   History,
@@ -499,13 +497,12 @@ import {
   Keyboard,
   AlertTriangle,
   Info,
-  Sun,
-  Moon,
   Mail,
+  ChevronsUpDown,
 } from 'lucide-vue-next';
 import { useAutenticacaoStore } from '@/servicos/autenticacao.store';
-import { useTemaStore } from '@/servicos/tema.store';
 import { perfilPodeAcessarRota } from '@/servicos/permissoes';
+import { useAlertaVencimento } from '@/composables/useAlertaVencimento';
 import logoSenac from '@/componentes/img/Senac_logo.svg.png';
 import api from '@/servicos/api';
 import GlobalBusca from '@/componentes/ui/GlobalBusca.vue';
@@ -513,7 +510,7 @@ import GlobalBusca from '@/componentes/ui/GlobalBusca.vue';
 const buscaGlobalAberta = ref(false);
 const router = useRouter();
 const autenticacao = useAutenticacaoStore();
-const tema = useTemaStore();
+const { dias: diasAlerta } = useAlertaVencimento();
 const logo = logoSenac;
 const expandido = ref(true);
 const painelAberto = ref(false);
@@ -537,16 +534,18 @@ const iniciaisDoUsuario = computed(() => {
 });
 
 const itensDoMenu = computed(() => {
+  // "grupo" só organiza a sidebar; a lista continua plana para a busca global
   const menus = [
-    { nome: 'Dashboard', rota: '/dashboard', nomeRota: 'dashboard', icone: LayoutDashboard },
-    { nome: 'Lotes', rota: '/lotes', nomeRota: 'lotes', icone: PackagePlus },
-    { nome: 'Produtos', rota: '/produtos', nomeRota: 'produtos', icone: Package },
-    { nome: 'Perdas', rota: '/perdas', nomeRota: 'perdas', icone: Trash2 },
-    { nome: 'Centros de Custo', rota: '/centros-custo', nomeRota: 'centros-custo', icone: Building2 },
-    { nome: 'Histórico', rota: '/historico', nomeRota: 'historico', icone: History },
-    { nome: 'Relatórios', rota: '/relatorios', nomeRota: 'relatorios', icone: FileText },
-    { nome: 'Rel. Avançados', rota: '/rel-avancados', nomeRota: 'rel-avancados', icone: BarChart3 },
-    { nome: 'Import/Export', rota: '/importexport', nomeRota: 'importexport', icone: Download },
+    { nome: 'Dashboard', rota: '/dashboard', nomeRota: 'dashboard', icone: LayoutDashboard, grupo: null },
+    { nome: 'Lotes', rota: '/lotes', nomeRota: 'lotes', icone: PackagePlus, grupo: 'Estoque' },
+    { nome: 'Recebimentos', rota: '/recebimentos', nomeRota: 'recebimentos', icone: ClipboardCheck, grupo: 'Estoque' },
+    { nome: 'Produtos', rota: '/produtos', nomeRota: 'produtos', icone: Package, grupo: 'Estoque' },
+    { nome: 'Perdas', rota: '/perdas', nomeRota: 'perdas', icone: Trash2, grupo: 'Estoque' },
+    { nome: 'Centros de Custo', rota: '/centros-custo', nomeRota: 'centros-custo', icone: Building2, grupo: 'Estoque' },
+    { nome: 'Histórico', rota: '/historico', nomeRota: 'historico', icone: History, grupo: 'Análises' },
+    { nome: 'Relatórios', rota: '/relatorios', nomeRota: 'relatorios', icone: FileText, grupo: 'Análises' },
+    { nome: 'Rel. Avançados', rota: '/rel-avancados', nomeRota: 'rel-avancados', icone: BarChart3, grupo: 'Análises' },
+    { nome: 'Import/Export', rota: '/importexport', nomeRota: 'importexport', icone: Download, grupo: 'Sistema' },
   ];
 
   const menusFiltrados = menus.filter((item) =>
@@ -554,16 +553,37 @@ const itensDoMenu = computed(() => {
   );
 
   if (autenticacao.ehAdmin) {
-    menusFiltrados.push({ nome: 'Log', rota: '/log', nomeRota: 'log', icone: Shield });
+    menusFiltrados.push({
+      nome: 'Log',
+      rota: '/log',
+      nomeRota: 'log',
+      icone: Shield,
+      grupo: 'Sistema',
+    });
     menusFiltrados.push({
       nome: 'Usuários',
       rota: '/usuarios',
       nomeRota: 'usuarios',
       icone: Users,
+      grupo: 'Sistema',
     });
   }
 
   return menusFiltrados;
+});
+
+// Agrupa os itens já filtrados por permissão; grupos vazios nem aparecem
+const gruposDoMenu = computed(() => {
+  const grupos = [];
+  itensDoMenu.value.forEach((item) => {
+    let grupo = grupos.find((g) => g.nome === item.grupo);
+    if (!grupo) {
+      grupo = { nome: item.grupo, itens: [] };
+      grupos.push(grupo);
+    }
+    grupo.itens.push(item);
+  });
+  return grupos;
 });
 
 // ===== ATALHOS =====
@@ -629,12 +649,18 @@ function apagarTodas() {
   aba.value = 'todas';
 }
 
+// Lê "YYYY-MM-DD" como data local (new Date("YYYY-MM-DD") interpreta como UTC
+// e, no Brasil, voltaria um dia).
+function paraDataLocal(dataString) {
+  const [ano, mes, dia] = String(dataString).split('T')[0].split('-').map(Number);
+  return new Date(ano, mes - 1, dia);
+}
+
 function diasParaVencer(dataValidade) {
   if (!dataValidade) return null;
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
-  const venc = new Date(dataValidade);
-  venc.setHours(0, 0, 0, 0);
+  const venc = paraDataLocal(dataValidade);
   return Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
 }
 
@@ -655,10 +681,10 @@ async function carregarNotificacoes() {
     produtos.forEach((item) => {
       if (item.data_validade) {
         const dias = diasParaVencer(item.data_validade);
-        if (dias !== null && dias <= 30) {
+        if (dias !== null && dias <= diasAlerta.value) {
           lista.push({
             // A validade entra no ID: se a data do produto mudar, a notificação volta
-            id: `venc-${item.id_item}-${item.data_validade}`,
+            id: `venc-${item.id_produto}-${item.data_validade}`,
             tipo: 'vencimento',
             titulo:
               dias < 0
@@ -674,7 +700,7 @@ async function carregarNotificacoes() {
       }
       if (item.estoque_minimo && item.quantidade <= item.estoque_minimo) {
         lista.push({
-          id: `estoque-${item.id_item}`,
+          id: `estoque-${item.id_produto}`,
           tipo: 'estoque',
           titulo: `Estoque baixo: ${item.nome}`,
           descricao: `Quantidade atual (${item.quantidade} ${item.unidade_medida}) atingiu o mínimo de ${item.estoque_minimo}`,
@@ -703,6 +729,9 @@ function marcarLida(notif) {
 function marcarTodasLidas() {
   notificacoes.value.forEach((n) => (n.lida = true));
 }
+
+// Se a janela de alerta mudar (30/60/90/120/personalizado), refaz a lista
+watch(diasAlerta, carregarNotificacoes);
 
 async function sair() {
   await autenticacao.fazerLogout();

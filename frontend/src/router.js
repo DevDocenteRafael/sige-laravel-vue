@@ -6,6 +6,7 @@ const PaginaLogin               = () => import('@/paginas/PaginaLogin.vue')
 const PaginaDashboard           = () => import('@/paginas/PaginaDashboard.vue')
 const PaginaProdutos            = () => import('@/paginas/PaginaProdutos.vue')
 const PaginaLotes               = () => import('@/paginas/PaginaLotes.vue')
+const PaginaRecebimentos        = () => import('@/paginas/PaginaRecebimentos.vue')
 const PaginaMovimentos          = () => import('@/paginas/PaginaMovimentos.vue')
 const PaginaRelatorios          = () => import('@/paginas/PaginaRelatorios.vue')
 const PaginaRelatoriosAvancados = () => import('@/paginas/PaginaRelatoriosAvancados.vue')
@@ -33,6 +34,7 @@ const rotas = [
       { path: 'dashboard',      name: 'dashboard',      component: PaginaDashboard },
       { path: 'produtos',       name: 'produtos',       component: PaginaProdutos },
       { path: 'lotes',          name: 'lotes',          component: PaginaLotes },
+      { path: 'recebimentos',   name: 'recebimentos',   component: PaginaRecebimentos },
       { path: 'movimentos',     name: 'movimentos',     component: PaginaMovimentos },
       { path: 'perdas',         name: 'perdas',         component: PaginaPerdas },
       { path: 'historico',      name: 'historico',      component: PaginaHistorico },

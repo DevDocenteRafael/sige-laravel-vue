@@ -47,7 +47,52 @@
             {{ c.codigo }} - {{ c.nome }}
           </option>
         </select>
+
+        <!-- Filtro de saldo -->
+        <select
+          v-model="filtroSaldo"
+          class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg px-4 py-2 text-sm font-medium border-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-slate-500"
+        >
+          <option value="todos">Todos os saldos</option>
+          <option value="com">Com saldo</option>
+          <option value="sem">Sem saldo</option>
+        </select>
+
+        <!-- Janela de alerta de vencimento -->
+        <div class="flex items-center gap-2 ml-auto">
+          <span class="text-xs text-slate-500 dark:text-slate-400">Avisar vencimento em</span>
+          <select
+            v-model="selecaoAlerta"
+            class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg px-3 py-2 text-sm font-medium border-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-slate-500"
+          >
+            <option v-for="d in PRESETS" :key="d" :value="String(d)">{{ d }} dias</option>
+            <option value="custom">Personalizado</option>
+          </select>
+          <template v-if="modoPersonalizado">
+            <input
+              v-model.number="diasPersonalizado"
+              type="number"
+              min="1"
+              max="3650"
+              class="w-20 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg px-3 py-2 text-sm border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span class="text-xs text-slate-500 dark:text-slate-400">dias</span>
+          </template>
+        </div>
       </div>
+    </div>
+
+    <!-- Aviso de itens vencendo -->
+    <div
+      v-if="totalVencendo > 0 && !avisoDispensado"
+      class="mb-4 flex items-center justify-between gap-3 rounded-xl border border-orange-300 dark:border-orange-500/40 bg-orange-50 dark:bg-orange-500/10 px-4 py-3 text-sm text-orange-800 dark:text-orange-300"
+    >
+      <span>
+        ⚠ {{ formatNumero(totalVencendo) }}
+        {{ totalVencendo === 1 ? 'produto vence' : 'produtos vencem' }}
+        nos próximos {{ diasAlerta }} dias.
+      </span>
+      <button type="button" class="text-xs underline" @click="avisoDispensado = true">Dispensar</button>
     </div>
 
     <!-- Cards de resumo -->
@@ -57,7 +102,7 @@
         <p class="text-slate-900 dark:text-white text-2xl font-bold">{{ formatNumero(produtos.length) }}</p>
       </div>
       <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl p-4">
-        <p class="text-slate-500 dark:text-slate-400 text-xs mb-1">Produtos Vencendo</p>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mb-1">Produtos Vencendo (≤ {{ diasAlerta }}d)</p>
         <p class="text-orange-600 dark:text-orange-400 text-2xl font-bold">{{ formatNumero(totalVencendo) }}</p>
       </div>
       <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl p-4">
@@ -84,6 +129,7 @@
             <th class="px-4 py-3">SKU</th>
             <th class="px-4 py-3">Nome do Produto</th>
             <th class="px-4 py-3">Quantidade Total</th>
+            <th class="px-4 py-3">Estoque Mínimo</th>
             <th class="px-4 py-3">Próxima Validade</th>
             <th class="px-4 py-3">Lotes</th>
             <th class="px-4 py-3">Centro de Custo</th>
@@ -103,6 +149,32 @@
             <td class="px-4 py-3" :class="estoqueBaixo(item) ? 'text-orange-600 dark:text-orange-400 font-bold' : 'text-slate-900 dark:text-white'">
               {{ formatNumero(item.quantidade) }} {{ item.unidade_medida }}
             </td>
+
+            <!-- Estoque mínimo editável -->
+            <td class="px-4 py-3" @click.stop>
+              <input
+                v-if="editandoMinimo === item.id_produto"
+                v-model.number="valorMinimo"
+                v-focar
+                type="number"
+                min="0"
+                class="w-20 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                @keyup.enter="salvarMinimo(item)"
+                @keyup.esc="cancelarEdicaoMinimo"
+                @blur="salvarMinimo(item)"
+              />
+              <button
+                v-else
+                type="button"
+                title="Editar estoque mínimo"
+                class="group flex items-center gap-1.5 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                @click="iniciarEdicaoMinimo(item)"
+              >
+                {{ formatNumero(item.estoque_minimo) }}
+                <span class="text-[10px] opacity-0 group-hover:opacity-100">✎</span>
+              </button>
+            </td>
+
             <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
               {{ formatarDataCurta(item.data_validade) }}<span v-if="datasUnicas(item).length > 1" class="text-slate-400"> +{{ datasUnicas(item).length - 1 }}</span>
             </td>
@@ -251,9 +323,11 @@ import ModalTransferirItem from '@/componentes/ui/ModalTransferirItem.vue'
 import PaginacaoControles from '@/paginas/PaginacaoControles.vue'
 import { useNotificacao } from '@/composables/useNotificacao'
 import { useCentrosCusto } from '@/composables/useCentrosCusto'
+import { useAlertaVencimento } from '@/composables/useAlertaVencimento'
 
-const { erro } = useNotificacao()
+const { sucesso, erro } = useNotificacao()
 const { centros, carregar: carregarCentros } = useCentrosCusto()
+const { dias: diasAlerta, PRESETS } = useAlertaVencimento()
 
 const produtos            = ref([])
 const carregando          = ref(false)
@@ -261,6 +335,7 @@ const termoDeBusca        = ref('')
 const filtroBaixo         = ref(false)
 const filtroCategoria     = ref('')
 const filtroCentro        = ref('') // '' = todos | 'sem' = sem centro | id
+const filtroSaldo         = ref('todos') // todos | com | sem
 const produtoSelecionado  = ref(null)
 const loteDestaque        = ref(null)
 const dropdownAberto      = ref(null)
@@ -274,6 +349,72 @@ const paginaAtual         = ref(1)
 const porPagina           = ref(10)
 
 let temporizadorBusca = null
+
+// ===== Janela de alerta de vencimento (30/60/90/120/personalizado) =====
+const modoPersonalizado = ref(!PRESETS.includes(diasAlerta.value))
+const avisoDispensado   = ref(false)
+
+const selecaoAlerta = computed({
+  get: () => (modoPersonalizado.value ? 'custom' : String(diasAlerta.value)),
+  set: (v) => {
+    if (v === 'custom') {
+      modoPersonalizado.value = true
+      return
+    }
+    modoPersonalizado.value = false
+    diasAlerta.value = Number(v)
+  },
+})
+
+const diasPersonalizado = computed({
+  get: () => diasAlerta.value,
+  set: (v) => {
+    const n = Math.floor(Number(v))
+    if (n >= 1 && n <= 3650) diasAlerta.value = n
+  },
+})
+
+// Se a janela mudar, o aviso volta a aparecer
+watch(diasAlerta, () => { avisoDispensado.value = false })
+
+// ===== Estoque mínimo editável =====
+const vFocar = { mounted: (el) => { el.focus(); el.select() } }
+const editandoMinimo = ref(null)
+const valorMinimo    = ref(0)
+const salvandoMinimo = ref(false)
+
+const iniciarEdicaoMinimo = (item) => {
+  editandoMinimo.value = item.id_produto
+  valorMinimo.value = item.estoque_minimo ?? 0
+}
+
+const cancelarEdicaoMinimo = () => { editandoMinimo.value = null }
+
+async function salvarMinimo(item) {
+  if (editandoMinimo.value !== item.id_produto || salvandoMinimo.value) return
+
+  const novo = Math.floor(Number(valorMinimo.value))
+  if (!Number.isFinite(novo) || novo < 0) {
+    erro('Informe um estoque mínimo válido (0 ou mais).')
+    return
+  }
+  if (novo === item.estoque_minimo) {
+    editandoMinimo.value = null
+    return
+  }
+
+  salvandoMinimo.value = true
+  try {
+    await api.patch(`/produtos/${item.id_produto}/estoque-minimo`, { estoque_minimo: novo })
+    item.estoque_minimo = novo
+    sucesso('Estoque mínimo atualizado.')
+    editandoMinimo.value = null
+  } catch (e) {
+    erro(e.response?.data?.message || 'Não foi possível atualizar o estoque mínimo.')
+  } finally {
+    salvandoMinimo.value = false
+  }
+}
 
 const estoqueBaixo = (item) => item.quantidade <= item.estoque_minimo
 
@@ -289,7 +430,7 @@ const labelValidade = (item) => {
   const dias = diasParaVencer(item.data_validade)
   if (dias === null) return '—'
   if (dias < 0) return `Vencido há ${Math.abs(dias)}d`
-  if (dias <= 30) return `${dias}d`
+  if (dias <= diasAlerta.value) return `${dias}d`
   return 'OK'
 }
 
@@ -298,7 +439,7 @@ const badgeValidade = (item) => {
   const base = 'px-2 py-1 rounded text-xs font-semibold'
   if (dias === null) return `${base} text-slate-500 dark:text-slate-400`
   if (dias < 0)     return `${base} bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400`
-  if (dias <= 30)   return `${base} bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400`
+  if (dias <= diasAlerta.value) return `${base} bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400`
   return `${base} bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400`
 }
 
@@ -472,7 +613,10 @@ const produtosFiltrados = computed(() => {
       item.sku?.toLowerCase().includes(termo)
     const baixoOk = !filtroBaixo.value || estoqueBaixo(item)
     const categoriaOk = !filtroCategoria.value || item.categoria_nome === filtroCategoria.value
-    return buscaOk && baixoOk && categoriaOk
+    const saldoOk =
+      filtroSaldo.value === 'todos' ||
+      (filtroSaldo.value === 'com' ? item.quantidade > 0 : item.quantidade <= 0)
+    return buscaOk && baixoOk && categoriaOk && saldoOk
   })
 })
 
@@ -485,7 +629,7 @@ const produtosPaginados = computed(() => {
   return produtosFiltrados.value.slice(inicio, inicio + porPagina.value)
 })
 
-watch([termoDeBusca, filtroBaixo, filtroCategoria, filtroCentro], () => {
+watch([termoDeBusca, filtroBaixo, filtroCategoria, filtroCentro, filtroSaldo], () => {
   paginaAtual.value = 1
 })
 
@@ -495,7 +639,7 @@ watch(filtroCentro, () => carregarProdutos())
 const totalVencendo = computed(() =>
   produtos.value.filter(i => {
     const dias = diasParaVencer(i.data_validade)
-    return dias !== null && dias >= 0 && dias <= 30
+    return dias !== null && dias >= 0 && dias <= diasAlerta.value
   }).length
 )
 

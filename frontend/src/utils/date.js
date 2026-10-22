@@ -39,4 +39,5 @@ export function proximoDoVencimento(dataString, dias = 30) {
   limite.setDate(hoje.getDate() + dias)
 
   return dataValidade >= hoje && dataValidade <= limite
+  
 }

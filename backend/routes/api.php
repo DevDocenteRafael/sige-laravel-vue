@@ -19,6 +19,8 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\CentroCustoController;
+use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\RecebimentoController;
 
 // ─── Auth ──────────────────────────────────────────────────────
 Route::post('/login', [AuthController::class, 'login']);
@@ -66,6 +68,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/produtos/buscar-por-sku', [ProdutoController::class, 'buscarPorSku']);
     Route::delete('/produtos/{id}',        [ProdutoController::class, 'destroy']);
     Route::delete('/produtos',             [ProdutoController::class, 'destroyMultiplos']);
+
+    // ─── Pedidos ─────────────────────────────────────────────
+    Route::get('/pedidos',           [PedidoController::class, 'index']);
+    Route::get('/pedidos/{id}',      [PedidoController::class, 'show']);
+    Route::post('/pedidos/importar', [PedidoController::class, 'importar'])->middleware('perfil:admin,operador');
+    Route::delete('/pedidos/{id}',   [PedidoController::class, 'destroy'])->middleware('perfil:admin,operador');
+
+    // ─── Recebimento de notas fiscais ────────────────────────
+    Route::get('/recebimentos',                [RecebimentoController::class, 'index']);
+    Route::get('/recebimentos/chave/{chave}',  [RecebimentoController::class, 'porChave']);
+    Route::get('/recebimentos/{id}',           [RecebimentoController::class, 'show']);
+    Route::post('/recebimentos/xml',           [RecebimentoController::class, 'importarXml'])->middleware('perfil:admin,operador');
+    Route::post('/recebimentos/{idNota}/itens/{idNotaItem}/vincular', [RecebimentoController::class, 'vincular'])->middleware('perfil:admin,operador');
+        Route::post('/recebimentos/{id}/entrada', [RecebimentoController::class, 'darEntrada'])->middleware('perfil:admin,operador');
+    Route::delete('/recebimentos/{id}',        [RecebimentoController::class, 'destroy'])->middleware('perfil:admin,operador');
 
     // ─── Perdas ──────────────────────────────────────────────
     Route::get('/perdas',              [PerdaController::class, 'index']);

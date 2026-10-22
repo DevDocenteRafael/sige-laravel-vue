@@ -33,6 +33,29 @@
       >
         <ALargeSmall :size="20" />
       </button>
+
+      <button
+        v-if="menuAberto"
+        key="atalhos"
+        class="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center transition-colors"
+        title="Atalhos de teclado"
+        aria-label="Abrir atalhos de teclado"
+        @click="abrirAtalhos"
+      >
+        <Keyboard :size="20" />
+      </button>
+
+      <button
+        v-if="menuAberto"
+        key="tema"
+        class="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center transition-colors"
+        :title="tema.temaClaro ? 'Modo Escuro' : 'Modo Claro'"
+        :aria-label="tema.temaClaro ? 'Mudar para o modo escuro' : 'Mudar para o modo claro'"
+        @click="alternarTema"
+      >
+        <Sun v-if="tema.temaClaro" :size="20" />
+        <Moon v-else :size="20" />
+      </button>
     </TransitionGroup>
 
     <!-- Botão principal (arraste para mover, clique para abrir) -->
@@ -63,11 +86,17 @@
 
 <script setup>
 import { ref } from 'vue'
-import { MessageCircle, ALargeSmall, X, Plus } from 'lucide-vue-next'
+import { MessageCircle, ALargeSmall, Keyboard, Sun, Moon, X, Plus } from 'lucide-vue-next'
 import ChatbotWidget from '@/componentes/ui/ChatbotWidget.vue'
 import WidgetAcessibilidade from '@/componentes/ui/WidgetAcessibilidade.vue'
+import { useTemaStore } from '@/servicos/tema.store'
 // Ajuste o caminho para a pasta onde você guarda seus outros composables
 import { useBotaoFlutuanteArrastavel } from '@/composables/useBotaoFlutuanteArrastavel'
+
+// O painel de Atalhos fica no layout (também abre com Shift+?): aqui só avisamos que o botão foi clicado
+const emit = defineEmits(['abrir-atalhos'])
+
+const tema = useTemaStore()
 
 const { estilo, posicao, arrastando, aoPressionar, aoMover, aoSoltar, aoClicarCapturando } =
   useBotaoFlutuanteArrastavel({ chave: 'sige:posicao-botao-suporte' })
@@ -83,6 +112,9 @@ const abrirParaBaixo = ref(false)
 const TAMANHO_BOLINHA = 56
 const FOLGA = 20
 const MARGEM = 8
+
+// Espaço que os 4 mini-botões ocupam acima da bolinha (4 × 48px + 4 × 12px de espaçamento)
+const ESPACO_MINI_BOTOES = 270
 
 function ancora(largura, altura) {
   const direitaBola = posicao.value?.direita ?? 20
@@ -110,8 +142,8 @@ function alternarMenu() {
     return
   }
   if (!menuAberto.value && botaoRef.value) {
-    // Sem espaço em cima (~150px)? Abre os mini-botões para baixo.
-    abrirParaBaixo.value = botaoRef.value.getBoundingClientRect().top < 150
+    // Sem espaço em cima para os mini-botões? Abre para baixo.
+    abrirParaBaixo.value = botaoRef.value.getBoundingClientRect().top < ESPACO_MINI_BOTOES
   }
   menuAberto.value = !menuAberto.value
 }
@@ -125,6 +157,16 @@ function abrirChat() {
 function abrirAcessibilidade() {
   acessibilidadeAberto.value = true
   chatAberto.value = false
+  menuAberto.value = false
+}
+
+function abrirAtalhos() {
+  emit('abrir-atalhos')
+  menuAberto.value = false
+}
+
+function alternarTema() {
+  tema.toggleTema()
   menuAberto.value = false
 }
 </script>

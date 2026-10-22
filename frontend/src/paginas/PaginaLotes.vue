@@ -259,7 +259,7 @@
               >
                 <option value="todos">Todas</option>
                 <option value="vencido">Vencido</option>
-                <option value="vencendo">Vencendo</option>
+                <option value="vencendo">Vencendo (≤ {{ diasAlerta }}d)</option>
                 <option value="critico">Estoque crítico</option>
                 <option value="ok">Sem alertas</option>
               </select>
@@ -433,7 +433,7 @@
                       <span v-if="item.data_validade && estaVencido(item.data_validade)" class="px-2 py-0.5 rounded text-xs font-bold bg-red-600 text-white">
                         Vencido
                       </span>
-                      <span v-else-if="item.data_validade && proximoDoVencimento(item.data_validade)" class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-600 text-white">
+                      <span v-else-if="item.data_validade && proximoDoVencimento(item.data_validade, diasAlerta)" class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-600 text-white">
                         Vencendo
                       </span>
                       <span v-else class="px-2 py-0.5 rounded text-xs font-bold bg-green-700 text-white">
@@ -675,6 +675,7 @@ import { useAutenticacaoStore } from '@/servicos/autenticacao.store'
 import api from '@/servicos/api'
 import { useNotificacao } from '@/composables/useNotificacao'
 import { useCentrosCusto } from '@/composables/useCentrosCusto'
+import { useAlertaVencimento } from '@/composables/useAlertaVencimento'
 import ModalLote            from '@/componentes/ui/ModalLote.vue'
 import ModalAdicionarItem   from '@/componentes/ui/ModalAdicionarItem.vue'
 import ModalEditarItem      from '@/componentes/ui/ModalEditarItem.vue'
@@ -690,6 +691,7 @@ import { useArrastarParaRolar } from '@/composables/useArrastarParaRolar'
 
 const { elementoRef: tabelaRef, aoIniciar } = useArrastarParaRolar()
 const { centros, carregar: carregarCentros } = useCentrosCusto()
+const { dias: diasAlerta } = useAlertaVencimento()
 
 const autenticacao        = useAutenticacaoStore()
 const { sucesso, erro }   = useNotificacao()
@@ -852,9 +854,10 @@ function alternarPainel(nome) {
   painelAberto.value = painelAberto.value === nome ? null : nome
 }
 
-// Mesmas regras dos badges da tabela
+// Mesmas regras dos badges da tabela (janela de "vencendo" vem do composable compartilhado)
 const itemVencido  = (i) => !!i.data_validade && estaVencido(i.data_validade)
-const itemVencendo = (i) => !!i.data_validade && !estaVencido(i.data_validade) && proximoDoVencimento(i.data_validade)
+const itemVencendo = (i) =>
+  !!i.data_validade && !estaVencido(i.data_validade) && proximoDoVencimento(i.data_validade, diasAlerta.value)
 const itemCritico  = (i) => i.quantidade === 0 || i.quantidade <= (i.produto?.estoque_minimo ?? 0)
 
 // Ignora acentos e maiúsculas/minúsculas
