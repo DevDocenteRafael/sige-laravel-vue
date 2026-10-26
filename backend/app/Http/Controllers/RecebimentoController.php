@@ -46,6 +46,62 @@ class RecebimentoController extends Controller
         return response()->json($this->montar(NotaRecebimento::findOrFail($id)));
     }
 
+    /**
+     * Notas e pedidos que aguardam ação, com o motivo de cada pendência.
+     * Quem resolve e o prazo ainda não foram definidos pelo responsável (ver documento do módulo),
+     * por isso aqui só se informa o estado atual, sem prazo nem bloqueio automático.
+     */
+    public function pendentes()
+    {
+        $notas = NotaRecebimento::with(['itens', 'pedido'])
+            ->whereIn('status', ['pendente', 'parcial'])
+            ->orderBy('id_nota')
+            ->get()
+            ->map(function (NotaRecebimento $nota) {
+                $motivos = [];
+
+                if (!$nota->numero_pedido) {
+                    $motivos[] = 'Nota sem número de pedido.';
+                } elseif (!$nota->pedido) {
+                    $motivos[] = "Pedido {$nota->numero_pedido} não encontrado.";
+                } elseif ($bloqueio = $this->bloqueioEntrada($nota)) {
+                    $motivos[] = $bloqueio;
+                }
+
+                $contagem = $nota->itens->groupBy('status')->map->count();
+                if (($contagem['sem_vinculo'] ?? 0) > 0) {
+                    $motivos[] = "{$contagem['sem_vinculo']} item(ns) sem vínculo com o pedido.";
+                }
+                if (($contagem['divergente'] ?? 0) > 0) {
+                    $motivos[] = "{$contagem['divergente']} item(ns) com quantidade acima do saldo do pedido.";
+                }
+                if (($contagem['pendente'] ?? 0) > 0) {
+                    $motivos[] = "{$contagem['pendente']} item(ns) ainda não conferido(s).";
+                }
+
+                return [
+                    'id_nota'         => $nota->id_nota,
+                    'numero'          => $nota->numero,
+                    'fornecedor_nome' => $nota->fornecedor_nome,
+                    'numero_pedido'   => $nota->numero_pedido,
+                    'status'          => $nota->status,
+                    'itens_total'     => $nota->itens->count(),
+                    'itens_entraram'  => $contagem['entrou'] ?? 0,
+                    'motivos'         => $motivos,
+                    'criada_em'       => $nota->created_at?->toDateTimeString(),
+                ];
+            })
+            // Nota sem motivo nenhum está só aguardando a conferência física: não é pendência de divergência
+            ->values();
+
+        $pedidos = Pedido::withCount('itens')
+            ->whereIn('status', ['aberto', 'parcial'])
+            ->orderBy('id_pedido')
+            ->get(['id_pedido', 'numero', 'fornecedor_nome', 'status', 'data_emissao', 'valor_total']);
+
+        return response()->json(['notas' => $notas, 'pedidos' => $pedidos]);
+    }
+
     // Usado quando o conferente bipa o código de barras da nota (chave de 44 caracteres)
     public function porChave(string $chave)
     {
@@ -291,6 +347,8 @@ class RecebimentoController extends Controller
             'itens.*.id_nota_item'  => 'required|integer',
             'itens.*.localizacao'   => 'nullable|string|max:100',
             'itens.*.data_validade' => 'nullable|date|before:2100-01-01',
+            'itens.*.numero_lote'   => 'nullable|string|max:50',
+            'itens.*.prioridade_abc' => 'nullable|in:A,B,C',
         ], [
             'itens.required' => 'Selecione ao menos um item para dar entrada.',
             'itens.array'    => 'Selecione ao menos um item para dar entrada.',
@@ -336,7 +394,7 @@ class RecebimentoController extends Controller
                 return;
             }
 
-            $lote = null;
+            $lotes = [];   // lotes já resolvidos nesta entrada, por número
 
             foreach ($itens as $item) {
                 $qtd = (float) $item->quantidade;
@@ -368,9 +426,12 @@ class RecebimentoController extends Controller
                     continue;
                 }
 
-                // O lote só é criado quando existe pelo menos um item válido
-                $lote ??= Lote::firstOrCreate(
-                    ['numero_lote' => "NF{$nota->numero}-{$nota->id_nota}"],
+                // O lote só é criado quando existe pelo menos um item válido.
+                // Se o conferente informou o lote do item, usa ele; senão, um lote padrão por nota.
+                $extra      = $extras->get($item->id_nota_item, []);
+                $numeroLote = trim((string) ($extra['numero_lote'] ?? '')) ?: "NF{$nota->numero}-{$nota->id_nota}";
+                $lote       = $lotes[$numeroLote] ??= Lote::firstOrCreate(
+                    ['numero_lote' => $numeroLote],
                     [
                         'data_entrada' => now()->toDateString(),
                         'descricao'    => "Recebimento NF {$nota->numero} - {$nota->fornecedor_nome}",
@@ -378,7 +439,8 @@ class RecebimentoController extends Controller
                     ]
                 );
 
-                $extra   = $extras->get($item->id_nota_item, []);
+                // Prioridade informada vira manual; sem ela, o cálculo ABC automático continua valendo
+                $prioridade = ($extra['prioridade_abc'] ?? null) ?: null;
                 $produto = Produto::findOrFail($item->id_produto);
                 $qtdInt  = (int) $qtd;
 
@@ -390,7 +452,8 @@ class RecebimentoController extends Controller
                     'unidade_medida'    => $produto->unidade_medida ?: 'UN',
                     'data_validade'     => ($extra['data_validade'] ?? null) ?: $item->data_validade,
                     'localizacao'       => $extra['localizacao'] ?? null,
-                    'prioridade_manual' => false,
+                    'prioridade_abc'    => $prioridade,
+                    'prioridade_manual' => $prioridade !== null,
                 ]);
 
                 Produto::whereKey($produto->id_produto)->increment('estoque_atual', $qtdInt);

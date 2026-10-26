@@ -136,25 +136,73 @@
 
       <!-- Menu agrupado -->
       <nav class="flex-1 overflow-y-auto px-2 pb-2">
+        <p v-if="organizandoMenu" class="mb-3 px-3 text-xs text-slate-500 dark:text-slate-400">
+          Arraste pela alça (ou use as setas ↑ ↓) para mudar a ordem dentro de cada grupo.
+        </p>
         <div
           v-for="(grupo, indice) in gruposDoMenu"
           :key="grupo.nome ?? 'principal'"
           :class="indice > 0 && (expandido ? 'mt-4' : 'mt-2')"
         >
-          <p
+          <button
             v-if="grupo.nome && expandido"
-            class="mb-1 px-3 text-xs font-medium text-slate-400 dark:text-slate-500"
+            type="button"
+            class="mb-1 flex w-full items-center justify-between rounded-lg px-3 py-1 text-xs font-medium text-slate-400 transition hover:text-slate-700 disabled:cursor-default disabled:hover:text-slate-400 dark:text-slate-500 dark:hover:text-slate-200 dark:disabled:hover:text-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+            :aria-expanded="grupoAberto(grupo)"
+            :disabled="organizandoMenu"
+            @click="alternarGrupo(grupo.nome)"
           >
-            {{ grupo.nome }}
-          </p>
+            <span class="flex items-center gap-2">
+              {{ grupo.nome }}
+              <span
+                v-if="!grupoAberto(grupo) && grupoTemRotaAtual(grupo)"
+                class="h-1.5 w-1.5 rounded-full bg-blue-500"
+              />
+            </span>
+            <ChevronDown
+              :size="14"
+              class="transition-transform"
+              :class="grupoAberto(grupo) ? '' : '-rotate-90'"
+            />
+          </button>
           <div
             v-else-if="indice > 0 && !expandido"
             class="mx-3 mb-2 border-t border-slate-200 dark:border-slate-800"
           />
 
-          <ul class="space-y-0.5">
-            <li v-for="item in grupo.itens" :key="item.rota">
+          <ul v-show="grupoAberto(grupo)" class="space-y-0.5">
+            <li
+              v-for="item in grupo.itens"
+              :key="item.rota"
+              :draggable="organizandoMenu"
+              :class="[
+                itemArrastado === item.rota && 'opacity-40',
+                itemAlvo === item.rota && 'rounded-lg ring-2 ring-blue-500/60',
+              ]"
+              @dragstart="iniciarArraste($event, item.rota)"
+              @dragover="passarSobre($event, grupo, item.rota)"
+              @drop.prevent="soltar(grupo, item.rota)"
+              @dragend="finalizarArraste"
+            >
+              <!-- Modo organizar: sem navegação, com alça de arraste -->
+              <div
+                v-if="organizandoMenu"
+                class="flex cursor-grab items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 dark:text-slate-300 bg-slate-100/60 dark:bg-slate-800/60 active:cursor-grabbing"
+              >
+                <button
+                  type="button"
+                  class="shrink-0 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+                  :aria-label="`Mover ${item.nome}. Use as setas para cima e para baixo.`"
+                  @keydown="moverPorTeclado($event, grupo, item.rota)"
+                >
+                  <GripVertical :size="16" />
+                </button>
+                <component :is="item.icone" :size="18" class="shrink-0" />
+                <span class="truncate">{{ item.nome }}</span>
+              </div>
+
               <RouterLink
+                v-else
                 :to="item.rota"
                 :title="!expandido ? item.nome : ''"
                 :class="[
@@ -174,6 +222,30 @@
 
       <!-- Rodapé (Modo Claro e Atalhos ficam no botão flutuante) -->
       <div class="p-2 border-t border-slate-200 dark:border-slate-800 space-y-0.5">
+        <!-- Organizar menu -->
+        <div v-if="expandido" class="flex items-center gap-1">
+          <button
+            :class="[
+              'flex flex-1 items-center gap-3 px-3 py-2.5 rounded-lg transition text-sm',
+              organizandoMenu
+                ? 'bg-blue-600 font-medium text-white hover:bg-blue-500'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
+            ]"
+            @click="organizandoMenu = !organizandoMenu"
+          >
+            <ArrowUpDown :size="18" class="shrink-0" />
+            <span>{{ organizandoMenu ? 'Concluir' : 'Organizar menu' }}</span>
+          </button>
+          <button
+            v-if="organizandoMenu"
+            class="rounded-lg px-3 py-2.5 text-xs text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+            title="Voltar à ordem original do menu"
+            @click="restaurarOrdemMenu"
+          >
+            Restaurar
+          </button>
+        </div>
+
         <!-- Notificações -->
         <button
           :title="!expandido ? 'Notificações' : ''"
@@ -499,6 +571,11 @@ import {
   Info,
   Mail,
   ChevronsUpDown,
+  ClipboardList,
+  AlertCircle,
+  GripVertical,
+  ArrowUpDown,
+  ChevronDown,
 } from 'lucide-vue-next';
 import { useAutenticacaoStore } from '@/servicos/autenticacao.store';
 import { perfilPodeAcessarRota } from '@/servicos/permissoes';
@@ -538,7 +615,9 @@ const itensDoMenu = computed(() => {
   const menus = [
     { nome: 'Dashboard', rota: '/dashboard', nomeRota: 'dashboard', icone: LayoutDashboard, grupo: null },
     { nome: 'Lotes', rota: '/lotes', nomeRota: 'lotes', icone: PackagePlus, grupo: 'Estoque' },
+    { nome: 'Pedidos', rota: '/pedidos', nomeRota: 'pedidos', icone: ClipboardList, grupo: 'Estoque' },
     { nome: 'Recebimentos', rota: '/recebimentos', nomeRota: 'recebimentos', icone: ClipboardCheck, grupo: 'Estoque' },
+    { nome: 'Pendências', rota: '/pendencias', nomeRota: 'pendencias', icone: AlertCircle, grupo: 'Estoque' },
     { nome: 'Produtos', rota: '/produtos', nomeRota: 'produtos', icone: Package, grupo: 'Estoque' },
     { nome: 'Perdas', rota: '/perdas', nomeRota: 'perdas', icone: Trash2, grupo: 'Estoque' },
     { nome: 'Centros de Custo', rota: '/centros-custo', nomeRota: 'centros-custo', icone: Building2, grupo: 'Estoque' },
@@ -572,6 +651,70 @@ const itensDoMenu = computed(() => {
   return menusFiltrados;
 });
 
+// ===== Ordem do menu escolhida pelo usuário (só dentro de cada grupo) =====
+const CHAVE_ORDEM_MENU = 'sige:menu-ordem:v1';
+const organizandoMenu = ref(false);
+const itemArrastado = ref(null);
+const itemAlvo = ref(null);
+
+function lerOrdemMenu() {
+  try {
+    const salva = JSON.parse(localStorage.getItem(CHAVE_ORDEM_MENU) || '[]');
+    return Array.isArray(salva) ? salva.filter((r) => typeof r === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+const ordemMenu = ref(lerOrdemMenu());
+
+// ===== Grupos recolhíveis (dropdown) =====
+const CHAVE_GRUPOS_FECHADOS = 'sige:menu-grupos-fechados:v1';
+
+function lerGruposFechados() {
+  try {
+    const salvos = JSON.parse(localStorage.getItem(CHAVE_GRUPOS_FECHADOS) || '[]');
+    return Array.isArray(salvos) ? salvos.filter((n) => typeof n === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+const gruposFechados = ref(lerGruposFechados());
+const rotaAtual = computed(() => router.currentRoute.value.path);
+
+function salvarGruposFechados() {
+  try {
+    localStorage.setItem(CHAVE_GRUPOS_FECHADOS, JSON.stringify(gruposFechados.value));
+  } catch (e) {
+    console.error('Erro ao salvar os grupos recolhidos do menu', e);
+  }
+}
+
+// Menu recolhido (só ícones), grupo sem título e modo organizar mostram sempre a lista inteira
+function grupoAberto(grupo) {
+  if (!grupo.nome || !expandido.value || organizandoMenu.value) return true;
+  return !gruposFechados.value.includes(grupo.nome);
+}
+
+function alternarGrupo(nome) {
+  gruposFechados.value = gruposFechados.value.includes(nome)
+    ? gruposFechados.value.filter((n) => n !== nome)
+    : [...gruposFechados.value, nome];
+  salvarGruposFechados();
+}
+
+// Grupo fechado que contém a página atual ganha um pontinho, para o usuário não se perder
+function grupoTemRotaAtual(grupo) {
+  return grupo.itens.some((i) => rotaAtual.value === i.rota || rotaAtual.value.startsWith(`${i.rota}/`));
+}
+
+function salvarOrdemMenu() {
+  try {
+    localStorage.setItem(CHAVE_ORDEM_MENU, JSON.stringify(ordemMenu.value));
+  } catch (e) {
+    console.error('Erro ao salvar a ordem do menu', e);
+  }
+}
+
 // Agrupa os itens já filtrados por permissão; grupos vazios nem aparecem
 const gruposDoMenu = computed(() => {
   const grupos = [];
@@ -583,7 +726,79 @@ const gruposDoMenu = computed(() => {
     }
     grupo.itens.push(item);
   });
+  // Itens sem posição salva (ex.: itens novos do sistema) ficam no fim do grupo, na ordem padrão
+  const posicao = (rota) => {
+    const p = ordemMenu.value.indexOf(rota);
+    return p === -1 ? Infinity : p;
+  };
+  grupos.forEach((g) => g.itens.sort((a, b) => posicao(a.rota) - posicao(b.rota)));
   return grupos;
+});
+
+function guardarOrdem(grupos) {
+  const visiveis = grupos.flatMap((g) => g.itens.map((i) => i.rota));
+  // mantém rotas de outros perfis que não aparecem agora, para não perder a escolha deles
+  ordemMenu.value = [...visiveis, ...ordemMenu.value.filter((r) => !visiveis.includes(r))];
+  salvarOrdemMenu();
+}
+
+function moverItem(grupo, rotaOrigem, rotaDestino) {
+  const rotas = grupo.itens.map((i) => i.rota);
+  const de = rotas.indexOf(rotaOrigem);
+  const para = rotas.indexOf(rotaDestino);
+  if (de < 0 || para < 0 || de === para) return;
+
+  rotas.splice(de, 1);
+  rotas.splice(para, 0, rotaOrigem);
+
+  guardarOrdem(
+    gruposDoMenu.value.map((g) =>
+      g.nome === grupo.nome ? { ...g, itens: rotas.map((r) => g.itens.find((i) => i.rota === r)) } : g
+    )
+  );
+}
+
+// Teclado: seta para cima/baixo na alça move o item uma posição
+function moverPorTeclado(evento, grupo, rota) {
+  const delta = evento.key === 'ArrowUp' ? -1 : evento.key === 'ArrowDown' ? 1 : 0;
+  if (!delta) return;
+  evento.preventDefault();
+  const rotas = grupo.itens.map((i) => i.rota);
+  const destino = rotas[rotas.indexOf(rota) + delta];
+  if (destino) moverItem(grupo, rota, destino);
+}
+
+function iniciarArraste(evento, rota) {
+  itemArrastado.value = rota;
+  evento.dataTransfer.effectAllowed = 'move';
+  evento.dataTransfer.setData('text/plain', rota); // o Firefox exige algum dado para iniciar o arraste
+}
+
+function passarSobre(evento, grupo, rota) {
+  const mesmoGrupo = grupo.itens.some((i) => i.rota === itemArrastado.value);
+  if (!mesmoGrupo || rota === itemArrastado.value) return;
+  evento.preventDefault();
+  itemAlvo.value = rota;
+}
+
+function soltar(grupo, rota) {
+  if (itemArrastado.value) moverItem(grupo, itemArrastado.value, rota);
+  finalizarArraste();
+}
+
+function finalizarArraste() {
+  itemArrastado.value = null;
+  itemAlvo.value = null;
+}
+
+function restaurarOrdemMenu() {
+  ordemMenu.value = [];
+  salvarOrdemMenu();
+}
+
+// Menu recolhido não tem espaço para organizar
+watch(expandido, (aberto) => {
+  if (!aberto) organizandoMenu.value = false;
 });
 
 // ===== ATALHOS =====
@@ -796,6 +1011,7 @@ function handleKeyboard(e) {
     painelAtalhosAberto.value = false;
     buscaGlobalAberta.value = false;
     perfilAberto.value = false;
+    organizandoMenu.value = false;
   }
 }
 

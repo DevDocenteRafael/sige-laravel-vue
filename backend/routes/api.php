@@ -70,18 +70,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/produtos',             [ProdutoController::class, 'destroyMultiplos']);
 
     // ─── Pedidos ─────────────────────────────────────────────
-    Route::get('/pedidos',           [PedidoController::class, 'index']);
-    Route::get('/pedidos/{id}',      [PedidoController::class, 'show']);
-    Route::post('/pedidos/importar', [PedidoController::class, 'importar'])->middleware('perfil:admin,operador');
-    Route::delete('/pedidos/{id}',   [PedidoController::class, 'destroy'])->middleware('perfil:admin,operador');
+    Route::get('/pedidos',                    [PedidoController::class, 'index']);
+    Route::get('/pedidos/exportar',           [PedidoController::class, 'exportar']);
+    Route::post('/pedidos',                   [PedidoController::class, 'store'])->middleware('perfil:admin,operador');
+    Route::post('/pedidos/importar',          [PedidoController::class, 'importar'])->middleware('perfil:admin,operador');
+    Route::post('/pedidos/importar-planilha', [PedidoController::class, 'importarPlanilha'])->middleware('perfil:admin,operador');
+    Route::get('/pedidos/{id}',               [PedidoController::class, 'show'])->whereNumber('id');
+    Route::get('/pedidos/{id}/exportar',      [PedidoController::class, 'exportar'])->whereNumber('id');
+    Route::put('/pedidos/{id}',               [PedidoController::class, 'update'])->middleware('perfil:admin,operador')->whereNumber('id');
+    Route::delete('/pedidos/{id}',            [PedidoController::class, 'destroy'])->middleware('perfil:admin,operador')->whereNumber('id');
+    Route::post('/pedidos/{id}/itens',                [PedidoController::class, 'adicionarItem'])->middleware('perfil:admin,operador')->whereNumber('id');
+    Route::put('/pedidos/{id}/itens/{idItem}',        [PedidoController::class, 'atualizarItem'])->middleware('perfil:admin,operador')->whereNumber(['id', 'idItem']);
+    Route::delete('/pedidos/{id}/itens/{idItem}',     [PedidoController::class, 'removerItem'])->middleware('perfil:admin,operador')->whereNumber(['id', 'idItem']);
 
     // ─── Recebimento de notas fiscais ────────────────────────
     Route::get('/recebimentos',                [RecebimentoController::class, 'index']);
+    Route::get('/recebimentos/pendentes',      [RecebimentoController::class, 'pendentes']);
     Route::get('/recebimentos/chave/{chave}',  [RecebimentoController::class, 'porChave']);
     Route::get('/recebimentos/{id}',           [RecebimentoController::class, 'show']);
     Route::post('/recebimentos/xml',           [RecebimentoController::class, 'importarXml'])->middleware('perfil:admin,operador');
     Route::post('/recebimentos/{idNota}/itens/{idNotaItem}/vincular', [RecebimentoController::class, 'vincular'])->middleware('perfil:admin,operador');
-        Route::post('/recebimentos/{id}/entrada', [RecebimentoController::class, 'darEntrada'])->middleware('perfil:admin,operador');
+    Route::post('/recebimentos/{idNota}/itens/{idNotaItem}/equivalencia', [RecebimentoController::class, 'confirmarEquivalenciaUnidade'])->middleware('perfil:admin,operador');
+    Route::post('/recebimentos/{id}/entrada', [RecebimentoController::class, 'darEntrada'])->middleware('perfil:admin,operador');
     Route::delete('/recebimentos/{id}',        [RecebimentoController::class, 'destroy'])->middleware('perfil:admin,operador');
 
     // ─── Perdas ──────────────────────────────────────────────

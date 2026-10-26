@@ -263,6 +263,8 @@
               <th class="text-left pb-3 font-medium">Qtd</th>
               <th class="text-left pb-3 font-medium">Valor unit.</th>
               <th class="text-left pb-3 font-medium">Status</th>
+              <th class="text-left pb-3 font-medium">Lote</th>
+              <th class="text-left pb-3 font-medium">Prioridade</th>
               <th class="text-left pb-3 font-medium">Localização</th>
               <th class="text-left pb-3 font-medium">Validade</th>
               <th class="text-left pb-3 font-medium">Ações</th>
@@ -319,6 +321,32 @@
                 <td class="py-3">
                   <input
                     v-if="item.status === 'ok' && extras[item.id_nota_item]"
+                    v-model="extras[item.id_nota_item].numero_lote"
+                    type="text"
+                    maxlength="50"
+                    placeholder="Lote (opcional)"
+                    class="w-32 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500"
+                  />
+                  <span v-else class="text-slate-400 dark:text-slate-500">—</span>
+                </td>
+
+                <td class="py-3">
+                  <select
+                    v-if="item.status === 'ok' && extras[item.id_nota_item]"
+                    v-model="extras[item.id_nota_item].prioridade_abc"
+                    class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500"
+                  >
+                    <option value="">Automática</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                  </select>
+                  <span v-else class="text-slate-400 dark:text-slate-500">—</span>
+                </td>
+
+                <td class="py-3">
+                  <input
+                    v-if="item.status === 'ok' && extras[item.id_nota_item]"
                     v-model="extras[item.id_nota_item].localizacao"
                     type="text"
                     maxlength="100"
@@ -358,7 +386,7 @@
               <!-- Sugestões de vínculo -->
               <tr v-if="itemExpandido === item.id_nota_item">
                 <td></td>
-                <td colspan="7" class="pb-4">
+                <td colspan="9" class="pb-4">
                   <div class="rounded-lg bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 p-3">
                     <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
                       Qual item do pedido corresponde a "{{ item.descricao }}"?
@@ -589,7 +617,7 @@ const notaNaoImportada = ref(null)   // { chave, dados } quando a chave bipada n
 const chaveEsperada    = ref('')     // chave bipada que o XML importado precisa ter
 
 // ===== Estado do detalhe =====
-const extras                = ref({})   // { [id_nota_item]: { selecionado, localizacao, data_validade } }
+const extras                = ref({})   // { [id_nota_item]: { selecionado, localizacao, data_validade, numero_lote, prioridade_abc } }
 const itemExpandido         = ref(null)
 const vinculandoId          = ref(null)
 const darEntradaEmAndamento = ref(false)
@@ -664,6 +692,8 @@ function sincronizarExtras() {
         : false,
       localizacao:   anterior?.localizacao ?? '',
       data_validade: anterior?.data_validade ?? '',
+      numero_lote:    anterior?.numero_lote ?? '',
+      prioridade_abc: anterior?.prioridade_abc ?? '',
     }
   }
   extras.value = novo
@@ -870,6 +900,8 @@ async function darEntrada() {
     const obj = { id_nota_item: i.id_nota_item }
     if (e.localizacao.trim()) obj.localizacao = e.localizacao.trim()
     if (e.data_validade) obj.data_validade = e.data_validade
+    if (e.numero_lote.trim()) obj.numero_lote = e.numero_lote.trim()
+    if (e.prioridade_abc) obj.prioridade_abc = e.prioridade_abc
     return obj
   })
 
