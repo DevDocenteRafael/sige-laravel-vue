@@ -34,7 +34,7 @@
     <GridLayout
       v-else
       v-model:layout="layout"
-      :col-num="12"
+      :col-num="10"
       :row-height="30"
       :margin="[24, 24]"
       :is-draggable="editando"
@@ -129,6 +129,25 @@
               </div>
             </div>
             <p class="text-xs text-red-600 dark:text-red-400">Clique para ver estoque baixo</p>
+          </div>
+
+          <!-- NOTAS PENDENTES -->
+          <div
+            v-else-if="item.i === 'pendencias'"
+            class="h-full rounded-xl p-6 bg-slate-50 dark:bg-slate-900 border-2 border-violet-300 dark:border-violet-700 transition flex flex-col justify-between gap-4 overflow-hidden"
+            :class="editando ? '' : 'cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-900/20'"
+            @click="ir('/pendencias')"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-slate-500 dark:text-slate-400 text-sm">Notas Pendentes</p>
+                <p class="text-4xl font-bold text-slate-900 dark:text-white mt-2">{{ formatNumero(resumoPendencias.notas) }}</p>
+              </div>
+              <div class="w-12 h-12 bg-violet-100 dark:bg-violet-600/20 rounded-lg flex items-center justify-center shrink-0">
+                <AlertCircle class="text-violet-600 dark:text-violet-500" :size="24" />
+              </div>
+            </div>
+            <p class="text-xs text-violet-600 dark:text-violet-400">Clique para ver notas e pedidos pendentes</p>
           </div>
 
           <!-- DISTRIBUIÇÃO POR CATEGORIA -->
@@ -370,11 +389,12 @@ import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { GridLayout } from 'grid-layout-plus'
-import { PackagePlus, Package, AlertTriangle, TrendingDown, TrendingUp, PieChart, History, GripVertical } from 'lucide-vue-next'
+import { PackagePlus, Package, AlertTriangle, AlertCircle, TrendingDown, TrendingUp, PieChart, History, GripVertical } from 'lucide-vue-next'
 import api from '@/servicos/api'
 import Chart from 'chart.js/auto'
 import { useTemaStore } from '@/servicos/tema.store'
 import { useAutenticacaoStore } from '@/servicos/autenticacao.store'
+import { perfilPodeAcessarRota } from '@/servicos/permissoes'
 
 const router = useRouter()
 
@@ -385,23 +405,29 @@ const autenticacaoStore = useAutenticacaoStore()
 const { perfil }        = storeToRefs(autenticacaoStore)
 
 // ===== Layout personalizável (arrastar / redimensionar) =====
-const CHAVE_LAYOUT = 'sige:dashboard-layout:v1' // suba o v1 se mudar os cards no futuro
+const CHAVE_LAYOUT = 'sige:dashboard-layout:v2' // suba o número se mudar os cards ou a grade no futuro
 
-// grade de 12 colunas, 1 unidade de altura = 30px
+// grade de 10 colunas (5 cards de resumo de 2 colunas), 1 unidade de altura = 30px
 const LAYOUT_PADRAO = [
-  { i: 'lotes',      x: 0, y: 0,  w: 3,  h: 4,  minW: 2, minH: 3 },
-  { i: 'itens',      x: 3, y: 0,  w: 3,  h: 4,  minW: 2, minH: 3 },
-  { i: 'vencendo',   x: 6, y: 0,  w: 3,  h: 4,  minW: 2, minH: 3 },
-  { i: 'baixo',      x: 9, y: 0,  w: 3,  h: 4,  minW: 2, minH: 3 },
-  { i: 'categorias', x: 0, y: 4,  w: 6,  h: 11, minW: 3, minH: 7 },
-  { i: 'evolucao',   x: 6, y: 4,  w: 6,  h: 11, minW: 3, minH: 7 },
-  { i: 'alertas',    x: 0, y: 15, w: 6,  h: 11, minW: 3, minH: 6 },
-  { i: 'movimentos', x: 6, y: 15, w: 6,  h: 11, minW: 3, minH: 6 },
-  { i: 'top',        x: 0, y: 26, w: 12, h: 11, minW: 4, minH: 6 },
+  { i: 'lotes',      x: 0, y: 0,  w: 2,  h: 4,  minW: 2, minH: 3 },
+  { i: 'itens',      x: 2, y: 0,  w: 2,  h: 4,  minW: 2, minH: 3 },
+  { i: 'vencendo',   x: 4, y: 0,  w: 2,  h: 4,  minW: 2, minH: 3 },
+  { i: 'baixo',      x: 6, y: 0,  w: 2,  h: 4,  minW: 2, minH: 3 },
+  { i: 'pendencias', x: 8, y: 0,  w: 2,  h: 4,  minW: 2, minH: 3 },
+  { i: 'categorias', x: 0, y: 4,  w: 5,  h: 11, minW: 3, minH: 7 },
+  { i: 'evolucao',   x: 5, y: 4,  w: 5,  h: 11, minW: 3, minH: 7 },
+  { i: 'alertas',    x: 0, y: 15, w: 5,  h: 11, minW: 3, minH: 6 },
+  { i: 'movimentos', x: 5, y: 15, w: 5,  h: 11, minW: 3, minH: 6 },
+  { i: 'top',        x: 0, y: 26, w: 10, h: 11, minW: 4, minH: 6 },
 ]
 
+// Quem não pode abrir Pendências (ex.: visualizador) não vê o card
+const podeVerPendencias = perfilPodeAcessarRota(perfil.value, 'pendencias')
+const cardsDisponiveis = () =>
+  LAYOUT_PADRAO.filter(item => item.i !== 'pendencias' || podeVerPendencias)
+
 function clonarLayoutPadrao() {
-  return LAYOUT_PADRAO.map(item => ({ ...item }))
+  return cardsDisponiveis().map(item => ({ ...item }))
 }
 
 function carregarLayoutSalvo() {
@@ -410,7 +436,7 @@ function carregarLayoutSalvo() {
     if (!Array.isArray(salvo)) return clonarLayoutPadrao()
     const porId = new Map(salvo.map(s => [s.i, s]))
     // ids desconhecidos são descartados; cards novos entram com a posição padrão
-    return LAYOUT_PADRAO.map(p => {
+    return cardsDisponiveis().map(p => {
       const s = porId.get(p.i)
       return s ? { ...p, x: s.x, y: s.y, w: s.w, h: s.h } : { ...p }
     })
@@ -449,6 +475,7 @@ const topProdutos            = ref([])
 const produtosEstoqueCritico = ref([])
 const produtosVencendo       = ref([])
 const semDadosPizza          = ref(false)
+const resumoPendencias       = ref({ notas: 0, pedidos: 0 })
 
 // ===== Filtro do Top Produtos =====
 const opcoesLimite          = ref([5, 10, 20, 50, 100]) // opções fixas do select
@@ -523,8 +550,23 @@ function recortarDiasVazios(dados) {
   return dados.slice(primeiroIndiceComDado - 1)
 }
 
+// Contagem do card "Notas Pendentes". Falhar aqui não pode derrubar o resto do dashboard.
+async function carregarPendencias() {
+  if (!podeVerPendencias) return
+  try {
+    const { data } = await api.get('/recebimentos/pendentes')
+    resumoPendencias.value = {
+      notas:   data.notas?.length ?? 0,
+      pedidos: data.pedidos?.length ?? 0,
+    }
+  } catch (erro) {
+    console.error('Erro ao carregar pendências do dashboard:', erro)
+  }
+}
+
 async function carregarDashboard({ mostrarLoading = true } = {}) {
   if (mostrarLoading) carregando.value = true
+  carregarPendencias() // em paralelo, sem travar os demais cards
   let dadosEvolucao = []
   let dadosDistribuicao = []
 
