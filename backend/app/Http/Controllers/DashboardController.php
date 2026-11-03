@@ -41,12 +41,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Endpoint dedicado para o filtro do Top Produtos, evitando recarregar
-     * o dashboard inteiro (gráficos, alertas, etc) toda vez que o usuário
-     * troca o limite ou a categoria.
-     * GET /dashboard/top-produtos?limite=20&categoria=Higiene
-     */
     public function topProdutos(Request $request)
     {
         $limite = (int) $request->query('limite', 10);
@@ -66,8 +60,6 @@ class DashboardController extends Controller
         );
     }
 
-    // Estoque crítico agora é POR PRODUTO: soma de todos os lotes (estoque_atual)
-    // comparada ao estoque_minimo cadastrado no produto — não mais por lote isolado.
     private function buscarProdutosEstoqueCritico()
     {
         return Produto::whereColumn('estoque_atual', '<=', 'estoque_minimo')
@@ -163,8 +155,6 @@ class DashboardController extends Controller
         return $evolucao;
     }
 
-    // Distribuição por categoria agora cruza item_lote -> produto -> categoria,
-    // já que item_lote não guarda mais a categoria diretamente.
     private function calcularDistribuicaoCategorias()
     {
         $distribuicao = DB::table('item_lote')
@@ -185,7 +175,6 @@ class DashboardController extends Controller
         ])->sortByDesc('percentual')->values();
     }
 
-    // Top produtos agora ordena por produto (estoque_atual agregado), não por lote isolado.
     private function buscarTopProdutos(int $limite = 10, ?string $categoria = null)
     {
         $query = Produto::with('categoria')->orderByDesc('estoque_atual');

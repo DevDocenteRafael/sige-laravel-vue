@@ -7,14 +7,10 @@ use Illuminate\Validation\Rule;
 
 class PerfilController extends Controller
 {
-    /**
-     * Atualizar perfil do usuário (nome, email e foto)
-     */
     public function atualizarPerfil(Request $request)
     {
         $usuario = $request->user();
 
-        // MUDANÇA PRINCIPAL: Adicionar validação de email com regra unique
         $validated = $request->validate([
             'nome'  => 'required|string|max:255',
             'email' => [
@@ -22,19 +18,15 @@ class PerfilController extends Controller
                 'email',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($usuario->id),
-                // ↑ Isso permite que o email seja único, mas ignora o próprio usuário
             ],
             'foto'         => 'nullable|image|mimes:jpeg,png,gif,webp|max:2048',
             'remover_foto' => 'nullable|boolean',
         ]);
 
-        // Atualizar nome
         $usuario->name = $validated['nome'];
 
-        // MUDANÇA: Atualizar email
         $usuario->email = $validated['email'];
 
-        // Processar foto (mesmo de antes)
         if ($request->hasFile('foto')) {
             if ($usuario->foto_url) {
                 $caminhoAntigo = public_path('storage/' . $usuario->foto_url);
@@ -57,10 +49,8 @@ class PerfilController extends Controller
             $usuario->foto_url = null;
         }
 
-        // Salvar tudo de uma vez
         $usuario->save();
 
-        // MUDANÇA: Retornar email atualizado também
        return response()->json([
     'message' => 'Perfil atualizado com sucesso!',
     'usuario' => [
@@ -71,9 +61,6 @@ class PerfilController extends Controller
 ]);
     }
 
-    /**
-     * Atualizar senha do usuário
-     */
     public function atualizarSenha(Request $request)
     {
         $usuario = $request->user();
@@ -84,14 +71,12 @@ class PerfilController extends Controller
             'nova_senha_confirmation' => 'required|string|same:nova_senha',
         ]);
 
-        // Verificar se a senha atual está correta
         if (!password_verify($validated['senha_atual'], $usuario->password)) {
             return response()->json([
                 'message' => 'Senha atual incorreta.',
             ], 422);
         }
 
-        // Atualizar para a nova senha
         $usuario->password = bcrypt($validated['nova_senha']);
         $usuario->save();
 

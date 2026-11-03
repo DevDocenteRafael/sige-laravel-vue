@@ -7,10 +7,6 @@ use Illuminate\Console\Command;
 
 class RecalcularEstoqueProdutos extends Command
 {
-    /**
-     * php artisan estoque:recalcular
-     * php artisan estoque:recalcular --dry-run   (só mostra o que mudaria, sem salvar)
-     */
     protected $signature = 'estoque:recalcular {--dry-run : Mostra as diferenças sem gravar no banco}';
 
     protected $description = 'Recalcula produto.estoque_atual somando as quantidades reais em item_lote';

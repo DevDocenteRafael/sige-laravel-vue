@@ -2,14 +2,8 @@
 
 namespace App\Services;
 
-/**
- * Lê o texto extraído do PDF "PEDIDO NR." do MXM e devolve os dados estruturados.
- * Classe pura (sem Laravel) para poder ser testada isoladamente.
- */
 class PedidoPdfParser
 {
-    // Unidades que aparecem coladas na descrição no texto do PDF (ex.: "150,00UNBASE ...").
-    // PCT/KIT vêm antes de PC/KT para não cortar a unidade pela metade.
     private const UNIDADES = 'KIT|PCT|UN|FR|PC|CX|CJ|PT|BA|BG|KT|GL|LT|KG|RL|PR|FD|CT|SC|DZ|MT|PA|TB';
 
     public function parse(string $texto): array
@@ -56,14 +50,13 @@ class PedidoPdfParser
             }
 
             $quantidade = $this->num($m[2]);
-            $total      = $this->num(end($nums[0])); // o último número da linha é o total do item
+            $total      = $this->num(end($nums[0]));
 
             $itens[] = [
                 'sku'            => $m[1],
                 'quantidade'     => $quantidade,
                 'unidade'        => $m[3],
                 'descricao'      => trim(preg_replace('/\s+/', ' ', $m[4])),
-                // o valor unitário sai embaralhado no PDF, então é recalculado pelo total
                 'valor_unitario' => $quantidade > 0 ? round($total / $quantidade, 2) : 0,
                 'total'          => $total,
             ];

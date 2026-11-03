@@ -28,7 +28,6 @@ use Illuminate\Support\Str;
 
 class RecebimentoController extends Controller
 {
-    // Equivalências de unidade confirmadas (cache da requisição): "UNIDADE_NOTA|UNIDADE_PEDIDO" => índice
     private ?array $equivalencias = null;
 
     public function index()
@@ -46,11 +45,6 @@ class RecebimentoController extends Controller
         return response()->json($this->montar(NotaRecebimento::findOrFail($id)));
     }
 
-    /**
-     * Notas e pedidos que aguardam ação, com o motivo de cada pendência.
-     * Quem resolve e o prazo ainda não foram definidos pelo responsável (ver documento do módulo),
-     * por isso aqui só se informa o estado atual, sem prazo nem bloqueio automático.
-     */
     public function pendentes()
     {
         $notas = NotaRecebimento::with(['itens', 'pedido'])
@@ -91,7 +85,6 @@ class RecebimentoController extends Controller
                     'criada_em'       => $nota->created_at?->toDateTimeString(),
                 ];
             })
-            // Nota sem motivo nenhum está só aguardando a conferência física: não é pendência de divergência
             ->values();
 
         $pedidos = Pedido::withCount('itens')
@@ -102,7 +95,6 @@ class RecebimentoController extends Controller
         return response()->json(['notas' => $notas, 'pedidos' => $pedidos]);
     }
 
-    // Usado quando o conferente bipa o código de barras da nota (chave de 44 caracteres)
     public function porChave(string $chave)
     {
         $chave = ChaveAcessoNfe::normalizar($chave);
@@ -143,7 +135,6 @@ class RecebimentoController extends Controller
         );
     }
 
-    // Miolo da importação, reutilizável (upload manual hoje; fonte externa de XML depois)
     private function registrarNota(string $conteudo, ?string $numeroPedidoInformado, ?string $chaveEsperada): JsonResponse
     {
         try {
@@ -152,7 +143,6 @@ class RecebimentoController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        // Importação iniciada a partir de uma chave bipada: o XML precisa ser dessa mesma nota
         $esperada = ChaveAcessoNfe::normalizar($chaveEsperada);
         if ($esperada !== '' && ChaveAcessoNfe::normalizar($dados['chave']) !== $esperada) {
             return response()->json([
@@ -215,9 +205,8 @@ class RecebimentoController extends Controller
                 return $nota;
             });
         } catch (\Throwable $e) {
-            Storage::delete($caminho);   // não deixa XML órfão no disco
+            Storage::delete($caminho);
 
-            // Corrida: outra requisição cadastrou a mesma chave entre a checagem e o create
             if ($e instanceof QueryException) {
                 $existente = NotaRecebimento::where('chave_acesso', $dados['chave'])->first();
                 if ($existente) {
@@ -231,11 +220,9 @@ class RecebimentoController extends Controller
             throw $e;
         }
 
-        // Os avisos (pedido ausente, CNPJ divergente...) vêm do montar(), que os recalcula sempre
         return response()->json($this->montar($nota), 201);
     }
 
-    // O operador diz qual item do pedido corresponde ao item da nota (de-para do fornecedor)
     public function vincular(Request $request, int $idNota, int $idNotaItem)
     {
         $request->validate([
@@ -272,7 +259,6 @@ class RecebimentoController extends Controller
                 $pedidoItem->update(['id_produto' => $produto->id_produto]);
             }
 
-            // Mapeamento que existia antes (para a auditoria mostrar se o vínculo substituiu outro)
             $idProdutoAnterior = FornecedorProduto::where('fornecedor_cnpj', $nota->fornecedor_cnpj)
                 ->where('codigo_fornecedor', $item->codigo_fornecedor)
                 ->value('id_produto');
@@ -307,7 +293,6 @@ class RecebimentoController extends Controller
         return response()->json($this->montar($nota->refresh()));
     }
 
-    // Um responsável confirma que a unidade da nota equivale (1:1) à do pedido. Vale para as próximas notas.
     public function confirmarEquivalenciaUnidade(int $idNota, int $idNotaItem)
     {
         $nota = NotaRecebimento::findOrFail($idNota);
@@ -328,7 +313,7 @@ class RecebimentoController extends Controller
             ['unidade_nota' => $a, 'unidade_pedido' => $b],
             ['id_usuario'   => Auth::id()]
         );
-        $this->equivalencias = null;   // recarrega na próxima consulta desta requisição
+        $this->equivalencias = null;
 
         AuditHelper::log(
             'Equivalencia de Unidade',
@@ -339,7 +324,6 @@ class RecebimentoController extends Controller
         return response()->json($this->montar($nota->refresh()));
     }
 
-    // Dá entrada no estoque dos itens 'ok' selecionados (entrega parcial: só o que chegou)
     public function darEntrada(Request $request, int $id)
     {
         $request->validate([
@@ -357,7 +341,6 @@ class RecebimentoController extends Controller
 
         $nota = NotaRecebimento::findOrFail($id);
 
-        // Fornecedor da nota diferente do pedido (ou nota sem pedido): nada entra
         $bloqueio = $this->bloqueioEntrada($nota);
         if ($bloqueio) {
             return response()->json(['message' => $bloqueio], 422);
@@ -374,7 +357,6 @@ class RecebimentoController extends Controller
                 ->get()
                 ->keyBy('id_nota_item');
 
-            // Só passam os itens 'ok'; os demais são informados, nunca descartados em silêncio
             $itens = collect();
             foreach ($extras->keys() as $idItem) {
                 $item = $encontrados->get($idItem);
@@ -394,7 +376,7 @@ class RecebimentoController extends Controller
                 return;
             }
 
-            $lotes = [];   // lotes já resolvidos nesta entrada, por número
+            $lotes = [];
 
             foreach ($itens as $item) {
                 $qtd = (float) $item->quantidade;
@@ -410,7 +392,6 @@ class RecebimentoController extends Controller
                     continue;
                 }
 
-                // Sem equivalência confirmada entre unidades, o item não entra (nada é convertido por suposição)
                 if ($this->unidadesIncompativeis($item->unidade, $pedidoItem->unidade)) {
                     $ignorados[] = [
                         'id_nota_item' => $item->id_nota_item,
@@ -426,8 +407,6 @@ class RecebimentoController extends Controller
                     continue;
                 }
 
-                // O lote só é criado quando existe pelo menos um item válido.
-                // Se o conferente informou o lote do item, usa ele; senão, um lote padrão por nota.
                 $extra      = $extras->get($item->id_nota_item, []);
                 $numeroLote = trim((string) ($extra['numero_lote'] ?? '')) ?: "NF{$nota->numero}-{$nota->id_nota}";
                 $lote       = $lotes[$numeroLote] ??= Lote::firstOrCreate(
@@ -439,12 +418,10 @@ class RecebimentoController extends Controller
                     ]
                 );
 
-                // Prioridade informada vira manual; sem ela, o cálculo ABC automático continua valendo
                 $prioridade = ($extra['prioridade_abc'] ?? null) ?: null;
                 $produto = Produto::findOrFail($item->id_produto);
                 $qtdInt  = (int) $qtd;
 
-                // Validade ausente continua nula: não inventamos data
                 $itemLote = ItemLote::create([
                     'id_lote'           => $lote->id_lote,
                     'id_produto'        => $produto->id_produto,
@@ -473,12 +450,10 @@ class RecebimentoController extends Controller
                 $entraram++;
             }
 
-            // Status da nota
             $total  = NotaItem::where('id_nota', $nota->id_nota)->count();
             $entrou = NotaItem::where('id_nota', $nota->id_nota)->where('status', 'entrou')->count();
             $nota->update(['status' => $entrou === $total ? 'conferida' : ($entrou > 0 ? 'parcial' : $nota->status)]);
 
-            // Status do pedido
             if ($nota->id_pedido) {
                 $pedido   = Pedido::find($nota->id_pedido);
                 $faltando = PedidoItem::where('id_pedido', $nota->id_pedido)
@@ -518,7 +493,6 @@ class RecebimentoController extends Controller
         return response()->json(['message' => 'Nota excluída com sucesso.']);
     }
 
-    // ─── Auxiliares ─────────────────────────────────────────────
 
     private function soDigitos(?string $valor): string
     {
@@ -535,11 +509,6 @@ class RecebimentoController extends Controller
         return isset($this->equivalencias["{$a}|{$b}"]);
     }
 
-    /**
-     * Incompatível só quando as duas unidades são conhecidas, diferentes
-     * e ninguém confirmou a equivalência entre elas (tabela unidade_equivalencia).
-     * A comparação ignora apenas maiúsculas/minúsculas e espaços.
-     */
     private function unidadesIncompativeis(?string $unidadeNota, ?string $unidadePedido): bool
     {
         $a = mb_strtoupper(trim((string) $unidadeNota));
@@ -552,10 +521,6 @@ class RecebimentoController extends Controller
         return !$this->equivalenciaConfirmada($a, $b);
     }
 
-    /**
-     * Motivo pelo qual a nota inteira não pode dar entrada (null = liberada).
-     * A consulta da nota continua permitida; só a entrada é bloqueada.
-     */
     private function bloqueioEntrada(NotaRecebimento $nota): ?string
     {
         $pedido = $nota->pedido;
@@ -573,7 +538,6 @@ class RecebimentoController extends Controller
         return null;
     }
 
-    // Avisos recalculados a cada leitura da nota, para não sumirem depois da importação
     private function avisos(NotaRecebimento $nota): array
     {
         $avisos = [];
@@ -595,12 +559,6 @@ class RecebimentoController extends Controller
         return $avisos;
     }
 
-    /**
-     * Cruza cada item da nota com o pedido:
-     *  - sem_vinculo : não sabemos ainda qual item do pedido é (ou não está no pedido)
-     *  - ok          : a quantidade cabe no saldo do pedido (entrega parcial é aceita)
-     *  - divergente  : a quantidade passa do que ainda falta receber do pedido
-     */
     private function conferir(NotaRecebimento $nota): void
     {
         $nota->load('itens');
@@ -643,7 +601,6 @@ class RecebimentoController extends Controller
         }
     }
 
-    // Compara o que a chave de 44 dígitos informa com o que o XML trouxe
     private function comparacaoChave(NotaRecebimento $nota): array
     {
         $c = $nota->chave_acesso;
@@ -695,7 +652,6 @@ class RecebimentoController extends Controller
                 }
             }
 
-            // Valor unitário da nota diferente do pedido: só aviso (o vínculo pode estar errado)
             $valorDivergente = $i->pedidoItem
                 && $i->status !== 'entrou'
                 && abs((float) $i->valor_unitario - (float) $i->pedidoItem->valor_unitario) > 0.005;
@@ -710,7 +666,6 @@ class RecebimentoController extends Controller
                 'status'               => $i->status,
                 'quantidade_entrada'   => (float) $i->quantidade_entrada,
                 'pedido_item'          => $i->pedidoItem ? $paraArray($i->pedidoItem) : null,
-                // Item vinculado cuja unidade não bate com a do pedido (e sem equivalência confirmada): a entrada dele é bloqueada
                 'unidade_incompativel' => $i->pedidoItem
                     && $i->status !== 'entrou'
                     && $this->unidadesIncompativeis($i->unidade, $i->pedidoItem->unidade),
@@ -757,7 +712,6 @@ class RecebimentoController extends Controller
     {
         $pedido = Pedido::where('numero', $numero)->first();
 
-        // "036072" e "36072" são o mesmo pedido
         if (!$pedido && ctype_digit($numero)) {
             $pedido = Pedido::whereRaw('CAST(numero AS UNSIGNED) = ?', [(int) $numero])->first();
         }

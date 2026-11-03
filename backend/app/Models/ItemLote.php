@@ -19,7 +19,6 @@ class ItemLote extends Model {
         'data_validade' => 'date',
     ];
 
-    // liga o item de lote ao produto-mãe (identidade única)
     public function produto() {
         return $this->belongsTo(Produto::class, 'id_produto', 'id_produto');
     }

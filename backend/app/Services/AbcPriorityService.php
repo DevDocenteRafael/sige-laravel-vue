@@ -45,7 +45,6 @@ class AbcPriorityService
             }
         }
 
-        // Só atualiza quem realmente mudou de classe
         $paraAtualizar = $itens->filter(fn($item) => $item->prioridade_abc !== $classesPorItem[$item->id_item]);
 
         if ($paraAtualizar->isEmpty()) {

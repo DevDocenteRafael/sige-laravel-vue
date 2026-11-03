@@ -8,7 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Pedido de compra (vem do MXM)
         Schema::create('pedido', function (Blueprint $table) {
             $table->id('id_pedido');
             $table->string('numero', 30)->unique();
@@ -17,13 +16,12 @@ return new class extends Migration
             $table->string('fornecedor_cnpj', 14)->nullable()->index();
             $table->date('data_emissao')->nullable();
             $table->decimal('valor_total', 14, 2)->default(0);
-            $table->string('status', 20)->default('aberto'); // aberto | parcial | concluido | cancelado
+            $table->string('status', 20)->default('aberto');
             $table->text('observacao')->nullable();
             $table->unsignedBigInteger('id_usuario')->nullable();
             $table->timestamps();
         });
 
-        // Itens do pedido
         Schema::create('pedido_item', function (Blueprint $table) {
             $table->id('id_pedido_item');
             $table->unsignedBigInteger('id_pedido');
@@ -39,7 +37,6 @@ return new class extends Migration
             $table->foreign('id_pedido')->references('id_pedido')->on('pedido')->cascadeOnDelete();
         });
 
-        // De-para: código do fornecedor -> produto do SIGE (código do MXM)
         Schema::create('fornecedor_produto', function (Blueprint $table) {
             $table->id('id_fornecedor_produto');
             $table->string('fornecedor_cnpj', 14);
@@ -51,7 +48,6 @@ return new class extends Migration
             $table->unique(['fornecedor_cnpj', 'codigo_fornecedor']);
         });
 
-        // Nota fiscal recebida (cabeçalho)
         Schema::create('nota_recebimento', function (Blueprint $table) {
             $table->id('id_nota');
             $table->string('chave_acesso', 44)->unique();
@@ -63,7 +59,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_pedido')->nullable()->index();
             $table->string('numero_pedido', 30)->nullable();
             $table->decimal('valor_total', 14, 2)->default(0);
-            $table->string('status', 20)->default('pendente'); // pendente | parcial | conferida | cancelada
+            $table->string('status', 20)->default('pendente');
             $table->string('xml_path', 255)->nullable();
             $table->unsignedBigInteger('id_usuario')->nullable();
             $table->timestamps();
@@ -71,7 +67,6 @@ return new class extends Migration
             $table->foreign('id_pedido')->references('id_pedido')->on('pedido')->nullOnDelete();
         });
 
-        // Itens da nota
         Schema::create('nota_item', function (Blueprint $table) {
             $table->id('id_nota_item');
             $table->unsignedBigInteger('id_nota');
@@ -82,7 +77,7 @@ return new class extends Migration
             $table->decimal('valor_unitario', 12, 4)->default(0);
             $table->unsignedBigInteger('id_produto')->nullable()->index();
             $table->unsignedBigInteger('id_pedido_item')->nullable()->index();
-            $table->string('status', 20)->default('pendente'); // pendente | ok | divergente | entrou
+            $table->string('status', 20)->default('pendente');
             $table->decimal('quantidade_entrada', 12, 2)->default(0);
             $table->string('lote_fornecedor', 60)->nullable();
             $table->date('data_validade')->nullable();

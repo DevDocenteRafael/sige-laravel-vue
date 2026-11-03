@@ -33,9 +33,6 @@ class ChatbotController extends Controller
         return $this->responder($this->gerarRespostaRegras($mensagemOriginal));
     }
 
-    // =========================================================
-    // ===================  STREAMING (SSE)  ======================
-    // =========================================================
 
     public function perguntarStream(Request $request)
     {
@@ -78,14 +75,12 @@ class ChatbotController extends Controller
             throw new \RuntimeException('Sem resposta da IA na etapa de decisão');
         }
 
-        // Não precisou de ferramenta: já temos o texto final, só "digitamos" ele
         if ($resposta['stop_reason'] !== 'tool_use') {
             $texto = $this->extrairTexto($resposta) ?? 'Não consegui gerar uma resposta agora.';
             $this->streamTextoSimulado($texto);
             return;
         }
 
-        // Precisou de ferramenta: executa e faz a chamada final já em streaming real
         $blocosDeUso = array_filter($resposta['content'], fn($b) => $b['type'] === 'tool_use');
 
         $resultadosFerramentas = [];
@@ -185,13 +180,10 @@ class ChatbotController extends Controller
         foreach ($partes as $parte) {
             if ($parte === '') continue;
             $this->enviarChunkStream($parte);
-            usleep(16000); // ~16ms por palavra, efeito de digitação
+            usleep(16000);
         }
     }
 
-    // =========================================================
-    // ===================  MOTOR COM IA (não-stream)  ============
-    // =========================================================
 
     private function perguntarComIA(string $mensagem): ?string
     {
@@ -275,9 +267,6 @@ class ChatbotController extends Controller
         };
     }
 
-    // =========================================================
-    // ==================  PROMPT E FERRAMENTAS  ===================
-    // =========================================================
 
     private function systemPromptPadrao(): string
     {
@@ -346,9 +335,6 @@ PROMPT;
         ];
     }
 
-    // =========================================================
-    // ============  FONTES DE DADOS (usadas por IA e regras)  ====
-    // =========================================================
 
     private function dadosListarProdutos(): array
     {
@@ -470,9 +456,6 @@ PROMPT;
             ->values();
     }
 
-    // =========================================================
-    // ===============  FALLBACK: MOTOR DE REGRAS  ================
-    // =========================================================
 
     private function responderComRegras(string $mensagemOriginal)
     {
@@ -483,7 +466,6 @@ PROMPT;
     {
         $pergunta = $this->normalizar($mensagemOriginal);
 
-        // 1) Despedida
         if ($this->contem($pergunta, [
             'obrigado',
             'obrigada',
@@ -501,7 +483,6 @@ PROMPT;
             return 'De nada! Qualquer coisa é só chamar. 😊';
         }
 
-        // 2) Saudação / ajuda genérica
         if ($this->contem($pergunta, [
             'oi',
             'ola',
@@ -538,7 +519,6 @@ PROMPT;
             return 'Oi! Posso te ajudar com informações sobre estoque, validades, perdas, movimentações — e também com qualquer outra dúvida. O que você quer saber?';
         }
 
-        // 3) Contagem total de produtos
         if ($this->contem($pergunta, [
             'quantos produtos',
             'quantos itens',
@@ -552,7 +532,6 @@ PROMPT;
             return "Atualmente há {$total} produtos cadastrados no sistema.";
         }
 
-        // 4) Vencimentos (checagem específica antes da listagem genérica)
         if ($this->contem($pergunta, [
             'vence',
             'vencendo',
@@ -573,7 +552,6 @@ PROMPT;
             return "Itens vencendo nos próximos 30 dias:\n\n{$linhas}";
         }
 
-        // 5) Estoque crítico (checagem específica antes da listagem genérica)
         if ($this->contem($pergunta, [
             'critico',
             'criticos',
@@ -592,7 +570,6 @@ PROMPT;
             return "Itens com estoque crítico:\n\n{$linhas}";
         }
 
-        // 6) Perdas (checagem específica antes da listagem genérica)
         if ($this->contem($pergunta, ['perda', 'perdas', 'perdi', 'descarte', 'desperdicio', 'quebra', 'estragou'])) {
             $perdas = $this->dadosPerdas();
             if (empty($perdas)) return 'Nenhuma perda registrada nos últimos 30 dias.';
@@ -604,7 +581,6 @@ PROMPT;
             return "Perdas nos últimos 30 dias ({$total} unidades no total):\n\n{$linhas}";
         }
 
-        // 7) Movimentações (checagem específica antes da listagem genérica)
         if ($this->contem($pergunta, ['movimenta', 'entrada', 'saida', 'ultima', 'historico', 'quem mexeu'])) {
             $movs = $this->dadosMovimentacoes();
             if (empty($movs)) return 'Nenhuma movimentação registrada ainda.';
@@ -615,8 +591,6 @@ PROMPT;
             return "Últimas movimentações:\n\n{$linhas}";
         }
 
-        // 8) Listar TODOS os produtos — regra mais genérica, agora por último
-        // (movida pra cá porque "quais itens" batia antes de "critico", "vence" etc.)
         if ($this->contem($pergunta, [
             'quais sao os produtos',
             'quais os produtos',
@@ -638,7 +612,6 @@ PROMPT;
             return "Produtos no estoque:\n\n{$linhas}";
         }
 
-        // 9) Busca por produto específico (regex de "quanto/tem/cadê ...")
         if (preg_match('/\b(quant[ao]s?|quantidade|estoque de|tem |tenho |temos|possui|existe|disponivel|onde esta|cade)\b/u', $pergunta)) {
             $termo = $this->extrairTermoBusca($pergunta);
             if (strlen($termo) < 2) return 'Qual produto você quer consultar?';
@@ -689,9 +662,6 @@ PROMPT;
         return trim(preg_replace('/\s+/', ' ', $termo));
     }
 
-    // =========================================================
-    // =======================  UTIL  =============================
-    // =========================================================
 
     private function normalizar(string $texto): string
     {

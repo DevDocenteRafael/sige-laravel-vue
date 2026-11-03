@@ -49,9 +49,6 @@ class PerdaController extends Controller
         return response()->json($perda->load('item'), 201);
     }
 
-    // Registra perda de vários itens de uma vez, todos com o mesmo motivo,
-    // cada um com sua própria quantidade. Tudo numa transação: se um item
-    // falhar (ex: quantidade maior que o disponível), nenhuma perda é salva.
     public function storeVarios(Request $request)
     {
         $request->validate([

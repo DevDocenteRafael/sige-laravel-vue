@@ -25,7 +25,6 @@ class AuthController extends Controller
             return response()->json(['message' => 'Credenciais inválidas'], 401);
         }
 
-        /** @var User $user */
         $user = Auth::user();
 
         if (!$user->ativo) {

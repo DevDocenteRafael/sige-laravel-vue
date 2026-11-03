@@ -101,7 +101,6 @@ class ImportacaoController extends Controller
         $writer = new Xlsx($spreadsheet);
 
         return response()->streamDownload(function () use ($writer) {
-            // Limpa qualquer saída que tenha vazado antes (espaços, warnings, BOM)
             while (ob_get_level() > 0) {
                 ob_end_clean();
             }
@@ -182,11 +181,10 @@ class ImportacaoController extends Controller
                     ? $codigo
                     : 'GEN-' . strtoupper(substr(preg_replace('/[^A-Z0-9]/i', '', $descricao), 0, 12));
 
-                // Apenas consulta — nunca cria o produto no preview
                 $produtoExistente = Produto::where('sku', $sku)->first();
 
                 $itens[] = [
-                    'produto_id'        => $produtoExistente->id_produto ?? null, // null = produto novo
+                    'produto_id'        => $produtoExistente->id_produto ?? null,
                     'sku'               => $sku,
                     'nome'              => $descricao,
                     'unidade'           => $unidade ?: 'UN',
@@ -194,7 +192,7 @@ class ImportacaoController extends Controller
                     'estoque_minimo'    => is_numeric($estoqueMinimo) ? (int) $estoqueMinimo : 0,
                     'validade'          => $dataValidade,
                     'centro_custo'      => $centroCusto !== '' ? $centroCusto : null,
-                    'produto_existente' => (bool) $produtoExistente, // útil pro frontend avisar na tabela
+                    'produto_existente' => (bool) $produtoExistente,
                 ];
             }
 
@@ -285,7 +283,6 @@ class ImportacaoController extends Controller
         foreach ($itens as $it) {
             if ((int) $it['quantidade'] <= 0) continue;
 
-            // Resolve o produto AGORA (na confirmação), de forma atômica — não no preview
             $produto = Produto::firstOrCreate(
                 ['sku' => $it['sku']],
                 [
@@ -302,7 +299,6 @@ class ImportacaoController extends Controller
 
             $validadeItem = $it['validade'] ?? $dataValidade;
 
-            // Agrupa por PRODUTO + VALIDADE, não por SKU sozinho — preserva lotes com validades diferentes
             $item = ItemLote::where('id_lote', $lote->id_lote)
                 ->where('id_produto', $produto->id_produto)
                 ->where('data_validade', $validadeItem)
@@ -333,11 +329,6 @@ class ImportacaoController extends Controller
         return $lote;
     }
 
-    /**
-     * Converte o texto da planilha em id_centro_custo.
-     * Procura pelo código ou pelo nome (sem diferenciar maiúsculas).
-     * Só vincula centros já cadastrados. Se não achar, o item fica sem centro de custo.
-     */
     private function resolverCentroCusto(?string $texto): ?int
     {
         $texto = trim((string) $texto);

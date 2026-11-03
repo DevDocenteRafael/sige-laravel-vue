@@ -10,7 +10,7 @@ class LogAuditoria
     public static function registrar(
         string $nomeEntidade,
         int $idEntidade,
-        string $acao, // 'INSERT' | 'UPDATE' | 'DELETE'
+        string $acao,
         ?string $descricao = null,
         $dadosAntes = null,
         $dadosDepois = null

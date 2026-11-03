@@ -8,7 +8,6 @@ use Carbon\Carbon;
 
 class RelatorioController extends Controller
 {
-    // Posição atual do estoque agrupada por item
     public function estoque()
     {
         $itens = ItemLote::with(['produto.categoria'])->get()->map(fn($item) => [
@@ -23,7 +22,6 @@ class RelatorioController extends Controller
         return response()->json($itens);
     }
 
-    // Itens vencidos ou que vencem nos próximos 30 dias
     public function vencimentos()
     {
         $limite = Carbon::now()->addDays(30);
@@ -44,7 +42,6 @@ class RelatorioController extends Controller
         return response()->json($itens);
     }
 
-    // Log de auditoria baseado nas movimentações
     public function auditoria()
     {
         $logs = Movimentacao::with(['item.produto', 'usuario'])
@@ -66,7 +63,6 @@ class RelatorioController extends Controller
         return response()->json($logs);
     }
 
-    // Lista de itens de lote para a tela de Relatórios (filtros, exportação)
     public function itens()
     {
         $itens = ItemLote::with(['lote', 'produto.fornecedor', 'centroCusto'])

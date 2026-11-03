@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('item_lote', function (Blueprint $table) {
-            // Esses dados agora vêm de `produto` via id_produto — não fazem mais sentido aqui
             $colunas = ['nome', 'sku', 'estoque_minimo', 'fornecedor', 'categoria'];
             foreach ($colunas as $coluna) {
                 if (Schema::hasColumn('item_lote', $coluna)) {

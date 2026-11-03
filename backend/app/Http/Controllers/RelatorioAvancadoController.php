@@ -29,7 +29,6 @@ class RelatorioAvancadoController extends Controller
                 'usuario'    => $m->usuario?->name ?? '—',
             ]);
 
-        // Agrupa por motivo
         $porMotivo = $perdas->groupBy('motivo')->map(fn($grupo, $motivo) => [
             'motivo'     => $motivo,
             'total'      => $grupo->sum('quantidade'),
@@ -49,7 +48,6 @@ class RelatorioAvancadoController extends Controller
 
     public function abc()
     {
-        // Soma total de movimentações (ENTRADA + SAIDA) por item.
         $movimentos = Movimentacao::whereIn('tipo', ['ENTRADA', 'SAIDA'])
             ->selectRaw('id_item, SUM(quantidade) as total')
             ->groupBy('id_item')

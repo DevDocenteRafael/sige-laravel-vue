@@ -8,11 +8,6 @@ use Illuminate\Support\Facades\Request;
 
 class AuditHelper
 {
-    /**
-     * Mapa de normalização: qualquer variação recebida (com ou sem acento,
-     * maiúscula/minúscula) é convertida para a forma canônica usada em todo
-     * o sistema (banco, filtros do frontend e badges de cor).
-     */
     private const ACOES_CANONICAS = [
         'criacao'    => 'Criação',
         'criação'    => 'Criação',

@@ -9,7 +9,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Antes de aplicar o UNIQUE, garante que não existe SKU duplicado sobrando
         $duplicados = DB::table('produto')
             ->select('sku')
             ->whereNotNull('sku')
@@ -19,8 +18,6 @@ return new class extends Migration
             ->pluck('sku');
 
         if ($duplicados->isNotEmpty()) {
-            // Se ainda houver duplicata, a migration para aqui — rode antes
-            // a migration de limpeza (cleanup_produto_duplicates) que já fizemos.
             throw new \RuntimeException(
                 'Ainda existem SKUs duplicados em produto: ' . $duplicados->implode(', ') .
                 '. Rode a migration de limpeza antes desta.'

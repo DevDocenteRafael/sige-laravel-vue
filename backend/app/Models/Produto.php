@@ -34,7 +34,6 @@ class Produto extends Model {
             ->orderBy('data_validade', 'asc');
     }
 
-    // Calcula o status do estoque com base no mínimo e na % de alerta do produto
     public function statusEstoque(): string
     {
         if ($this->estoque_atual <= $this->estoque_minimo) {

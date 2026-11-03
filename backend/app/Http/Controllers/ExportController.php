@@ -63,20 +63,16 @@ class ExportController extends Controller
                 $p->prioridade_abc,
             ], null, "A{$row}");
 
-            // Estoque atual e mínimo como número inteiro alinhado à direita
             $sheet->getStyle("F{$row}:G{$row}")->getNumberFormat()->setFormatCode('#,##0');
             $sheet->getStyle("F{$row}:G{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-            // Preço custo como moeda
             $sheet->getStyle("H{$row}")->getNumberFormat()->setFormatCode('"R$" #,##0.00');
             $sheet->getStyle("H{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-            // Destaque se estoque atual está no mínimo ou abaixo
             if ($p->estoque_atual <= $p->estoque_minimo) {
                 $sheet->getStyle("F{$row}")->getFont()->setBold(true)->getColor()->setRGB('C62828');
             }
 
-            // Cor da Prioridade ABC (I)
             $this->colorirCelula($sheet, "I{$row}", $this->corAbc($p->prioridade_abc));
 
             $row++;
@@ -137,7 +133,6 @@ class ExportController extends Controller
             $sheet->getStyle("E{$row}")->getNumberFormat()->setFormatCode('#,##0');
             $sheet->getStyle("E{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-            // Cor do Tipo: verde para entrada, vermelho para saída
             $tipoNorm = mb_strtolower((string) $m->tipo);
             $corTipo = str_contains($tipoNorm, 'entrada') ? '2E7D32' : (str_contains($tipoNorm, 'saida') || str_contains($tipoNorm, 'saída') ? 'C62828' : '64748B');
             $this->colorirCelula($sheet, "B{$row}", $corTipo);
@@ -151,7 +146,6 @@ class ExportController extends Controller
         return $this->baixarXlsx($spreadsheet, 'movimentacoes_' . now()->format('Ymd') . '.xlsx');
     }
 
-    // ─── Helpers privados (elimina a duplicação entre os dois XLSX) ───
 
     private function estilizarCabecalho(Worksheet $sheet, array $headers, string $ultimaCelula): void
     {

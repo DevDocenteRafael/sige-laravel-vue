@@ -14,9 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class ItemLoteController extends Controller
 {
-    // Maior inteiro que o PHP consegue representar com precisão (64-bit).
-    // Acima disso o BIGINT UNSIGNED do MySQL ainda aguenta, mas o PHP
-    // já viraria float e perderia precisão — então este é o teto seguro.
     private const QUANTIDADE_MAX = 9223372036854775807;
 
     public function store(Request $request, int $idLote)
@@ -331,7 +328,6 @@ class ItemLoteController extends Controller
 
             $item->delete();
 
-            // Se o produto ficou sem nenhum lote, remove o cadastro também.
             if (!ItemLote::where('id_produto', $idProduto)->exists()) {
                 Produto::whereKey($idProduto)->delete();
             }
@@ -367,7 +363,6 @@ class ItemLoteController extends Controller
             }
             ItemLote::whereIn('id_item', $itens->pluck('id_item'))->delete();
 
-            // Remove produtos que ficaram sem nenhum lote.
             foreach ($idsProdutosAfetados as $idProduto) {
                 if (!ItemLote::where('id_produto', $idProduto)->exists()) {
                     Produto::whereKey($idProduto)->delete();

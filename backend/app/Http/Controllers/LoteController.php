@@ -12,7 +12,6 @@ class LoteController extends Controller
 {
     public function index()
     {
-        // Precisa carregar 'itens.produto.fornecedor' — sem isso, item.produto.fornecedor vem null no front
         $lotes = Lote::with(['itens.produto.fornecedor', 'itens.centroCusto'])->orderBy('id_lote', 'asc')->get();
         return response()->json($lotes);
     }
@@ -78,9 +77,6 @@ class LoteController extends Controller
         $lote = Lote::with('itens')->findOrFail($id);
 
         DB::transaction(function () use ($lote, $id) {
-            // Antes do cascade apagar os item_lote, desconta cada quantidade
-            // do estoque_atual do produto correspondente — senão o produto
-            // fica com estoque "fantasma" (valor antigo nunca decrementado).
             foreach ($lote->itens as $item) {
                 Produto::whereKey($item->id_produto)->decrement('estoque_atual', $item->quantidade);
             }

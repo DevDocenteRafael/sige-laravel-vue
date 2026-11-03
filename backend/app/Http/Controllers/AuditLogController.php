@@ -48,10 +48,6 @@ class AuditLogController extends Controller
         };
     }
 
-    /**
-     * Monta a query com os filtros de busca/período/ação usados tanto
-     * na listagem quanto na exportação, evitando duplicar a lógica.
-     */
     private function buildQuery(Request $request, bool $withUserSearch = false): Builder
     {
         $query = AuditLog::with('user');

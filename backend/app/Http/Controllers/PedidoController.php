@@ -142,9 +142,7 @@ class PedidoController extends Controller
         return response()->json(['message' => 'Pedido excluído com sucesso.']);
     }
 
-    // ─── Criação manual, edição e planilha ───────────────────────
 
-    // Menu "Novo pedido": cadastro direto no SIGE
     public function store(Request $request)
     {
         $this->normalizarCnpj($request);
@@ -181,7 +179,6 @@ class PedidoController extends Controller
         return response()->json($this->detalhe($pedido->id_pedido), 201);
     }
 
-    // Cabeçalho do pedido (só enquanto ele pode ser editado)
     public function update(Request $request, int $id)
     {
         $this->normalizarCnpj($request);
@@ -298,10 +295,6 @@ class PedidoController extends Controller
         return response()->json($this->detalhe($id));
     }
 
-    /**
-     * Importa pedidos de planilha. Com "previa=1" só valida e mostra o que seria criado.
-     * Se houver qualquer erro, nada é gravado.
-     */
     public function importarPlanilha(Request $request, PedidoPlanilha $planilha)
     {
         $request->validate([
@@ -355,7 +348,6 @@ class PedidoController extends Controller
         ], 201);
     }
 
-    // Planilha de um pedido (ou de todos, quando $id é null) no layout configurado em config/pedido_mxm.php
     public function exportar(PedidoPlanilha $planilha, ?int $id = null)
     {
         $pedidos = $id
@@ -378,12 +370,7 @@ class PedidoController extends Controller
         ]);
     }
 
-    // ─── Auxiliares ─────────────────────────────────────────────
 
-    /**
-     * Regra de edição (PENDENTE DE APROVAÇÃO do responsável): o pedido só pode ser alterado
-     * enquanto está "aberto", sem item recebido e sem nota fiscal vinculada.
-     */
     private function exigirEditavel(Pedido $pedido): void
     {
         $motivo = null;
@@ -410,7 +397,6 @@ class PedidoController extends Controller
         $pedido->update(['valor_total' => round((float) $total, 2)]);
     }
 
-    // Grava pedido + itens numa transação (usado pelo cadastro manual e pela planilha)
     private function gravar(array $dados, string $origem): Pedido
     {
         $produtos = Produto::whereIn('sku', array_column($dados['itens'], 'sku'))->pluck('id_produto', 'sku');

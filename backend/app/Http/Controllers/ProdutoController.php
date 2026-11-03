@@ -15,7 +15,6 @@ class ProdutoController extends Controller
             'id_centro_custo' => ['nullable', 'regex:/^(sem|\d+)$/'],
         ]);
 
-        // Aplica o filtro de centro de custo ('sem' = itens sem centro)
         $aplicarCentro = function ($q) use ($request) {
             if (!$request->filled('id_centro_custo')) return;
             $request->id_centro_custo === 'sem'
@@ -82,8 +81,6 @@ class ProdutoController extends Controller
                 })
                 ->values();
 
-            // Status calculado com base em estoque_minimo + percentual_alerta do produto.
-            // O front usa esse campo pronto ao invés de recalcular a mesma regra em 3 lugares.
             $produto->status_estoque = $produto->statusEstoque();
 
             return $produto;
@@ -92,9 +89,6 @@ class ProdutoController extends Controller
         return response()->json($produtos);
     }
 
-    // Usado pelo ModalAdicionarItem pra detectar se o SKU digitado já pertence
-    // a um produto existente (nesse caso, só adiciona um novo item de lote
-    // pra ele, com sua própria quantidade/validade/localização).
     public function buscarPorSku(Request $request)
     {
         $request->validate([

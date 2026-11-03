@@ -2,18 +2,10 @@
 
 namespace App\Services;
 
-/**
- * Sugere qual item do pedido corresponde à descrição de um item da nota,
- * comparando as palavras das duas descrições.
- */
 class DescricaoMatcher
 {
     private const IGNORAR = ['DE', 'DA', 'DO', 'DAS', 'DOS', 'PARA', 'COM', 'SEM', 'EM', 'E', 'A', 'O', 'OU', 'NA', 'NO'];
 
-    /**
-     * @param array $candidatos lista de ['id' => ..., 'descricao' => ...]
-     * @return array lista de ['id' => ..., 'pontuacao' => 0..1], melhores primeiro
-     */
     public function sugerir(string $descricaoNota, array $candidatos, int $limite = 5): array
     {
         $tokensNota = $this->tokens($descricaoNota);
@@ -65,7 +57,6 @@ class DescricaoMatcher
             if (in_array($p, self::IGNORAR, true)) {
                 continue;
             }
-            // tira o "S" do plural (OLHOS -> OLHO), sem mexer em palavras curtas ou números
             if (strlen($p) > 3 && substr($p, -1) === 'S' && !ctype_digit($p)) {
                 $p = substr($p, 0, -1);
             }

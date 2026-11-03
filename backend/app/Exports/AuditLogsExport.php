@@ -42,7 +42,6 @@ class AuditLogsExport implements FromCollection, WithHeadings, WithMapping, Shou
 
     public function styles(Worksheet $sheet)
     {
-        // Cabeçalho em negrito com fundo azul e texto branco
         $sheet->getStyle('A1:G1')->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '2563EB']],

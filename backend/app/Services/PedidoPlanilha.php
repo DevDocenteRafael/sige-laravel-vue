@@ -9,17 +9,8 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-/**
- * Lê e gera a planilha de pedido no layout configurado em config/pedido_mxm.php.
- * Não sabe nada de banco: recebe e devolve arrays/modelos já carregados.
- */
 class PedidoPlanilha
 {
-    /**
-     * Gera uma planilha com uma aba por pedido.
-     *
-     * @param iterable<Pedido> $pedidos (com a relação itens carregada)
-     */
     public function exportar(iterable $pedidos): Spreadsheet
     {
         $cab    = config('pedido_mxm.cabecalho');
@@ -49,13 +40,12 @@ class PedidoPlanilha
             ];
             foreach ($cab as $campo => $rotulo) {
                 $aba->setCellValue("A{$linha}", $rotulo);
-                // Texto explícito: evita que número do pedido (036072) e CNPJ percam os zeros à esquerda
                 $aba->setCellValueExplicit("B{$linha}", (string) ($dados[$campo] ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 $aba->getStyle("A{$linha}")->getFont()->setBold(true);
                 $linha++;
             }
 
-            $linha++;                       // linha em branco
+            $linha++;
             $linhaCabecalho = $linha;
             $letras = [];
             $i = 1;
@@ -109,11 +99,6 @@ class PedidoPlanilha
         return $planilha;
     }
 
-    /**
-     * Lê a primeira aba da planilha. Nunca grava nada.
-     *
-     * @return array{dados: array, erros: array<int, string>}
-     */
     public function ler(string $caminho): array
     {
         $erros = [];
@@ -129,7 +114,6 @@ class PedidoPlanilha
         $cols   = config('pedido_mxm.colunas');
         $limite = (int) config('pedido_mxm.max_itens', 500);
 
-        // 1) Cabeçalho (rótulo na coluna A, valor na coluna B) e linha de títulos dos itens
         $dados = array_fill_keys(array_keys($cab), null);
         $rotulos = [];
         foreach ($cab as $campo => $rotulo) {
@@ -168,7 +152,6 @@ class PedidoPlanilha
             return ['dados' => [], 'erros' => ["Não encontrei a linha de títulos dos itens. As colunas obrigatórias são: {$faltam}."]];
         }
 
-        // 2) Cabeçalho do pedido
         $numero = preg_replace('/\s+/', '', (string) $dados['numero']);
         if ($numero === '') {
             $erros[] = "Informe o número do pedido ({$cab['numero']}) no cabeçalho da planilha.";
@@ -189,7 +172,6 @@ class PedidoPlanilha
             }
         }
 
-        // 3) Itens
         $itens = [];
         $vistos = [];
         $qtdLinhas = 0;
@@ -200,7 +182,7 @@ class PedidoPlanilha
             $qtdBr = $linha[$mapa['quantidade']] ?? null;
 
             if ($sku === '' && $desc === '' && ($qtdBr === null || $qtdBr === '')) {
-                continue;               // linha em branco
+                continue;
             }
 
             $numLinha = $i + 1;
@@ -268,7 +250,6 @@ class PedidoPlanilha
         ];
     }
 
-    // Aceita número do Excel (1234.5) e texto brasileiro ("1.234,50"); null se não for número
     private function numero(mixed $valor): ?float
     {
         if (is_int($valor) || is_float($valor)) {
@@ -290,7 +271,6 @@ class PedidoPlanilha
     {
         $texto = trim($texto);
         try {
-            // Data digitada como data no Excel chega como número de série (ex.: 46311)
             if (ctype_digit($texto) && (int) $texto > 20000 && (int) $texto < 80000) {
                 return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((int) $texto)->format('Y-m-d');
             }
@@ -306,7 +286,6 @@ class PedidoPlanilha
         return null;
     }
 
-    // Normaliza títulos: sem acento, sem pontuação, maiúsculas
     private function norm(mixed $texto): string
     {
         $t = mb_strtoupper(trim((string) $texto));

@@ -2,10 +2,6 @@
 
 namespace App\Services;
 
-/**
- * Lê o XML de uma NF-e (nfeProc ou NFe) e devolve os dados estruturados.
- * Classe pura (sem Laravel) para poder ser testada isoladamente.
- */
 class NfeXmlParser
 {
     private const NS = 'http://www.portalfiscal.inf.br/nfe';
@@ -57,7 +53,6 @@ class NfeXmlParser
             throw new \InvalidArgumentException('Esta NF-e não tem itens.');
         }
 
-        // O número do pedido vem no texto "PEDIDO DE COMPRA: 036072" ou no campo xPed dos itens
         $numeroPedido = null;
         if (preg_match('/PEDIDO\s+DE\s+COMPRA\s*:?\s*(\d+)/iu', $infCpl, $m)) {
             $numeroPedido = $m[1];
