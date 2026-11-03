@@ -1,7 +1,6 @@
 <template>
   <div class="p-6 min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white">
 
-    <!-- Cabeçalho -->
     <div class="flex justify-between items-center mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Lotes</h1>
@@ -45,12 +44,10 @@
       </div>
     </div>
 
-    <!-- Carregando -->
     <div v-if="carregando" class="text-center py-12 text-slate-500 dark:text-slate-400">
       Carregando lotes...
     </div>
 
-    <!-- Sem lotes -->
     <div v-else-if="lotes.length === 0" class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-16 text-center">
       <PackageMinus class="mx-auto mb-4 text-slate-400 dark:text-slate-600" :size="48" />
       <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Nenhum lote cadastrado</h2>
@@ -64,10 +61,8 @@
       </button>
     </div>
 
-    <!-- TABS DE LOTES -->
     <div v-else class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
 
-      <!-- Abas -->
       <div class="flex items-center gap-1 px-4 pt-4 border-b border-slate-200 dark:border-slate-800 overflow-x-auto">
         <button
           v-for="lote in lotes"
@@ -91,10 +86,8 @@
         </button>
       </div>
 
-      <!-- Conteúdo da tab ativa -->
       <div v-if="loteAtivo" class="p-6">
 
-        <!-- Cabeçalho do lote -->
         <div class="flex justify-between items-start mb-6">
           <div>
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ loteAtivo.numero_lote }}</h2>
@@ -172,10 +165,8 @@
           </div>
         </div>
 
-        <!-- Busca, filtros e colunas -->
         <div v-if="loteAtivo.itens?.length > 0" class="mb-4 space-y-3">
 
-          <!-- Linha única: busca + botões -->
           <div class="flex flex-col sm:flex-row gap-3">
             <div class="relative flex-1">
               <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
@@ -220,7 +211,6 @@
             </div>
           </div>
 
-          <!-- Painel de filtros (uma linha em telas grandes) -->
           <div
             v-if="painelAberto === 'filtros'"
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3 rounded-lg bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800"
@@ -279,7 +269,6 @@
             </label>
           </div>
 
-          <!-- Painel de colunas opcionais -->
           <div
             v-if="painelAberto === 'colunas'"
             class="flex items-center gap-x-5 gap-y-2 flex-wrap p-3 rounded-lg bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800"
@@ -308,7 +297,6 @@
             </button>
           </div>
 
-          <!-- Contagem, chips dos filtros ativos e limpar -->
           <div class="flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-slate-400">{{ formatNumero(itensFiltrados.length) }} de {{ formatNumero(loteAtivo.itens.length) }} itens</span>
@@ -329,19 +317,16 @@
           </div>
         </div>
 
-        <!-- Sem itens -->
         <div v-if="!loteAtivo.itens || loteAtivo.itens.length === 0" class="text-center py-16">
           <Package class="mx-auto mb-3 text-slate-400 dark:text-slate-600" :size="40" />
           <p class="text-slate-500 dark:text-slate-500">Nenhum item neste lote</p>
         </div>
 
-        <!-- Filtro sem resultado -->
         <div v-else-if="itensFiltrados.length === 0" class="text-center py-16">
           <Package class="mx-auto mb-3 text-slate-400 dark:text-slate-600" :size="40" />
           <p class="text-slate-500 dark:text-slate-500">Nenhum item encontrado com os filtros aplicados</p>
         </div>
 
-        <!-- Tabela de itens (arrastável com o mouse) -->
         <div
           v-else
           ref="tabelaRef"
@@ -474,7 +459,6 @@
           </table>
         </div>
 
-        <!-- Controles de paginação -->
         <Paginacao
           v-model:pagina-atual="paginaAtual"
           v-model:por-pagina="itensPorPagina"
@@ -485,7 +469,6 @@
       </div>
     </div>
 
-    <!-- ===== MODAL CONFIRMAÇÃO EXCLUSÃO DE LOTE (individual) ===== -->
     <div v-if="modalExcluirLoteAberto" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-start mb-5">
@@ -518,7 +501,6 @@
       </div>
     </div>
 
-    <!-- ===== MODAL CONFIRMAÇÃO EXCLUSÃO EM MASSA DE LOTES ===== -->
     <div v-if="modalExcluirVariosAberto" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-start mb-5">
@@ -551,7 +533,6 @@
       </div>
     </div>
 
-    <!-- ===== MODAL CONFIRMAÇÃO EXCLUSÃO EM MASSA DE ITENS ===== -->
     <div v-if="modalExcluirItensAberto" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-start mb-5">
@@ -584,7 +565,6 @@
       </div>
     </div>
 
-    <!-- Modal criar/editar lote -->
     <ModalLote
       v-if="modalAberto"
       :lote="loteSelecionado"
@@ -592,7 +572,6 @@
       @salvo="aoSalvar"
     />
 
-    <!-- Modal adicionar item -->
     <ModalAdicionarItem
       v-if="modalItemAberto"
       :lote="loteAtivo"
@@ -600,7 +579,6 @@
       @salvo="modalItemAberto = false; carregarLotes()"
     />
 
-    <!-- Modal editar item -->
     <ModalEditarItem
       v-if="modalEditarAberto"
       :item="itemSelecionado"
@@ -608,7 +586,6 @@
       @salvo="modalEditarAberto = false; carregarLotes()"
     />
 
-    <!-- Modal transferir item -->
     <ModalTransferirItem
       v-if="modalTransferirAberto"
       :item="itemParaTransferir"
@@ -618,7 +595,6 @@
       @salvo="modalTransferirAberto = false; carregarLotes()"
     />
 
-    <!-- Modal transferir vários itens selecionados -->
     <ModalTransferirVarios
       v-if="modalTransferirVariosAberto"
       :itens="loteAtivo.itens.filter(i => itensSelecionados.has(i.id_item))"
@@ -627,7 +603,6 @@
       @salvo="aoConcluirTransferenciaVarios"
     />
 
-    <!-- Modal baixa de estoque -->
     <ModalBaixaEstoque
       v-if="modalBaixaAberto"
       :item="itemSelecionado"
@@ -635,7 +610,6 @@
       @salvo="modalBaixaAberto = false; carregarLotes()"
     />
 
-    <!-- Modal entrada de estoque -->
     <ModalEntradaEstoque
       v-if="modalEntradaAberto"
       :item="itemSelecionado"
@@ -643,7 +617,6 @@
       @salvo="modalEntradaAberto = false; carregarLotes()"
     />
 
-    <!-- Modal excluir item -->
     <ModalExcluirItem
       v-if="modalExcluirAberto"
       :item="itemSelecionado"
@@ -651,7 +624,6 @@
       @salvo="modalExcluirAberto = false; carregarLotes()"
     />
 
-    <!-- Modal detalhes produto -->
     <ModalDetalhesProduto
       v-if="modalDetalhesAberto"
       :item="itemSelecionado"
@@ -708,7 +680,6 @@ const loteSelecionado     = ref(null)
 const itemSelecionado     = ref(null)
 const tabAtiva            = ref(null)
 
-// ===== Seleção múltipla / exclusão em massa de lotes =====
 const modoSelecaoLotes         = ref(false)
 const lotesSelecionados        = ref(new Set())
 const modalExcluirVariosAberto = ref(false)
@@ -738,7 +709,6 @@ async function excluirLotesSelecionados() {
   } catch (e) {
     console.error(e)
     erro(e.response?.data?.message || 'Erro ao excluir lotes selecionados.')
-    // lista desatualizada (lote já excluído por outro usuário/aba): recarrega
     if ([404, 422].includes(e.response?.status)) {
       modalExcluirVariosAberto.value = false
       modoSelecaoLotes.value = false
@@ -750,13 +720,11 @@ async function excluirLotesSelecionados() {
   }
 }
 
-// ===== Seleção múltipla / exclusão em massa de ITENS do lote ativo =====
 const modoSelecaoItens        = ref(false)
 const itensSelecionados       = ref(new Set())
 const modalExcluirItensAberto = ref(false)
 const excluindoItens          = ref(false)
 
-// ===== Selecionar todos os itens do lote (respeita os filtros) =====
 const inputSelecionarTodosItens = ref(null)
 
 const todosItensSelecionados = computed(() => {
@@ -778,7 +746,6 @@ function alternarSelecaoTodosItens() {
     : new Set(itensFiltrados.value.map((i) => i.id_item))
 }
 
-// checkbox nativo não tem v-model pra "indeterminate" — seta via DOM direto
 watchEffect(() => {
   if (inputSelecionarTodosItens.value) {
     inputSelecionarTodosItens.value.indeterminate = algunsItensSelecionados.value
@@ -813,7 +780,6 @@ async function excluirItensSelecionados() {
   }
 }
 
-// ===== Transferência em massa de itens selecionados =====
 const modalTransferirVariosAberto = ref(false)
 
 function iniciarTransferenciaVarios() {
@@ -827,40 +793,34 @@ async function aoConcluirTransferenciaVarios() {
   await carregarLotes()
 }
 
-// ===== Transferência de item entre lotes =====
 const modalTransferirAberto     = ref(false)
 const itemArrastado             = ref(null)
 const itemParaTransferir        = ref(null)
 const loteDestinoPreSelecionado = ref(null)
 
-// Formata números com separador de milhar no padrão brasileiro (ex: 17050 -> 17.050)
 function formatNumero(valor) {
   return Number(valor ?? 0).toLocaleString('pt-BR')
 }
 
 const loteAtivo = computed(() => lotes.value.find(l => l.id_lote === tabAtiva.value) || null)
 
-// ===== Filtros dos itens do lote ativo =====
 const busca         = ref('')
-const filtroCentro  = ref(null)      // null = todos | 'sem' = sem centro | id
-const filtroEstoque = ref('todos')   // todos | com | sem
-const filtroStatus     = ref('todos')   // todos | vencido | vencendo | critico | ok
-const filtroPrioridade = ref('')        // '' = todas | A | B | C
+const filtroCentro  = ref(null)
+const filtroEstoque = ref('todos')
+const filtroStatus     = ref('todos')
+const filtroPrioridade = ref('')
 
-// Painel aberto abaixo da busca: null | 'filtros' | 'colunas'
 const painelAberto = ref(null)
 
 function alternarPainel(nome) {
   painelAberto.value = painelAberto.value === nome ? null : nome
 }
 
-// Mesmas regras dos badges da tabela (janela de "vencendo" vem do composable compartilhado)
 const itemVencido  = (i) => !!i.data_validade && estaVencido(i.data_validade)
 const itemVencendo = (i) =>
   !!i.data_validade && !estaVencido(i.data_validade) && proximoDoVencimento(i.data_validade, diasAlerta.value)
 const itemCritico  = (i) => i.quantidade === 0 || i.quantidade <= (i.produto?.estoque_minimo ?? 0)
 
-// Ignora acentos e maiúsculas/minúsculas
 const normalizar = (s) =>
   String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
@@ -899,7 +859,6 @@ const filtrosAtivos = computed(() =>
   filtroStatus.value !== 'todos' || !!filtroPrioridade.value
 )
 
-// Quantidade de filtros do painel (a busca não conta: ela já fica visível no campo)
 const qtdFiltrosAvancados = computed(() =>
   [
     filtroCentro.value !== null,
@@ -912,7 +871,6 @@ const qtdFiltrosAvancados = computed(() =>
 const ROTULOS_ESTOQUE = { com: 'Com estoque', sem: 'Sem estoque' }
 const ROTULOS_STATUS  = { vencido: 'Vencido', vencendo: 'Vencendo', critico: 'Estoque crítico', ok: 'Sem alertas' }
 
-// Chips removíveis dos filtros ativos
 const chipsFiltros = computed(() => {
   const chips = []
 
@@ -952,9 +910,6 @@ function limparFiltros() {
   filtroPrioridade.value = ''
 }
 
-// ===== Colunas opcionais (Fornecedor, Localização, Centro de custo) =====
-// Modo automático: a coluna só aparece se algum item do lote tiver dado.
-// Se o usuário marcar/desmarcar no painel "Colunas", a escolha vale para todos os lotes.
 const CHAVE_COLUNAS = 'sige:lotes-colunas:v1'
 
 const COLUNAS_OPCIONAIS = [
@@ -988,7 +943,6 @@ function salvarPrefColunas() {
   }
 }
 
-// usa todos os itens do lote (não só os filtrados) para as colunas não "pularem" ao filtrar
 const temDado = computed(() => {
   const itens = loteAtivo.value?.itens ?? []
   return {
@@ -1018,7 +972,6 @@ function restaurarColunas() {
   salvarPrefColunas()
 }
 
-// ===== Paginação de itens (controles ficam no componente Paginacao) =====
 const itensPorPagina = ref(10)
 const paginaAtual = ref(1)
 
@@ -1031,7 +984,6 @@ const itensPaginados = computed(() => {
   return itensFiltrados.value.slice(inicio, inicio + itensPorPagina.value)
 })
 
-// ao trocar de lote: volta pra página 1, limpa a seleção de itens e os filtros
 watch(tabAtiva, () => {
   paginaAtual.value       = 1
   modoSelecaoItens.value  = false
@@ -1039,25 +991,21 @@ watch(tabAtiva, () => {
   limparFiltros()
 })
 
-// ao mudar itens por página: volta pra página 1 (evita ficar numa página inexistente)
 watch(itensPorPagina, () => {
   paginaAtual.value = 1
 })
 
-// ao mudar qualquer filtro: volta pra página 1 e limpa a seleção
 watch([busca, filtroCentro, filtroEstoque, filtroStatus, filtroPrioridade], () => {
   paginaAtual.value       = 1
   itensSelecionados.value = new Set()
 })
 
-// evita ficar numa página vazia se a lista encolher
 watchEffect(() => {
   if (paginaAtual.value > totalPaginas.value) {
     paginaAtual.value = totalPaginas.value
   }
 })
 
-// ===== Troca de tab (desvia pra seleção quando ativo) =====
 function aoClicarTab(idLote) {
   if (modoSelecaoLotes.value) {
     alternarSelecaoLote(idLote)
@@ -1066,7 +1014,6 @@ function aoClicarTab(idLote) {
   tabAtiva.value = idLote
 }
 
-// ===== Ações (criar lote / adicionar item) =====
 function iniciarCriacaoLote() {
   loteSelecionado.value = null
   modalAberto.value = true
@@ -1081,7 +1028,6 @@ function iniciarAdicaoItem() {
   modalItemAberto.value = true
 }
 
-// ===== Transferência de item entre lotes =====
 function aoIniciarArraste(evt) {
   itemArrastado.value = itensPaginados.value[evt.oldIndex]
 }
@@ -1100,7 +1046,6 @@ function iniciarTransferenciaManual(item) {
   modalTransferirAberto.value = true
 }
 
-// ===== Exclusão de lote (confirmação simples) =====
 const modalExcluirLoteAberto = ref(false)
 
 function iniciarExclusaoLote() {
@@ -1118,7 +1063,6 @@ async function excluirLote() {
     console.error(e)
     erro('Erro ao excluir lote.')
     modalExcluirLoteAberto.value = false
-    // lista desatualizada (lote já excluído): recarrega
     if ([404, 422].includes(e.response?.status)) await carregarLotes()
   }
 }
@@ -1141,7 +1085,7 @@ async function aoTerminarArraste(evt) {
     loteDestinoPreSelecionado.value = idLoteDestino
     modalTransferirAberto.value = true
     itemArrastado.value = null
-    await carregarLotes() // desfaz a reordenação visual local, já que o item saiu do lote
+    await carregarLotes()
     return
   }
 
@@ -1183,7 +1127,6 @@ async function carregarLotes() {
   try {
     const resposta = await api.get('/lotes')
     lotes.value = resposta.data
-    // se a aba ativa não existe mais (lote excluído), cai para o primeiro lote
     if (lotes.value.length > 0 && !lotes.value.some(l => l.id_lote === tabAtiva.value)) {
       tabAtiva.value = lotes.value[0].id_lote
     }

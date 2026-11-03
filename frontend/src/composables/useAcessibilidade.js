@@ -15,7 +15,6 @@ function aplicarFonte(nivel) {
   document.documentElement.style.fontSize = `${porcentagem}%`
 }
 
-// aplica imediatamente ao carregar o módulo (evita "flash" de tamanho normal)
 aplicarFonte(nivelAtual.value)
 
 watch(nivelAtual, (novoNivel) => {

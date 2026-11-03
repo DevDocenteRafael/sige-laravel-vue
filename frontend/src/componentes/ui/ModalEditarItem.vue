@@ -12,7 +12,6 @@
         </button>
       </div>
 
-      <!-- Dados do produto: somente leitura. Editar nome/SKU/categoria/fornecedor é feito na tela de Produtos. -->
       <div class="mb-5 p-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-sm">
         <p class="text-slate-900 dark:text-white font-medium">{{ item.produto?.nome || '—' }}</p>
         <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
@@ -111,7 +110,6 @@
       </form>
     </div>
 
-    <!-- Modal de confirmação: descartar alterações -->
     <ModalConfirmacao
       v-if="modalDescartarAberto"
       titulo="Descartar alterações?"
@@ -143,8 +141,6 @@ const { aoIniciarArraste, estiloArraste } = useModalArrastavel()
 const { centros, carregar: carregarCentros } = useCentrosCusto()
 onMounted(carregarCentros)
 
-// Lista só centros ativos, mas mantém o centro que o item já tem (mesmo inativo),
-// senão o select ficaria em branco ao abrir a edição.
 const centrosDisponiveis = computed(() =>
   centros.value.filter((c) => c.ativo || c.id_centro_custo === props.item.id_centro_custo)
 )
@@ -152,33 +148,27 @@ const centrosDisponiveis = computed(() =>
 const salvando = ref(false)
 const erro     = ref('')
 
-// prioridade_manual pode vir como true/false, 1/0 ou "1"/"0"
 const ehManual = Boolean(
   props.item.prioridade_manual === true ||
   props.item.prioridade_manual === 1 ||
   props.item.prioridade_manual === '1'
 )
 
-// Classe que o sistema calculou sozinho (só serve de informação quando é automática)
 const classeCalculada = computed(() =>
   ehManual ? null : (props.item.prioridade_abc || null)
 )
 
-// Normaliza a data para o formato aceito pelo <input type="date">
 function paraInputDate(valor) {
   if (!valor) return ''
   return String(valor).slice(0, 10)
 }
 
-// Só campos que o backend (ItemLoteController@update) realmente salva
 const valoresOriginais = {
   quantidade:      props.item.quantidade     ?? null,
   unidade_medida:  props.item.unidade_medida || 'UN',
   data_validade:   paraInputDate(props.item.data_validade),
   localizacao:     props.item.localizacao    || '',
   id_centro_custo: props.item.id_centro_custo ?? null,
-  // Se não for manual, o select fica em "Automática" mesmo que exista
-  // uma classe calculada gravada no banco — senão ao salvar ela virava manual.
   prioridade_abc:  ehManual ? (props.item.prioridade_abc || '') : '',
 }
 
@@ -190,7 +180,6 @@ const temAlteracoes = computed(() => {
   )
 })
 
-// ===== Confirmação de descarte =====
 const modalDescartarAberto = ref(false)
 
 function tentarFechar() {
@@ -218,8 +207,6 @@ async function salvar() {
       id_centro_custo: form.value.id_centro_custo,
     }
 
-    // Só envia prioridade_abc quando o usuário escolheu manualmente.
-    // Ausente = automática (o backend zera prioridade_manual e recalcula).
     if (form.value.prioridade_abc) {
       dados.prioridade_abc = form.value.prioridade_abc
     }

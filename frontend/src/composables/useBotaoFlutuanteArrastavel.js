@@ -1,14 +1,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-/**
- * Deixa um botão flutuante (position: fixed) arrastável pela tela, com mouse e toque.
- * - O clique normal continua funcionando: só vira arrasto depois de mover ~5px.
- * - Fica sempre dentro da tela e lembra a última posição (localStorage).
- * - A posição é guardada como distância da direita e de baixo, igual ao
- *   "bottom-5 right-5" original, então o botão não pula quando o menu abre.
- */
 export function useBotaoFlutuanteArrastavel({ chave = 'sige:posicao-botao-suporte', margem = 8 } = {}) {
-  const posicao = ref(null) // { direita, baixo } em px; null = posição padrão do CSS
+  const posicao = ref(null)
   const arrastando = ref(false)
   let inicio = null
   let moveu = false
@@ -29,7 +22,6 @@ export function useBotaoFlutuanteArrastavel({ chave = 'sige:posicao-botao-suport
     try {
       localStorage.setItem(chave, JSON.stringify(posicao.value))
     } catch {
-      /* sem localStorage: a posição vale só até recarregar */
     }
   }
 
@@ -40,7 +32,6 @@ export function useBotaoFlutuanteArrastavel({ chave = 'sige:posicao-botao-suport
         posicao.value = limitar(salvo.direita, salvo.baixo)
       }
     } catch {
-      /* ignora valor inválido */
     }
   }
 
@@ -74,12 +65,11 @@ export function useBotaoFlutuanteArrastavel({ chave = 'sige:posicao-botao-suport
     inicio = null
     arrastando.value = false
     if (moveu) {
-      bloquearClique = true // o "click" logo após o arrasto não deve abrir/fechar o menu
+      bloquearClique = true
       salvar()
     }
   }
 
-  // Use com @click.capture no botão: descarta o clique gerado ao soltar o arrasto
   function aoClicarCapturando(e) {
     if (bloquearClique) {
       e.preventDefault()
@@ -98,7 +88,6 @@ export function useBotaoFlutuanteArrastavel({ chave = 'sige:posicao-botao-suport
   })
   onUnmounted(() => window.removeEventListener('resize', aoRedimensionar))
 
-  // Aplique no elemento fixo que envolve o botão
   const estilo = computed(() => {
     if (!posicao.value) return {}
     return {

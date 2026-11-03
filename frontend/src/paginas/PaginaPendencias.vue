@@ -8,7 +8,6 @@
     <p v-if="carregando" class="text-sm text-slate-500 dark:text-slate-400">Carregando...</p>
 
     <template v-else>
-      <!-- Notas -->
       <section class="mb-8">
         <h2 class="text-lg font-semibold mb-3">Notas fiscais ({{ notas.length }})</h2>
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 overflow-x-auto">
@@ -51,7 +50,6 @@
         </div>
       </section>
 
-      <!-- Pedidos -->
       <section>
         <h2 class="text-lg font-semibold mb-3">Pedidos aguardando recebimento ({{ pedidos.length }})</h2>
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 overflow-x-auto">

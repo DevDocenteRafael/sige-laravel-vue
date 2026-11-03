@@ -1,7 +1,6 @@
 <template>
   <div v-if="aberto" class="fixed z-[9999]" :style="estiloPosicao">
 
-    <!-- Painel expandido -->
     <div class="mb-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-3 flex flex-col gap-3 w-56">
       <div class="flex items-center justify-between px-1">
         <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Acessibilidade</p>
@@ -15,7 +14,6 @@
         </button>
       </div>
 
-      <!-- Tamanho da fonte -->
       <div class="flex flex-col gap-2">
         <p class="text-xs font-medium text-slate-500 dark:text-slate-400 px-1">Tamanho da fonte</p>
 
@@ -54,7 +52,6 @@
 
       <div class="border-t border-slate-200 dark:border-slate-700"></div>
 
-      <!-- Contraste -->
       <SeletorContraste />
     </div>
 
@@ -69,7 +66,6 @@ import SeletorContraste from './SeletorContraste.vue'
 
 defineProps({
   aberto: { type: Boolean, default: false },
-  // Posição do painel (right/bottom/top em px). O MenuSuporte calcula para ficar colado na bolinha.
   estiloPosicao: {
     type: Object,
     default: () => ({ bottom: '6rem', right: '1.25rem' })

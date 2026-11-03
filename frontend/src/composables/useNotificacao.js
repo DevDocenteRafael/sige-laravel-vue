@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 
-// ===== Toasts (substituem window.alert) =====
 const toasts = ref([])
 let proximoIdToast = 1
 
@@ -17,7 +16,6 @@ function removerToast(id) {
   toasts.value = toasts.value.filter(t => t.id !== id)
 }
 
-// ===== Confirmação (substitui window.confirm) =====
 const confirmacaoAberta   = ref(false)
 const confirmacaoTitulo   = ref('')
 const confirmacaoMensagem = ref('')
@@ -43,7 +41,6 @@ function responderConfirmacao(resposta) {
 
 export function useNotificacao() {
   return {
-    // toasts
     toasts,
     notificar,
     removerToast,
@@ -52,7 +49,6 @@ export function useNotificacao() {
     aviso:   (msg, duracaoMs = 5000) => notificar(msg, 'aviso', duracaoMs),
     info:    (msg, duracaoMs) => notificar(msg, 'info', duracaoMs),
 
-    // confirmação
     confirmacaoAberta,
     confirmacaoTitulo,
     confirmacaoMensagem,

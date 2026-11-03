@@ -1,6 +1,5 @@
 <template>
   <div class="p-6 min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white">
-    <!-- Cabeçalho -->
     <div class="flex items-start justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Histórico de Movimentações</h1>
@@ -19,7 +18,6 @@
       </div>
     </div>
 
-    <!-- Filtros -->
     <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 mb-4">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
@@ -130,7 +128,6 @@
       <p class="text-slate-500 dark:text-slate-400 text-sm mt-4">{{ formatNumero(movimentacoesFiltradas.length) }} movimentação(ões) encontrada(s)</p>
     </div>
 
-    <!-- Tabela -->
     <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 min-h-[200px]">
       <div v-if="movimentacoesFiltradas.length === 0" class="text-center py-16">
         <PackageMinus class="mx-auto mb-3 text-slate-400 dark:text-slate-600" :size="40" />
@@ -185,7 +182,6 @@
       </table>
     </div>
 
-    <!-- Modal de Confirmação de Exclusão -->
     <div v-if="movParaExcluir" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-6">
         <div class="flex items-center gap-3 mb-4">
@@ -230,7 +226,6 @@ import autoTable from 'jspdf-autotable'
 const auth  = useAutenticacaoStore()
 const ehRoot = computed(() => auth.ehRoot)
 
-// ----- ESTADO -----
 const SEM_CENTRO = 'Sem centro de custo'
 const TODOS_CENTROS = 'Todos os Centros'
 
@@ -253,7 +248,6 @@ const filtros = ref({
   dataFinal: ''
 })
 
-// Formata números com separador de milhar no padrão brasileiro (ex: 17050 -> 17.050)
 function formatNumero(valor) {
   return Number(valor ?? 0).toLocaleString('pt-BR')
 }
@@ -271,7 +265,6 @@ onMounted(async () => {
   }
 })
 
-// ----- EXCLUIR -----
 function confirmarExclusao(mov) {
   movParaExcluir.value = mov
 }
@@ -289,7 +282,6 @@ async function excluir() {
   }
 }
 
-// ----- COMPUTED -----
 const movimentacoesFiltradas = computed(() => {
   return movimentacoes.value.filter((mov) => {
     const buscaOk = filtros.value.busca === '' ||
@@ -424,10 +416,10 @@ function exportarPDF() {
     styles: { fontSize: 9, cellPadding: 3 },
     alternateRowStyles: { fillColor: [240, 240, 240] },
     columnStyles: {
-      6: { halign: 'right' }, // Quantidade
+      6: { halign: 'right' },
     },
     didParseCell: (data) => {
-      if (data.section === 'body' && data.column.index === 5) { // Tipo
+      if (data.section === 'body' && data.column.index === 5) {
         const ehEntrada = String(data.cell.raw) === 'Entrada'
         data.cell.styles.fillColor = ehEntrada ? [46, 125, 50] : [198, 40, 40]
         data.cell.styles.textColor = [255, 255, 255]

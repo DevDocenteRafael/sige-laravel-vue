@@ -1,7 +1,6 @@
 <template>
   <div class="p-6 min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white">
 
-    <!-- Cabeçalho -->
     <div class="flex justify-between items-center mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Gerenciamento de Usuários</h1>
@@ -16,7 +15,6 @@
       </button>
     </div>
 
-    <!-- Busca -->
     <div class="relative mb-6">
       <Search :size="18" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
       <input
@@ -27,12 +25,10 @@
       />
     </div>
 
-    <!-- Carregando -->
     <div v-if="carregando" class="text-center py-12 text-slate-500 dark:text-slate-400">
       Carregando usuários...
     </div>
 
-    <!-- Sem usuários -->
     <div v-else-if="usuariosFiltrados.length === 0" class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-16 text-center">
       <UserX class="mx-auto mb-4 text-slate-400 dark:text-slate-600" :size="48" />
       <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Nenhum usuário encontrado</h2>
@@ -41,7 +37,6 @@
       </p>
     </div>
 
-    <!-- Tabela de usuários -->
     <div v-else class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden mb-6">
       <table class="w-full text-sm">
         <thead>
@@ -112,7 +107,6 @@
       </table>
     </div>
 
-    <!-- Cards de totais -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">Total de Usuários</p>
@@ -128,7 +122,6 @@
       </div>
     </div>
 
-    <!-- Modal de cadastro/edição -->
     <ModalUsuario
       v-if="modalAberto"
       :usuario="usuarioSelecionado"
@@ -136,7 +129,6 @@
       @salvo="aoSalvar"
     />
 
-    <!-- Modal de confirmação de status -->
     <ModalConfirmacao
       v-if="usuarioParaAlternarStatus"
       :titulo="usuarioParaAlternarStatus.ativo ? 'Inativar usuário' : 'Ativar usuário'"

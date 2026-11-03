@@ -14,7 +14,6 @@
         </button>
       </div>
 
-      <!-- Atalho: aplicar o mesmo destino a todos -->
       <div class="flex items-end gap-2 mb-5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
         <div class="flex-1">
           <label class="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Aplicar este lote a todos os itens</label>
@@ -38,7 +37,6 @@
         </button>
       </div>
 
-      <!-- Tabela de linhas editáveis -->
       <div class="space-y-3 mb-6">
         <div
           v-for="linha in linhas"
@@ -115,8 +113,8 @@ import { useNotificacao } from '@/composables/useNotificacao'
 import { useModalArrastavel } from '@/composables/useModalArrastavel'
 
 const props = defineProps({
-  itens: { type: Array, required: true }, // itens de item_lote selecionados (com .produto carregado)
-  lotes: { type: Array, required: true }, // todos os lotes (para popular os selects)
+  itens: { type: Array, required: true },
+  lotes: { type: Array, required: true },
 })
 
 const emit = defineEmits(['fechar', 'salvo'])
@@ -136,7 +134,7 @@ const linhas = ref(
     idLoteOrigem:         item.id_lote,
     numeroLoteOrigem:     numeroLote(item.id_lote),
     quantidadeDisponivel: item.quantidade,
-    quantidade:           item.quantidade, // por padrão, transfere tudo
+    quantidade:           item.quantidade,
     idLoteDestino:        null,
   }))
 )

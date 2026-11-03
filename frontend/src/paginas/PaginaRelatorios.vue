@@ -1,13 +1,11 @@
 <template>
   <div class="p-6 min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white">
 
-    <!-- Cabeçalho -->
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Relatórios</h1>
       <p class="text-sm text-slate-500 dark:text-slate-400">Filtros, visualização e exportação de dados</p>
     </div>
 
-    <!-- Filtros -->
     <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 mb-6">
       <div class="flex items-center gap-2 mb-4">
         <Filter :size="16" class="text-blue-600 dark:text-blue-400" />
@@ -15,7 +13,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <!-- Lote -->
         <div>
           <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">Lote</label>
           <div class="relative">
@@ -39,7 +36,6 @@
           </div>
         </div>
 
-        <!-- Vencimento -->
         <div>
           <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">Vencimento em até</label>
           <div class="relative">
@@ -63,7 +59,6 @@
           </div>
         </div>
 
-        <!-- Busca -->
         <div>
           <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">Buscar</label>
           <div class="relative">
@@ -131,7 +126,6 @@
       </div>
     </div>
 
-    <!-- Cards de resumo -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
         <p class="text-slate-500 dark:text-slate-400 text-sm mb-2">Itens Filtrados</p>
@@ -147,7 +141,6 @@
       </div>
     </div>
 
-    <!-- Tabela -->
     <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
       <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <h2 class="font-semibold text-slate-900 dark:text-white">
@@ -250,7 +243,6 @@ const itens      = ref([])
 const dropdownLoteAberto = ref(false)
 const dropdownVencAberto  = ref(false)
 
-// Seleção de itens (id_item)
 const selecionados = ref(new Set())
 
 const opcoesVencimento = ['Todos', 'Vencidos', 'Vencendo em 7 dias', 'Vencendo em 30 dias', 'Vencendo em 90 dias']
@@ -262,16 +254,13 @@ const filtros = ref({
   vencimento: 'Todos',
   dataInicial: '',
   dataFinal: '',
-  centro: '', // '' = todos | 'sem' = sem centro | id
+  centro: '',
 })
 
-// Formata números com separador de milhar no padrão brasileiro (ex: 17050 -> 17.050)
 function formatNumero(valor) {
   return Number(valor ?? 0).toLocaleString('pt-BR')
 }
 
-// ===== Centro de custo =====
-// Aceita id direto, objeto aninhado ou código, conforme o backend devolver
 function idCentro(item) {
   return item.id_centro_custo ?? item.centro_custo?.id_centro_custo ?? null
 }
@@ -301,7 +290,6 @@ function centroConfere(item) {
   if (id !== null && id !== undefined && id !== '') {
     return Number(id) === Number(filtro)
   }
-  // fallback: backend só devolveu o código
   const selecionado = centros.value.find((x) => Number(x.id_centro_custo) === Number(filtro))
   return !!selecionado && centroTexto(item) === selecionado.codigo
 }
@@ -360,7 +348,6 @@ const itensFiltrados = computed(() => {
   })
 })
 
-// Se os filtros mudarem, remove da seleção itens que saíram da lista filtrada
 watch(itensFiltrados, (novosItens) => {
   if (!selecionados.value.size) return
   const idsVisiveis = new Set(novosItens.map(i => i.id_item))
@@ -433,10 +420,8 @@ function limparFiltros() {
   filtros.value = { busca: '', lote: 'Todos os lotes', vencimento: 'Todos', dataInicial: '', dataFinal: '', centro: '' }
 }
 
-// Exportação
 const CABECALHOS = ['Lote', 'SKU', 'Produto', 'Quantidade', 'Validade', 'Fornecedor', 'Localização', 'Centro de Custo', 'Status']
 
-// Retorna apenas os selecionados (se houver seleção) ou todos os filtrados
 function itensParaExportar() {
   if (selecionados.value.size > 0) {
     return itensFiltrados.value.filter(i => selecionados.value.has(i.id_item))
@@ -518,10 +503,10 @@ async function exportarExcel() {
     linha.getCell('quantidade').numFmt = '#,##0'
     linha.getCell('quantidade').alignment = { horizontal: 'right' }
 
-    let cor = 'FF2E7D32' // verde (OK)
+    let cor = 'FF2E7D32'
     if (item.data_validade) {
-      if (dias < 0) cor = 'FFC62828'       // vermelho (vencido)
-      else if (dias <= 30) cor = 'FFEF6C00' // laranja (vencendo)
+      if (dias < 0) cor = 'FFC62828'
+      else if (dias <= 30) cor = 'FFEF6C00'
     }
 
     const celulaStatus = linha.getCell('status')
@@ -557,10 +542,10 @@ function exportarPDF() {
     styles: { fontSize: 9, cellPadding: 3 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
     columnStyles: {
-      3: { halign: 'right' }, // Quantidade
+      3: { halign: 'right' },
     },
     didParseCell: (data) => {
-      if (data.section === 'body' && data.column.index === 8) { // Status
+      if (data.section === 'body' && data.column.index === 8) {
         const texto = String(data.cell.raw)
         if (texto.startsWith('Vencido')) {
           data.cell.styles.fillColor = [198, 40, 40]

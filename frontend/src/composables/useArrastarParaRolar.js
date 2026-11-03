@@ -1,6 +1,5 @@
 import { ref, onUnmounted } from 'vue'
 
-// Arrastar com o mouse para rolar um container (usado na tabela de itens)
 export function useArrastarParaRolar() {
   const elementoRef = ref(null)
 
@@ -45,7 +44,6 @@ export function useArrastarParaRolar() {
     window.removeEventListener('mouseup', aoSoltar)
     if (elementoRef.value) elementoRef.value.style.cursor = ''
 
-    // após arrastar, engole o click para não abrir o modal de detalhes da linha
     if (moveu) {
       const engolir = (ev) => {
         ev.stopPropagation()

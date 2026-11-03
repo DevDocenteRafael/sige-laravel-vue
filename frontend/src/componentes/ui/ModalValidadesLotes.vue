@@ -5,7 +5,6 @@
   >
     <div class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-6" :style="estiloArraste">
 
-      <!-- Cabeçalho -->
       <div class="flex justify-between items-start mb-1 cursor-grab active:cursor-grabbing select-none" @mousedown="aoIniciarArraste">
         <h2 class="text-xl font-bold">Detalhes do Produto</h2>
         <button
@@ -19,7 +18,6 @@
         Visualize as validades e lotes cadastrados para este produto.
       </p>
 
-      <!-- Código / Nome -->
       <div class="grid grid-cols-2 gap-4 mb-5">
         <div>
           <p class="text-blue-500 dark:text-blue-400 text-xs mb-1">Código / SKU</p>
@@ -31,7 +29,6 @@
         </div>
       </div>
 
-      <!-- Quantidade total / Categoria -->
       <div class="grid grid-cols-2 gap-4 mb-6">
         <div>
           <p class="text-blue-500 dark:text-blue-400 text-xs mb-1">Quantidade Total</p>
@@ -43,7 +40,6 @@
         </div>
       </div>
 
-      <!-- Lista de lotes/validades -->
       <p class="font-bold mb-3">Lotes e Validades</p>
       <div class="space-y-3 mb-2">
         <div
@@ -101,7 +97,6 @@ defineEmits(['fechar'])
 
 const { aoIniciarArraste, estiloArraste } = useModalArrastavel()
 
-// Ao abrir o modal com um lote específico destacado, rola até ele
 watch(
   () => [props.produto, props.loteDestaque],
   async () => {

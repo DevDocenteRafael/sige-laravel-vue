@@ -3,7 +3,6 @@
     <div v-if="isOpen" class="fixed inset-0 bg-black/60 z-[9999] flex items-start justify-center pt-24 px-4" @click.self="fechar">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl w-full max-w-xl overflow-hidden">
 
-        <!-- Input -->
         <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-800">
           <Search :size="18" class="text-slate-400 dark:text-slate-500 shrink-0" />
           <input
@@ -17,7 +16,6 @@
           <kbd class="px-1.5 py-0.5 text-xs font-mono border rounded bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400">ESC</kbd>
         </div>
 
-        <!-- Resultados -->
         <div class="max-h-96 overflow-y-auto py-2">
           <div v-if="carregando" class="text-center py-8 text-sm text-slate-400 dark:text-slate-500">
             Buscando...
@@ -60,7 +58,6 @@
           </button>
         </div>
 
-        <!-- Rodapé -->
         <div class="flex items-center gap-4 px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-xs text-slate-500 dark:text-slate-400">
           <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 border rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700">↑↓</kbd> Navegar</span>
           <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 border rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700">Enter</kbd> Selecionar</span>
@@ -79,7 +76,7 @@ import api from '@/servicos/api'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
-  itensMenu: { type: Array, default: () => [] }, // [{ nome, rota, icone }]
+  itensMenu: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['fechar'])

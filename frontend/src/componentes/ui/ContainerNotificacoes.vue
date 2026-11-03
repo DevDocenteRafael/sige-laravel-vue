@@ -1,5 +1,4 @@
 <template>
-  <!-- ===== TOASTS ===== -->
   <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-lg px-4 pointer-events-none">
     <TransitionGroup
       tag="div"
@@ -26,7 +25,6 @@
     </TransitionGroup>
   </div>
 
-  <!-- ===== CONFIRMAÇÃO ===== -->
   <div
     v-if="confirmacaoAberta"
     class="fixed inset-0 bg-black/70 flex items-center justify-center z-[90]"

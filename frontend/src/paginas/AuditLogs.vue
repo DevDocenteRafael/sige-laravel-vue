@@ -1,6 +1,5 @@
 <template>
   <div :class="['p-6 min-h-screen', temaClaro ? 'bg-gray-100 text-gray-900' : 'bg-[#0f1117] text-white']">
-    <!-- Header -->
     <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 class="text-2xl font-bold tracking-tight">Logs de Auditoria</h1>
@@ -10,7 +9,6 @@
       </div>
     </div>
 
-    <!-- Cards de Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div
         v-for="card in statCards"
@@ -30,7 +28,6 @@
       </div>
     </div>
 
-    <!-- Filtros -->
     <div
       :class="[
         'rounded-xl p-4 mb-4 border flex flex-wrap gap-3 items-center',
@@ -89,7 +86,6 @@
         <option value="Transferência">Transferência</option>
       </select>
 
-      <!-- Botão de exportação com opções -->
       <div ref="exportMenuRoot" class="relative">
         <button
           :class="[
@@ -128,7 +124,6 @@
       </div>
     </div>
 
-    <!-- Tabela -->
     <div :class="['rounded-xl border overflow-hidden', temaClaro ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#1a1d27] border-gray-800']">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -188,7 +183,6 @@
         </table>
       </div>
 
-      <!-- Paginação -->
       <div
         :class="[
           'flex justify-between items-center px-6 py-4 border-t text-sm',
@@ -251,7 +245,7 @@ const actionFilter = ref('all')
 const pagination   = ref({ current_page: 1, last_page: 1 })
 
 const showExportMenu = ref(false)
-const exporting       = ref(null) // 'csv' | 'xlsx' | 'pdf' | null
+const exporting       = ref(null)
 const exportMenuRoot  = ref(null)
 
 let searchDebounce = null

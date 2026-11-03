@@ -1,12 +1,10 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
-  <!-- Janela do chat -->
   <div
     v-if="aberto"
     class="fixed z-50 w-96 max-w-[calc(100vw-1rem)] h-[32rem] max-h-[calc(100vh-1rem)] rounded-xl shadow-2xl flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-chat-in"
     :style="estiloPosicao"
   >
-    <!-- Cabeçalho -->
     <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-blue-600 rounded-t-xl">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -31,7 +29,6 @@
       </div>
     </div>
 
-    <!-- Mensagens -->
     <div ref="areaMensagens" class="flex-1 overflow-y-auto p-4 space-y-3">
       <div v-if="mensagens.length === 0" class="flex flex-col items-center text-center mt-6 gap-4">
         <p class="text-sm text-slate-400 dark:text-slate-500">
@@ -91,7 +88,6 @@
       </TransitionGroup>
     </div>
 
-    <!-- Campo de input -->
     <form class="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2" @submit.prevent="enviarMensagem()">
       <input
         v-model="pergunta"
@@ -123,7 +119,6 @@ const LIMITE_HISTORICO = 50
 
 const props = defineProps({
   aberto: { type: Boolean, default: false },
-  // Posição da janela (right/bottom/top em px). O MenuSuporte calcula para ficar colada na bolinha.
   estiloPosicao: {
     type: Object,
     default: () => ({ bottom: '6rem', right: '1.25rem' })

@@ -1,14 +1,12 @@
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center bg-black">
 
-    <!-- Logo e título FORA do card -->
     <div class="text-center mb-8">
   <img :src="logo" alt="Logo Senac" class="h-20 mx-auto mb-8" />
   <h1 class="text-4xl font-bold text-sky-400">SIGE</h1>
   <p class="text-sm mt-1 text-slate-400">Sistema de Gerenciamento de Estoque</p>
 </div>
 
-    <!-- Card só com o formulário -->
     <div class="w-full max-w-md px-8 py-8 rounded-xl bg-slate-900 border border-slate-800">
       <form @submit.prevent="fazerLogin">
 

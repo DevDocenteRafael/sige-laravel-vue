@@ -1,7 +1,6 @@
 <template>
   <div class="p-6 min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white">
 
-    <!-- ===================== LISTA ===================== -->
     <template v-if="!detalhe">
       <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 mb-6">
         <div>
@@ -101,7 +100,6 @@
       </div>
     </template>
 
-    <!-- ===================== DETALHE ===================== -->
     <template v-else>
       <button class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-4" @click="fecharDetalhe">
         <ArrowLeft :size="16" /> Voltar para os pedidos
@@ -191,7 +189,6 @@
       </div>
     </template>
 
-    <!-- ===================== MODAL: NOVO PEDIDO / EDITAR DADOS ===================== -->
     <div v-if="modalPedido" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
@@ -277,7 +274,6 @@
       </div>
     </div>
 
-    <!-- ===================== MODAL: ITEM ===================== -->
     <div v-if="modalItem" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-lg">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
@@ -316,7 +312,6 @@
       </div>
     </div>
 
-    <!-- ===================== MODAL: IMPORTAR ===================== -->
     <div v-if="modalImportar" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-lg">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
@@ -358,7 +353,6 @@
       </div>
     </div>
 
-    <!-- ===================== MODAL: EXCLUIR ===================== -->
     <div v-if="pedidoParaExcluir" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-md p-5">
         <h2 class="font-bold mb-2">Excluir pedido {{ pedidoParaExcluir.numero }}?</h2>
@@ -390,7 +384,6 @@ const rotulo          = 'block text-xs font-medium text-slate-500 dark:text-slat
 const botaoPrimario   = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition disabled:opacity-50 disabled:cursor-not-allowed'
 const botaoSecundario = 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition'
 
-// ===== Estado =====
 const lista            = ref([])
 const carregandoLista  = ref(false)
 const detalhe          = ref(null)
@@ -424,7 +417,6 @@ function linhaVazia() {
   return { sku: '', descricao: '', unidade: '', quantidade_pedida: '', valor_unitario: '' }
 }
 
-// ===== Formatação =====
 function formatarNumero(v) {
   return Number(v ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 }
@@ -440,7 +432,6 @@ const STATUS = {
 const rotuloStatus = (s) => STATUS[s]?.rotulo ?? s
 const classeStatus = (s) => STATUS[s]?.classe ?? 'bg-slate-500'
 
-// Junta as mensagens de validação do Laravel (errors) ou usa a mensagem geral
 function mensagensDeErro(e, padrao) {
   const data = e.response?.data
   if (data?.erros?.length) return data.erros
@@ -448,7 +439,6 @@ function mensagensDeErro(e, padrao) {
   return [data?.message || padrao]
 }
 
-// ===== Lista =====
 const pedidosFiltrados = computed(() => {
   const termo = busca.value.trim().toLowerCase()
   return lista.value.filter((p) => {
@@ -485,7 +475,6 @@ function fecharDetalhe() {
   carregarLista()
 }
 
-// ===== Exportação =====
 async function exportar(id) {
   try {
     const resposta = await api.get(id ? `/pedidos/${id}/exportar` : '/pedidos/exportar', { responseType: 'blob' })
@@ -501,7 +490,6 @@ async function exportar(id) {
   }
 }
 
-// ===== Novo pedido / editar dados =====
 function abrirNovo() {
   editandoCabecalho.value = false
   form.value = formVazio()
@@ -584,7 +572,6 @@ async function salvarPedido() {
   }
 }
 
-// ===== Itens do pedido =====
 function abrirItem(item) {
   itemForm.value = item
     ? {
@@ -643,7 +630,6 @@ async function removerItem(item) {
   }
 }
 
-// ===== Excluir pedido =====
 async function excluirPedido() {
   const p = pedidoParaExcluir.value
   try {
@@ -658,7 +644,6 @@ async function excluirPedido() {
   }
 }
 
-// ===== Importação (PDF do MXM direto; planilha com prévia) =====
 function abrirImportacao() {
   arquivo.value = null
   previa.value = null
@@ -675,7 +660,6 @@ async function aoEscolherArquivo(e) {
 
   if (!arquivo.value || ehPdf(arquivo.value)) return
 
-  // Planilha: valida antes de gravar
   const dados = new FormData()
   dados.append('arquivo', arquivo.value)
   dados.append('previa', '1')

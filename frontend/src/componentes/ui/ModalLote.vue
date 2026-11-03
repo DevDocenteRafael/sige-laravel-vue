@@ -50,7 +50,6 @@
       </form>
     </div>
 
-    <!-- Modal confirmação descartar alterações -->
     <div v-if="mostrarConfirmDescartar" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[60]">
       <div class="bg-white dark:bg-slate-900 border border-orange-300 dark:border-orange-700 rounded-xl w-full max-w-sm p-6 space-y-4">
         <p class="text-slate-900 dark:text-white font-semibold text-lg">Descartar alterações?</p>

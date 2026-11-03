@@ -68,7 +68,6 @@ router.beforeEach((rotaDestino) => {
   if (rotaDestino.meta.requerLogin && !autenticacao.estaLogado) return { name: 'login' }
   if (rotaDestino.meta.requerPerfil && autenticacao.perfil !== rotaDestino.meta.requerPerfil) return { name: 'dashboard' }
 
-  // Bloqueia qualquer rota fora da lista de permissões do perfil, mesmo digitando a URL direto
   if (
     rotaDestino.name &&
     !perfilPodeAcessarRota(autenticacao.perfil, rotaDestino.name)

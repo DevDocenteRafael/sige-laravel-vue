@@ -1,7 +1,6 @@
 <template>
   <div class="p-6 min-h-screen">
 
-    <!-- Cabeçalho -->
     <div class="flex justify-between items-center mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">Movimentos</h1>
@@ -17,7 +16,6 @@
       </div>
     </div>
 
-    <!-- Filtros -->
     <div class="flex flex-wrap gap-3 mb-4">
       <select v-model="filtroTipo" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
         <option value="">Todos os tipos</option>
@@ -31,17 +29,14 @@
       </button>
     </div>
 
-    <!-- Carregando -->
     <div v-if="carregando" class="text-center py-12 text-gray-500">
       Carregando movimentos...
     </div>
 
-    <!-- Sem resultados -->
     <div v-else-if="movimentosFiltrados.length === 0" class="text-center py-12 text-gray-500">
       Nenhum movimento encontrado.
     </div>
 
-    <!-- Tabela -->
     <div v-else class="bg-white rounded-xl shadow overflow-hidden">
       <table class="w-full">
         <thead class="bg-gray-50 border-b">
@@ -88,7 +83,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useAutenticacaoStore } from '@/servicos/autenticacao.store'
 import api from '@/servicos/api'
 import { useNotificacao } from '@/composables/useNotificacao'
-// ...
 const { erro } = useNotificacao()
 
 const autenticacao = useAutenticacaoStore()

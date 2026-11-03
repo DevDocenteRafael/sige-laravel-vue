@@ -6,7 +6,7 @@ const estado = reactive({
   mensagem: '',
   textoConfirmar: 'Confirmar',
   textoCancelar: 'Cancelar',
-  variante: 'padrao', // 'padrao' | 'perigo'
+  variante: 'padrao',
   resolver: null,
 })
 

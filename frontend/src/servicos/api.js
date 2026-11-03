@@ -1,14 +1,5 @@
-  // ============================================================
-  // Serviço de API
-  //
-  // Configura o axios para fazer todas as chamadas ao backend.
-  // Adiciona automaticamente o token de autenticação em cada
-  // requisição, e trata erros de forma centralizada.
-  // ============================================================
-
   import axios from 'axios'
 
-  // Cria uma instância do axios já configurada com a URL base
   const api = axios.create({
     baseURL: '/api',
     headers: {
@@ -17,8 +8,6 @@
     },
   })
 
-  // ---- Interceptor de requisição ----
-  // Antes de cada chamada, adiciona o token de autenticação
   api.interceptors.request.use((configuracao) => {
     const token = localStorage.getItem('token')
 
@@ -26,8 +15,6 @@
       configuracao.headers.Authorization = `Bearer ${token}`
     }
 
-    // Se for envio de arquivo (FormData), remove o Content-Type fixo
-    // para o axios/navegador definirem o boundary do multipart sozinhos
     if (configuracao.data instanceof FormData) {
       delete configuracao.headers['Content-Type']
     }
@@ -35,18 +22,10 @@
     return configuracao
   })
 
-  // ---- Interceptor de resposta ----
-  // Trata erros que vêm do backend de forma centralizada
   api.interceptors.response.use(
-    // Resposta com sucesso: passa direto
     (resposta) => resposta,
 
-    // Resposta com erro
     (erro) => {
-      // Se o backend retornou 401 (não autenticado), faz logout
-        // Se o backend retornou 401 (não autenticado), faz logout
-      // Mas ignora se o 401 veio da própria tela de login (senha errada),
-      // pra não sobrescrever a mensagem de erro antes do usuário ver
       const ehRotaDeLogin = erro.config?.url?.includes('/login')
 
       if (erro.response?.status === 401 && !ehRotaDeLogin) {
@@ -55,7 +34,6 @@
         window.location.href = '/login'
       }
 
-      // Repassamos o erro para quem chamou tratar
       return Promise.reject(erro)
     }
   )

@@ -1,12 +1,10 @@
 <template>
   <div class="p-6 space-y-6">
-    <!-- Header -->
     <div>
       <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Importação e Exportação</h1>
       <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">Gerencie importação de dados e exportação de relatórios</p>
     </div>
 
-    <!-- Cards de Stats -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div
         v-for="card in statsCards"
@@ -23,13 +21,11 @@
       </div>
     </div>
 
-    <!-- Exportar -->
     <div class="bg-slate-50 dark:bg-[#1a1a2e] border border-slate-200 dark:border-gray-700 rounded-xl p-6">
       <h2 class="text-green-600 dark:text-green-400 font-semibold text-lg mb-4 flex items-center gap-2">
         <i class="fas fa-download"></i> Exportar Dados
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Backup JSON -->
         <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
           <div>
             <p class="text-slate-900 dark:text-white font-semibold">Backup Completo</p>
@@ -45,7 +41,6 @@
           </button>
         </div>
 
-        <!-- Produtos -->
         <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
           <div>
             <p class="text-slate-900 dark:text-white font-semibold">Produtos</p>
@@ -71,7 +66,6 @@
           </div>
         </div>
 
-        <!-- Movimentações -->
         <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
           <div>
             <p class="text-slate-900 dark:text-white font-semibold">Movimentações</p>
@@ -99,14 +93,12 @@
       </div>
     </div>
 
-    <!-- Importar -->
     <div class="bg-slate-50 dark:bg-[#1a1a2e] border border-slate-200 dark:border-gray-700 rounded-xl p-6">
       <h2 class="text-blue-600 dark:text-blue-400 font-semibold text-lg mb-4 flex items-center gap-2">
         <i class="fas fa-upload"></i> Importar Dados
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-        <!-- Importar Excel -->
         <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
           <div>
             <p class="text-slate-900 dark:text-white font-semibold">Planilha Excel (.xlsx)</p>
@@ -115,7 +107,6 @@
             </p>
           </div>
           <div class="space-y-2">
-            <!-- Preview das colunas esperadas -->
             <div class="bg-blue-50 dark:bg-[#0f1a2e] border border-blue-200 dark:border-blue-900 rounded-lg px-3 py-2 text-xs text-blue-700 dark:text-blue-300 space-y-1">
               <p class="font-semibold text-blue-700 dark:text-blue-400">Colunas lidas da planilha:</p>
               <p>CÓDIGO · DESCRIÇÃO · UNIDADE · SALDO · ESTOQUE MÍNIMO · VALIDADE</p>
@@ -139,7 +130,6 @@
           </div>
         </div>
 
-        <!-- Restaurar Backup -->
         <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
           <div>
             <p class="text-slate-900 dark:text-white font-semibold">Restaurar Backup</p>
@@ -169,7 +159,6 @@
           </div>
         </div>
 
-        <!-- Info formato -->
         <div class="bg-blue-50 dark:bg-[#1a2744] border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
           <p class="text-blue-700 dark:text-blue-300 font-semibold flex items-center gap-2">
             <i class="fas fa-circle-info"></i> Como funciona a importação
@@ -186,7 +175,6 @@
       </div>
     </div>
 
-    <!-- Toast -->
     <transition name="fade">
       <div
         v-if="toast.show"
@@ -198,7 +186,6 @@
       </div>
     </transition>
 
-    <!-- Modal confirmação restaurar -->
     <div v-if="modalRestaurar" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
       <div class="bg-white dark:bg-[#1e1e2e] border border-red-300 dark:border-red-700 rounded-xl p-6 max-w-sm w-full mx-4 space-y-4">
         <p class="text-slate-900 dark:text-white font-semibold text-lg flex items-center gap-2">
@@ -225,7 +212,6 @@
       </div>
     </div>
 
-    <!-- Wizard de importação Excel -->
     <ImportarExcelWizard
       v-if="mostrarWizard"
       @fechar="mostrarWizard = false"
@@ -270,7 +256,6 @@ async function carregarStats() {
   }
 }
 
-// Salva um blob como arquivo
 function salvarBlob(blob, nome) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -280,7 +265,6 @@ function salvarBlob(blob, nome) {
   URL.revokeObjectURL(url)
 }
 
-// Confere se o blob é mesmo um xlsx (zip começa com "PK")
 async function ehXlsxValido(blob) {
   if (!blob || typeof blob.slice !== 'function') return false
   const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer())

@@ -48,7 +48,7 @@ const props = defineProps({
   titulo:          { type: String, required: true },
   subtitulo:       { type: String, default: 'Esta ação não pode ser desfeita' },
   mensagem:        { type: String, default: '' },
-  variante:        { type: String, default: 'perigo' }, // 'perigo' | 'aviso'
+  variante:        { type: String, default: 'perigo' },
   textoCancelar:   { type: String, default: 'Cancelar' },
   textoConfirmar:  { type: String, default: 'Confirmar' },
   textoCarregando: { type: String, default: 'Processando...' },

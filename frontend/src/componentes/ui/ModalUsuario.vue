@@ -54,7 +54,6 @@
           />
         </div>
 
-        <!-- Confirmação de senha (só aparece se digitou uma nova senha) -->
         <div v-if="formulario.password" class="mb-6">
           <label class="block text-sm font-medium text-slate-300 mb-1">Confirmar senha *</label>
           <input

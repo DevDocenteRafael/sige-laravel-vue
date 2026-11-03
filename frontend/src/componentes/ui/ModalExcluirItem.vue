@@ -2,7 +2,6 @@
   <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
 
-      <!-- Cabeçalho -->
       <div class="flex justify-between items-start mb-5">
         <div class="flex items-center gap-2">
           <Trash2 class="text-red-600 dark:text-red-400" :size="20" />
@@ -13,7 +12,6 @@
         </button>
       </div>
 
-      <!-- Aviso -->
       <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-5">
         <p class="text-slate-600 dark:text-slate-300 text-sm">
           Tem certeza que deseja excluir o item
@@ -22,7 +20,6 @@
         </p>
       </div>
 
-      <!-- Double check -->
       <div class="mb-6">
         <label class="block text-sm text-slate-500 dark:text-slate-400 mb-2">
           Digite <strong class="text-red-600 dark:text-red-400">Confirmar Exclusão</strong> para prosseguir

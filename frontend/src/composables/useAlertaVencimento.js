@@ -1,4 +1,3 @@
-// src/composables/useAlertaVencimento.js
 import { ref, computed, watch } from 'vue'
 
 const CHAVE = 'sige:alerta-vencimento:v1'
@@ -13,14 +12,12 @@ function carregar() {
   }
 }
 
-// Fora da função: o mesmo ref é compartilhado entre as páginas (Produtos e Lotes)
 const dias = ref(carregar())
 
 watch(dias, (v) => {
   try {
     localStorage.setItem(CHAVE, JSON.stringify(v))
   } catch {
-    /* ignora */
   }
 })
 

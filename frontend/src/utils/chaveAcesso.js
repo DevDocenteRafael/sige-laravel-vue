@@ -1,7 +1,3 @@
-// Chave de acesso da NF-e (44 caracteres).
-// Estrutura: cUF(2) AAMM(4) CNPJ(14, pode ter letras) modelo(2) série(3) número(9) tpEmis(1) cNF(8) DV(1)
-// Mesma regra do backend (app/Services/ChaveAcessoNfe.php).
-
 const UF_POR_CODIGO = {
   '11': 'RO', '12': 'AC', '13': 'AM', '14': 'RR', '15': 'PA', '16': 'AP', '17': 'TO',
   '21': 'MA', '22': 'PI', '23': 'CE', '24': 'RN', '25': 'PB', '26': 'PE', '27': 'AL', '28': 'SE', '29': 'BA',
@@ -10,12 +6,10 @@ const UF_POR_CODIGO = {
   '50': 'MS', '51': 'MT', '52': 'GO', '53': 'DF',
 }
 
-// Remove separadores/espaços e deixa em maiúsculas (o leitor ou a colagem podem trazê-los)
 export function normalizarChave(valor) {
   return String(valor ?? '').replace(/[^0-9A-Za-z]/g, '').toUpperCase()
 }
 
-// Módulo 11 (pesos 2 a 9, da direita para a esquerda) sobre ASCII - 48
 export function calcularDv(base) {
   let soma = 0
   let peso = 2
@@ -27,7 +21,6 @@ export function calcularDv(base) {
   return resto < 2 ? 0 : 11 - resto
 }
 
-// Devolve a mensagem do problema, ou null se é uma chave de NF-e válida
 export function validarChave(valor) {
   const chave = normalizarChave(valor)
 
@@ -56,7 +49,6 @@ export function validarChave(valor) {
   return null
 }
 
-// Só o que a chave informa de fato. Nome do fornecedor, itens, quantidades e valores NÃO estão na chave.
 export function extrairDadosChave(valor) {
   const chave = normalizarChave(valor)
   const cnpj = chave.slice(6, 20)

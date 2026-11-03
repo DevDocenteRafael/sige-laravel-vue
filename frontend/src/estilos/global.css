@@ -1,13 +1,7 @@
-/* ============================================================
-   Estilos globais do SIGE
-   ============================================================ */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Modo claro (padrão) ===== */
-/* ===== Modo claro (padrão) ===== */
 :root {
   --background: #f9fafb;
   --foreground: #111827;
@@ -33,7 +27,6 @@
   --sidebar-accent-foreground: #111827;
 }
 
-/* ===== Modo escuro ===== */
 .dark {
   --background: #000000;
   --foreground: #f9fafb;

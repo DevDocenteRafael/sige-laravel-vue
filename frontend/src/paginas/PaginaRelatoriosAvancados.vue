@@ -1,14 +1,12 @@
 <template>
   <div class="p-6 min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white">
 
-    <!-- Cabeçalho -->
     <div class="flex items-start justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Relatórios Avançados</h1>
         <p class="text-sm text-slate-500 dark:text-slate-400">Análises detalhadas de perdas e classificação ABC</p>
       </div>
       <div ref="menusRoot" class="flex gap-2">
-        <!-- Centro de custo -->
         <div class="relative">
           <button
             class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm px-4 py-2 rounded-lg hover:border-blue-500 transition"
@@ -92,7 +90,6 @@
       </div>
     </div>
 
-    <!-- Abas -->
     <div class="flex gap-0 mb-6 border-b border-slate-200 dark:border-slate-800">
       <button
         class="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition"
@@ -110,11 +107,9 @@
       </button>
     </div>
 
-    <!-- ===== ABA PERDAS ===== -->
     <div v-if="aba === 'perdas'">
       <div v-if="carregando" class="text-center py-12 text-slate-400 dark:text-slate-500">Carregando...</div>
       <template v-else>
-        <!-- Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex items-center gap-4">
             <div class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
@@ -148,7 +143,6 @@
           </div>
         </div>
 
-        <!-- Perdas por motivo -->
         <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 mb-6">
           <h2 class="font-semibold text-slate-900 dark:text-white mb-4">
             Perdas por Motivo
@@ -174,7 +168,6 @@
           </div>
         </div>
 
-        <!-- Tabela detalhada -->
         <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
           <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800">
             <h2 class="font-semibold text-slate-900 dark:text-white">
@@ -211,11 +204,9 @@
       </template>
     </div>
 
-    <!-- ===== ABA ABC ===== -->
     <div v-if="aba === 'abc'">
       <div v-if="carregando" class="text-center py-12 text-slate-400 dark:text-slate-500">Carregando...</div>
       <template v-else>
-        <!-- Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
             <p class="text-slate-500 dark:text-slate-400 text-xs mb-1">Total Produtos</p>
@@ -235,14 +226,12 @@
           </div>
         </div>
 
-        <!-- Gráfico de pizza simples em SVG -->
         <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 mb-6">
           <h2 class="font-semibold text-slate-900 dark:text-white mb-4">Distribuição por Classe ABC</h2>
           <div class="flex items-center justify-center gap-12">
             <svg viewBox="0 0 200 200" class="w-48 h-48">
               <circle cx="100" cy="100" r="80" :fill="temaClaroSvg.fundo" />
               <template v-if="dadosAbc.resumo?.total > 0">
-                <!-- Fatias calculadas -->
                 <path v-for="(fatia, i) in fatiasPizza" :key="i" :d="fatia.d" :fill="fatia.cor" />
               </template>
               <circle cx="100" cy="100" r="45" :fill="temaClaroSvg.centro" />
@@ -264,7 +253,6 @@
           </div>
         </div>
 
-        <!-- Tabela ABC -->
         <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-6">
           <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800">
             <h2 class="font-semibold text-slate-900 dark:text-white">Classificação ABC de Produtos</h2>
@@ -304,7 +292,6 @@
             </tbody>
           </table>
 
-          <!-- Paginação -->
           <div class="px-4 pb-4">
             <Paginacao
               v-model:pagina-atual="paginaAbc"
@@ -316,7 +303,6 @@
           </div>
         </div>
 
-        <!-- Legenda ABC -->
         <div class="rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-5">
           <h3 class="text-slate-900 dark:text-white font-semibold mb-3">Sobre a Análise ABC</h3>
           <p class="text-green-700 dark:text-green-400 text-sm mb-1"><strong>Classe A (80%):</strong> Produtos mais importantes, representam 80% do valor total de movimentação. Merecem atenção especial no controle de estoque.</p>
@@ -365,7 +351,6 @@ const opcoesPeriodo = [
 const periodo = ref(opcoesPeriodo[1])
 const periodoLabel = computed(() => periodo.value.label)
 
-// ---- Filtro por centro de custo ----
 const TODOS_CENTROS = { id: null, label: 'Todos os Centros' }
 const opcoesCentro      = ref([TODOS_CENTROS])
 const centroSelecionado = ref(TODOS_CENTROS)
@@ -400,7 +385,6 @@ const opcoesExport = [
 const dadosPerdas = ref({ perdas: [], porMotivo: [], resumo: {} })
 const dadosAbc    = ref({ itens: [], resumo: {} })
 
-// ---- Paginação da aba ABC (feita no front: a API devolve a lista completa) ----
 const paginaAbc    = ref(1)
 const porPaginaAbc = ref(10)
 
@@ -415,19 +399,16 @@ const itensAbcPagina = computed(() => {
   return (dadosAbc.value.itens ?? []).slice(inicio, inicio + porPaginaAbc.value)
 })
 
-// Ao recarregar os dados, volta para a página 1
 watch(dadosAbc, () => { paginaAbc.value = 1 })
 
 const totalUnidadesPerdas = computed(() =>
   dadosPerdas.value.porMotivo?.reduce((s, m) => s + m.total, 0) ?? 0
 )
 
-// Formata números com separador de milhar no padrão brasileiro (ex: 17050 -> 17.050)
 function formatNumero(valor) {
   return Number(valor ?? 0).toLocaleString('pt-BR')
 }
 
-// Cores do SVG do gráfico de pizza precisam trocar manualmente (SVG não lê classes dark:)
 const temaClaroSvg = computed(() => ({
   fundo:  temaClaro.value ? '#e2e8f0' : '#1e293b',
   centro: temaClaro.value ? '#f8fafc' : '#0f172a',
@@ -480,7 +461,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', fecharMenusAoClicarFora)
 })
 
-// Gráfico de pizza SVG
 const fatiasPizza = computed(() => {
   const total = dadosAbc.value.resumo?.total ?? 0
   if (!total) return []
@@ -498,14 +478,9 @@ function calcularFatias(dados) {
   const cx = 100, cy = 100, r = 80
   let angulo = -Math.PI / 2
 
-  // Ignora fatias com 0% (evita paths degenerados)
   const visiveis = dados.filter(d => d.pct > 0)
 
   return visiveis.map(({ pct, cor }) => {
-    // Caso especial: fatia ocupa 100% do círculo.
-    // Um arco SVG não fecha uma volta completa num único comando A
-    // (início == fim vira arco de raio zero e não desenha nada),
-    // então nesse caso desenhamos o círculo em duas metades.
     if (pct >= 1) {
       return {
         d: `M${cx - r},${cy} A${r},${r} 0 1,1 ${cx + r},${cy} A${r},${r} 0 1,1 ${cx - r},${cy} Z`,
@@ -536,11 +511,6 @@ function formatarDataHora(dataISO) {
   const d = new Date(dataISO)
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
 }
-
-// =========================================================
-// ======================  EXPORTAÇÃO  ========================
-// (exporta TODOS os itens, não só a página atual)
-// =========================================================
 
 function cabecalhosExport() {
   return aba.value === 'perdas'
@@ -582,15 +552,11 @@ function baixar(blob, nome) {
   document.body.removeChild(link); URL.revokeObjectURL(url)
 }
 
-// ---- CSV ----
-
 function exportarCSV() {
   const csv = [cabecalhosExport(), ...linhasExport()]
     .map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
   baixar(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }), nomeArquivoExport('csv'))
 }
-
-// ---- Excel (ExcelJS, com estilo) ----
 
 async function exportarExcel() {
   const wb = new ExcelJS.Workbook()
@@ -671,8 +637,6 @@ async function exportarExcel() {
   )
 }
 
-// ---- PDF (jsPDF + autoTable, com estilo) ----
-
 function exportarPDF() {
   const ehPerdas = aba.value === 'perdas'
   const doc = new jsPDF({ orientation: 'landscape' })
@@ -695,8 +659,8 @@ function exportarPDF() {
     styles: { fontSize: 9, cellPadding: 3 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
     columnStyles: ehPerdas
-      ? { 4: { halign: 'right' } }                                  // Quantidade
-      : { 4: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'right' } }, // Movimento/%/%
+      ? { 4: { halign: 'right' } }
+      : { 4: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'right' } },
     didParseCell: (data) => {
       if (data.section !== 'body') return
 

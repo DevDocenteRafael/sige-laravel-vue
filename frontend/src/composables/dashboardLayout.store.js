@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 
 const PADRAO = [
-  // grid de 12 colunas
   { i: 'alertas',      x: 0, y: 0, w: 6, h: 8 },
   { i: 'movimentos',   x: 6, y: 0, w: 6, h: 8 },
   { i: 'categorias',   x: 0, y: 8, w: 6, h: 10 },

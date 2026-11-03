@@ -2,7 +2,6 @@
   <div class="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
 
-      <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
         <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Upload class="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -15,7 +14,6 @@
 
       <div class="flex-1 overflow-y-auto p-6">
 
-        <!-- ETAPA 1: Upload -->
         <div v-if="etapa === 'upload'">
           <label
             class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-10 cursor-pointer hover:border-blue-500 transition"
@@ -37,7 +35,6 @@
           </button>
         </div>
 
-        <!-- ETAPA 2: Preview + escolha de modo -->
         <div v-else-if="etapa === 'modo'">
           <div class="bg-slate-100 dark:bg-slate-800 rounded-lg p-4 mb-5 flex gap-6">
             <div>
@@ -76,7 +73,6 @@
             </button>
           </div>
 
-          <!-- Tabela de itens -->
           <div class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
             <table class="w-full text-sm">
               <thead class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
@@ -103,7 +99,6 @@
           </div>
         </div>
 
-        <!-- ETAPA 3A: Confirmar lote único -->
         <div v-else-if="etapa === 'confirmarUnico'">
           <button class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm mb-4 flex items-center gap-1" @click="etapa = 'modo'">
             <ArrowLeft class="w-4 h-4" /> Voltar
@@ -141,7 +136,6 @@
           </button>
         </div>
 
-        <!-- ETAPA 3B: Confirmar lotes múltiplos -->
         <div v-else-if="etapa === 'confirmarMultiplo'">
           <button class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm mb-4 flex items-center gap-1" @click="etapa = 'modo'">
             <ArrowLeft class="w-4 h-4" /> Voltar
@@ -157,7 +151,6 @@
             </button>
           </div>
 
-          <!-- Config de cada lote -->
           <div class="flex gap-3 overflow-x-auto pb-2 mb-4">
             <div
               v-for="(lote, idx) in lotesMultiplos"
@@ -185,7 +178,6 @@
             </div>
           </div>
 
-          <!-- Tabela de distribuição -->
           <div class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
@@ -236,7 +228,6 @@
           </button>
         </div>
 
-        <!-- ETAPA 4: Sucesso -->
         <div v-else-if="etapa === 'sucesso'" class="text-center py-10">
           <Check class="w-14 h-14 text-green-600 dark:text-green-400 mx-auto mb-4" />
           <p class="text-slate-900 dark:text-white font-semibold text-lg">Importação concluída!</p>
@@ -249,7 +240,6 @@
       </div>
     </div>
 
-    <!-- Modal de confirmação para fechar com importação em andamento -->
     <Transition
       enter-active-class="transition ease-out duration-150"
       enter-from-class="opacity-0"
@@ -285,7 +275,6 @@
       </div>
     </Transition>
 
-    <!-- Toast de aviso -->
     <Transition
       enter-active-class="transition ease-out duration-150"
       enter-from-class="opacity-0 translate-y-2"
@@ -312,7 +301,7 @@ import api from '@/servicos/api'
 
 const emit = defineEmits(['fechar', 'importado'])
 
-const etapa = ref('upload') // upload | modo | confirmarUnico | confirmarMultiplo | sucesso
+const etapa = ref('upload')
 const arquivo = ref(null)
 const carregando = ref(false)
 const erro = ref('')
@@ -393,7 +382,6 @@ async function confirmarUnico() {
   carregando.value = true
   erro.value = ''
   try {
-    // itens.value já carrega o campo centro_custo vindo do preview
     const { data } = await api.post('/importacao-exportacao/confirmar', {
       modo: 'unico',
       lote: {

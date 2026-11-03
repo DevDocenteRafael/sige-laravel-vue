@@ -62,7 +62,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:paginaAtual', 'update:porPagina'])
 
-// Janela de páginas: 1 … (atual-2 … atual+2) … última
 const paginasVisiveis = computed(() => {
   const { paginaAtual: atual, totalPaginas: total } = props
   const delta = 2

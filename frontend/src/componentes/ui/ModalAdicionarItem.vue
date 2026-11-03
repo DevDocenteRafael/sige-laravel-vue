@@ -156,7 +156,6 @@
       </form>
     </div>
 
-    <!-- Modal de confirmação: descartar informações não salvas -->
     <ModalConfirmacao
       v-if="modalDescartarAberto"
       titulo="Descartar alterações?"
@@ -188,7 +187,6 @@ const { aoIniciarArraste, estiloArraste } = useModalArrastavel()
 const { centros, carregar: carregarCentros } = useCentrosCusto()
 onMounted(carregarCentros)
 
-// Só centros de custo ativos podem ser vinculados a um novo item
 const centrosAtivos = computed(() => centros.value.filter((c) => c.ativo))
 
 const salvando = ref(false)
@@ -221,12 +219,11 @@ watch(() => form.value.sku, (sku) => {
   if (!sku || sku.trim().length < 2) return
 
   debounceTimer = setTimeout(async () => {
-    const idDestaBusca = ++idBuscaAtual   // marca esta busca como "a mais recente"
+    const idDestaBusca = ++idBuscaAtual
     buscandoProduto.value = true
     try {
       const { data } = await api.get('/produtos/buscar-por-sku', { params: { sku } })
 
-      // se outra busca começou depois desta, ignora essa resposta atrasada
       if (idDestaBusca !== idBuscaAtual) return
 
       produtoEncontrado.value = data && data.id_produto ? data : null
@@ -289,8 +286,6 @@ async function salvar() {
   try {
     dados = { ...form.value }
 
-    // Só envia prioridade_abc quando o usuário escolheu manualmente.
-    // Ausente = automática, backend calcula normalmente.
     if (!dados.prioridade_abc) {
       delete dados.prioridade_abc
     }

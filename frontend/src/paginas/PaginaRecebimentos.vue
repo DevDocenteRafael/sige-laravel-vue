@@ -1,7 +1,6 @@
 <template>
   <div class="p-6 min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white">
 
-    <!-- ===================== LISTA DE NOTAS ===================== -->
     <template v-if="!detalhe">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
@@ -112,7 +111,6 @@
       </div>
     </template>
 
-    <!-- ===================== DETALHE DA NOTA ===================== -->
     <template v-else>
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
         <div>
@@ -189,7 +187,6 @@
         </div>
       </div>
 
-      <!-- Avisos da importação -->
       <div
         v-if="avisos.length > 0"
         class="mb-4 rounded-lg border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 p-3 flex gap-2"
@@ -200,7 +197,6 @@
         </ul>
       </div>
 
-      <!-- Comparação chave x XML -->
       <div v-if="detalhe.comparacao_chave" class="mb-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-3">
         <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Conferência: chave de acesso x XML</p>
         <table class="w-full text-sm">
@@ -226,7 +222,6 @@
         </table>
       </div>
 
-      <!-- Resumo -->
       <div class="flex items-center gap-2 flex-wrap mb-4 text-xs">
         <span class="px-2 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
           {{ detalhe.resumo.total }} itens
@@ -245,7 +240,6 @@
         </span>
       </div>
 
-      <!-- Itens -->
       <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -383,7 +377,6 @@
                 </td>
               </tr>
 
-              <!-- Sugestões de vínculo -->
               <tr v-if="itemExpandido === item.id_nota_item">
                 <td></td>
                 <td colspan="9" class="pb-4">
@@ -438,14 +431,12 @@
       </div>
     </template>
 
-    <!-- carregando detalhe -->
     <div v-if="carregandoDetalhe" class="fixed inset-0 bg-black/40 flex items-center justify-center z-40">
       <div class="bg-white dark:bg-slate-900 rounded-lg px-6 py-4 text-sm text-slate-700 dark:text-slate-200">
         Carregando nota...
       </div>
     </div>
 
-    <!-- ===== MODAL IMPORTAR XML ===== -->
     <div v-if="modalImportarAberto" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-start mb-5">
@@ -506,7 +497,6 @@
       </div>
     </div>
 
-    <!-- ===== PAINEL: CHAVE BIPADA SEM NOTA CADASTRADA ===== -->
     <NotaNaoImportadaModal
       v-if="notaNaoImportada"
       :chave="notaNaoImportada.chave"
@@ -516,7 +506,6 @@
       @fechar="fecharNaoImportada"
     />
 
-    <!-- ===== MODAL EXCLUIR NOTA ===== -->
     <div v-if="notaParaExcluir" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-start mb-5">
@@ -573,19 +562,16 @@ import NotaNaoImportadaModal from '@/componentes/NotaNaoImportadaModal.vue'
 const autenticacao      = useAutenticacaoStore()
 const { sucesso, erro } = useNotificacao()
 
-// ===== Estado geral =====
 const lista             = ref([])
 const carregandoLista   = ref(false)
-const detalhe           = ref(null)   // { nota, pedido, resumo, itens }
+const detalhe           = ref(null)
 const carregandoDetalhe = ref(false)
 const avisos            = ref([])
 
-// ===== Bipador (chave de acesso) =====
 const chaveBusca    = ref('')
 const buscandoChave = ref(false)
-const campoChave    = ref(null)   // o mesmo ref serve para a lista e para o detalhe (nunca aparecem juntos)
+const campoChave    = ref(null)
 
-// aguardando | identificando | localizada | xml_necessario | erro
 const estadoLeitura = ref('aguardando')
 let timerAuto       = null
 let ultimaLeitura   = { chave: '', em: 0 }
@@ -603,8 +589,6 @@ async function focarCampoChave() {
   campoChave.value?.focus()
 }
 
-// Dispara a busca sozinha quando a chave chega completa (44 caracteres) e o leitor para de enviar.
-// Se o leitor mandar Enter, o Enter chama buscarPorChave direto e cancela este timer.
 function aoDigitarChave() {
   clearTimeout(timerAuto)
   if (estadoLeitura.value === 'erro') estadoLeitura.value = 'aguardando'
@@ -613,16 +597,14 @@ function aoDigitarChave() {
   }
 }
 
-const notaNaoImportada = ref(null)   // { chave, dados } quando a chave bipada não tem nota cadastrada
-const chaveEsperada    = ref('')     // chave bipada que o XML importado precisa ter
+const notaNaoImportada = ref(null)
+const chaveEsperada    = ref('')
 
-// ===== Estado do detalhe =====
-const extras                = ref({})   // { [id_nota_item]: { selecionado, localizacao, data_validade, numero_lote, prioridade_abc } }
+const extras                = ref({})
 const itemExpandido         = ref(null)
 const vinculandoId          = ref(null)
 const darEntradaEmAndamento = ref(false)
 
-// ===== Modais =====
 const modalImportarAberto = ref(false)
 const arquivoXml          = ref(null)
 const numeroPedido        = ref('')
@@ -630,7 +612,6 @@ const importando          = ref(false)
 const notaParaExcluir     = ref(null)
 const excluindo           = ref(false)
 
-// ===== Formatação =====
 function formatNumero(valor) {
   return Number(valor ?? 0).toLocaleString('pt-BR')
 }
@@ -642,7 +623,6 @@ function moeda(valor) {
 const normalizarUnidade = (u) => String(u ?? '').trim().toUpperCase()
 const unidadeDiferente  = (a, b) => normalizarUnidade(a) !== normalizarUnidade(b)
 
-// ===== Status =====
 const ROTULOS_NOTA = { pendente: 'Pendente', parcial: 'Parcial', conferida: 'Conferida' }
 const CLASSES_NOTA = { pendente: 'bg-slate-500', parcial: 'bg-yellow-600', conferida: 'bg-green-700' }
 
@@ -660,8 +640,6 @@ const classeStatusNota = (s) => CLASSES_NOTA[s] || 'bg-slate-500'
 const rotuloStatusItem = (s) => ROTULOS_ITEM[s] || s
 const classeStatusItem = (s) => CLASSES_ITEM[s] || 'bg-slate-500'
 
-// ===== Seleção para entrada =====
-// Item com unidade diferente da do pedido fica de fora: o backend bloqueia a entrada dele
 const itensOk = computed(() =>
   (detalhe.value?.itens ?? []).filter((i) => i.status === 'ok' && !i.unidade_incompativel)
 )
@@ -681,7 +659,6 @@ function alternarTodos() {
   })
 }
 
-// Mantém o que o usuário já digitou quando a nota é recarregada
 function sincronizarExtras() {
   const novo = {}
   for (const item of detalhe.value?.itens ?? []) {
@@ -704,11 +681,8 @@ function definirDetalhe(dados) {
   sincronizarExtras()
 }
 
-// Foco no campo do bipador só quando muda a nota aberta (ou ao voltar para a lista),
-// para não roubar o foco de quem está digitando localização/validade
 watch(() => detalhe.value?.nota?.id_nota ?? null, focarCampoChave)
 
-// ===== Lista =====
 async function carregarLista() {
   carregandoLista.value = true
   try {
@@ -742,7 +716,6 @@ async function buscarPorChave() {
   clearTimeout(timerAuto)
   if (buscandoChave.value) return
 
-  // Painel aberto por cima: ignora a leitura para não sobrescrever o que está na tela
   if (notaNaoImportada.value || modalImportarAberto.value || notaParaExcluir.value) {
     chaveBusca.value = ''
     return
@@ -750,11 +723,9 @@ async function buscarPorChave() {
 
   const chave = normalizarChave(chaveBusca.value)
 
-  // Limpa sempre, para a próxima bipada não se somar à anterior
   chaveBusca.value = ''
   if (!chave) return
 
-  // Descarta evento duplicado da mesma chave em até 2 s
   const agora = Date.now()
   if (chave === ultimaLeitura.chave && agora - ultimaLeitura.em < 2000) return
   ultimaLeitura = { chave, em: agora }
@@ -778,7 +749,6 @@ async function buscarPorChave() {
     estadoLeitura.value = 'localizada'
   } catch (e) {
     if (e.response?.status === 404 && e.response.data?.nao_importada) {
-      // Nota ainda não cadastrada: mostra o que a chave informa e oferece o envio do XML
       estadoLeitura.value = 'xml_necessario'
       notaNaoImportada.value = { chave, dados: extrairDadosChave(chave) }
     } else {
@@ -805,7 +775,6 @@ async function voltarParaLista() {
   await carregarLista()
 }
 
-// ===== Importar XML =====
 function aoEscolherArquivo(evento) {
   arquivoXml.value = evento.target.files?.[0] || null
 }
@@ -819,7 +788,6 @@ function fecharImportar() {
   focarCampoChave()
 }
 
-// Chave bipada sem nota cadastrada: abre a importação já presa a essa chave
 function enviarXmlDaChave() {
   chaveEsperada.value = notaNaoImportada.value.chave
   notaNaoImportada.value = null
@@ -858,7 +826,6 @@ async function importarXml() {
     console.error(e)
     const dados = e.response?.data
     erro(dados?.message || 'Erro ao importar o XML.')
-    // nota já importada antes: abre a existente
     if (dados?.id_nota) {
       fecharImportar()
       await abrirNota(dados.id_nota)
@@ -868,7 +835,6 @@ async function importarXml() {
   }
 }
 
-// ===== Vincular item da nota a item do pedido =====
 function alternarExpandido(idNotaItem) {
   itemExpandido.value = itemExpandido.value === idNotaItem ? null : idNotaItem
 }
@@ -891,7 +857,6 @@ async function vincular(item, sugestao) {
   }
 }
 
-// ===== Dar entrada no estoque =====
 async function darEntrada() {
   if (selecionadosEntrada.value.length === 0) return
 
@@ -924,7 +889,6 @@ async function darEntrada() {
   }
 }
 
-// ===== Excluir nota =====
 async function excluirNota() {
   if (!notaParaExcluir.value) return
   excluindo.value = true

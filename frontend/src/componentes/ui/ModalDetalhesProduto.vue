@@ -2,7 +2,6 @@
   <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" :style="estiloArraste">
 
-      <!-- Cabeçalho -->
       <div class="flex justify-between items-start mb-6 cursor-grab active:cursor-grabbing select-none" @mousedown="aoIniciarArraste">
         <div>
           <h2 class="text-slate-900 dark:text-white font-bold text-lg">Detalhes do Produto</h2>
@@ -13,7 +12,6 @@
         </button>
       </div>
 
-      <!-- Grid de infos -->
       <div class="grid grid-cols-2 gap-6 mb-6">
         <div>
           <p class="text-sky-600 dark:text-sky-400 text-xs mb-1">Código / SKU</p>
@@ -70,7 +68,6 @@
         </div>
       </div>
 
-      <!-- Botões de ação -->
       <div class="flex gap-2 mb-6 flex-wrap">
         <button
           class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
@@ -109,7 +106,6 @@
         </button>
       </div>
 
-      <!-- Histórico -->
       <div>
         <h3 class="text-slate-900 dark:text-white font-bold mb-3">Histórico do Item</h3>
 

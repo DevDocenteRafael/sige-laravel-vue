@@ -24,7 +24,6 @@ defineEmits(['update:modelValue'])
 const { centros, carregar } = useCentrosCusto()
 onMounted(carregar)
 
-// Mostra só os ativos, mas mantém o centro já selecionado mesmo se estiver inativo
 const opcoes = computed(() =>
   centros.value.filter(c => c.ativo || c.id_centro_custo === props.modelValue)
 )

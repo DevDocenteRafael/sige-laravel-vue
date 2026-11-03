@@ -1,13 +1,11 @@
 <template>
   <div class="p-6 bg-white dark:bg-black min-h-screen">
 
-    <!-- Cabeçalho -->
     <div class="flex justify-between items-center mb-1">
       <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Registro de Perdas</h1>
     </div>
     <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Controle de perdas por vencimento, quebra, furto e outros motivos</p>
 
-    <!-- Estatísticas -->
     <div class="grid grid-cols-3 gap-4 mb-6">
       <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center gap-4">
         <div class="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
@@ -38,7 +36,6 @@
       </div>
     </div>
 
-    <!-- Registrar Nova Perda -->
     <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 mb-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-slate-900 dark:text-white font-bold">Registrar Nova Perda</h2>
@@ -81,7 +78,6 @@
         </div>
       </div>
 
-      <!-- Filtros: lista de itens -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         <div class="relative md:col-span-4">
           <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
@@ -179,7 +175,6 @@
         </div>
       </div>
 
-      <!-- Paginação: lista de itens -->
       <PaginacaoControles
         v-model:pagina-atual="paginaAtualItens"
         v-model:por-pagina="itensPorPaginaItens"
@@ -189,11 +184,9 @@
       />
     </div>
 
-    <!-- Perdas Recentes -->
     <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
       <h2 class="text-slate-900 dark:text-white font-bold mb-4">Perdas Recentes</h2>
 
-      <!-- Filtros: perdas recentes -->
       <div v-if="perdas.length > 0" class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
         <input
           v-model="buscaPerda"
@@ -275,7 +268,6 @@
         </tbody>
       </table>
 
-      <!-- Paginação: perdas recentes -->
       <PaginacaoControles
         v-model:pagina-atual="paginaAtualPerdas"
         v-model:por-pagina="itensPorPaginaPerdas"
@@ -285,10 +277,8 @@
       />
     </div>
 
-    <!-- Modal: perda individual -->
     <div v-if="modalAberto" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
 
-      <!-- ETAPA 0: Formulário -->
       <div v-if="etapa === 0" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-center mb-5">
           <h2 class="text-slate-900 dark:text-white font-bold">Registrar Perda</h2>
@@ -358,7 +348,6 @@
         </div>
       </div>
 
-      <!-- ETAPA 1: Confirmação -->
       <div v-else class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-start mb-5">
           <div class="flex items-center gap-2">
@@ -399,10 +388,8 @@
 
     </div>
 
-    <!-- Modal: perdas em massa -->
     <div v-if="modalVariosAberto" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
 
-      <!-- ETAPA 0: quantidade por item + motivo único -->
       <div v-if="etapaVarios === 0" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-5">
           <h2 class="text-slate-900 dark:text-white font-bold">Registrar Perdas ({{ itensParaVarios.length }} itens)</h2>
@@ -472,7 +459,6 @@
         </div>
       </div>
 
-      <!-- ETAPA 1: confirmação -->
       <div v-else class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6">
         <div class="flex justify-between items-start mb-5">
           <div class="flex items-center gap-2">
@@ -539,26 +525,21 @@ const motivoExibicao = computed(() =>
   form.value.motivo === 'Outro' ? form.value.motivoOutro.trim() : form.value.motivo
 )
 
-// Centro de custo é opcional no item: sem centro vira "—"
 function rotuloCentroCusto(cc) {
   return cc ? `${cc.codigo} - ${cc.nome}` : '—'
 }
 
-// ===== Utilitários de filtro =====
 const SEM_CC = '__sem_cc__'
 
-// Ignora acentos e maiúsculas/minúsculas
 const normalizar = (s) =>
   String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
-// Data local no formato YYYY-MM-DD (mesmo fuso usado em formatarData)
 function dataLocalISO(valor) {
   const d = new Date(valor)
   const p = (n) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 
-// ===== Paginação + filtros: lista de itens (Registrar Nova Perda) =====
 const itensPorPaginaItens = ref(10)
 const paginaAtualItens    = ref(1)
 
@@ -623,7 +604,6 @@ function limparFiltrosItens() {
   filtroEstoque.value = 'todos'
 }
 
-// volta para a página 1 ao mudar qualquer filtro
 watch([busca, filtroLote, filtroCentroCusto, filtroEstoque], () => { paginaAtualItens.value = 1 })
 
 const totalPaginasItens = computed(() =>
@@ -635,14 +615,12 @@ const itensPaginados = computed(() => {
   return itensFiltrados.value.slice(inicio, inicio + itensPorPaginaItens.value)
 })
 
-// evita ficar numa página vazia se a lista encolher (ex: item some após virar 0 em estoque)
 watchEffect(() => {
   if (paginaAtualItens.value > totalPaginasItens.value) {
     paginaAtualItens.value = totalPaginasItens.value
   }
 })
 
-// ===== Paginação + filtros: Perdas Recentes =====
 const itensPorPaginaPerdas = ref(10)
 const paginaAtualPerdas    = ref(1)
 
@@ -726,11 +704,9 @@ watchEffect(() => {
   }
 })
 
-// ===== Seleção múltipla / perda em massa =====
 const modoSelecao       = ref(false)
 const itensSelecionados = ref(new Set())
 
-// ===== "Selecionar todos" vale só para a página atual (ignora itens sem estoque) =====
 const inputSelecionarTodos = ref(null)
 
 const itensSelecionaveis = computed(() =>
@@ -750,7 +726,6 @@ const algunsSelecionados = computed(() => {
   )
 })
 
-// Marca/desmarca só os itens da página atual, preservando o que foi selecionado em outras páginas
 function alternarSelecaoTodos() {
   const novo = new Set(itensSelecionados.value)
   if (todosSelecionados.value) {

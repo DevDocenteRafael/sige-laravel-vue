@@ -1,7 +1,6 @@
 <template>
   <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
 
-    <!-- ===== ETAPA CONFIRMAÇÃO ===== -->
     <div v-if="etapa === 1" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6" :style="estiloArraste">
 
       <div class="flex justify-between items-start mb-5 cursor-grab active:cursor-grabbing select-none" @mousedown="aoIniciarArraste">
@@ -51,7 +50,6 @@
       </div>
     </div>
 
-    <!-- ===== ETAPA FORMULÁRIO DE BAIXA ===== -->
     <div v-else class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-6 w-full max-w-md" :style="estiloArraste">
 
       <div class="flex justify-between items-center mb-6 cursor-grab active:cursor-grabbing select-none" @mousedown="aoIniciarArraste">

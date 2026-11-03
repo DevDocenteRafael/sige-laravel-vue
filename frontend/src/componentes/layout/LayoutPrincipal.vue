@@ -1,11 +1,9 @@
 <template>
   <div class="flex h-screen bg-white dark:bg-black">
-    <!-- ===== SIDEBAR ===== -->
     <aside
       class="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 border-r flex flex-col transition-all duration-300"
       :class="expandido ? 'w-64' : 'w-16'"
     >
-      <!-- Logo -->
       <div
         class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between min-h-[65px]"
       >
@@ -26,7 +24,6 @@
         </button>
       </div>
 
-      <!-- Usuário: um único card; clicar abre o painel com e-mail, perfil e "Editar Perfil" -->
       <div v-if="expandido" ref="perfilRef" class="relative px-3 py-3">
         <button
           class="group flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -57,7 +54,6 @@
           />
         </button>
 
-        <!-- Painel com as informações do usuário -->
         <Transition
           enter-active-class="transition ease-out duration-150"
           enter-from-class="opacity-0 -translate-y-1"
@@ -120,7 +116,6 @@
         </Transition>
       </div>
 
-      <!-- Avatar colapsado -->
       <div v-else class="flex justify-center py-3">
         <div
           class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-xs font-bold text-white"
@@ -134,7 +129,6 @@
         </div>
       </div>
 
-      <!-- Menu agrupado -->
       <nav class="flex-1 overflow-y-auto px-2 pb-2">
         <p v-if="organizandoMenu" class="mb-3 px-3 text-xs text-slate-500 dark:text-slate-400">
           Arraste pela alça (ou use as setas ↑ ↓) para mudar a ordem dentro de cada grupo.
@@ -184,7 +178,6 @@
               @drop.prevent="soltar(grupo, item.rota)"
               @dragend="finalizarArraste"
             >
-              <!-- Modo organizar: sem navegação, com alça de arraste -->
               <div
                 v-if="organizandoMenu"
                 class="flex cursor-grab items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 dark:text-slate-300 bg-slate-100/60 dark:bg-slate-800/60 active:cursor-grabbing"
@@ -220,9 +213,7 @@
         </div>
       </nav>
 
-      <!-- Rodapé (Modo Claro e Atalhos ficam no botão flutuante) -->
       <div class="p-2 border-t border-slate-200 dark:border-slate-800 space-y-0.5">
-        <!-- Organizar menu -->
         <div v-if="expandido" class="flex items-center gap-1">
           <button
             :class="[
@@ -246,7 +237,6 @@
           </button>
         </div>
 
-        <!-- Notificações -->
         <button
           :title="!expandido ? 'Notificações' : ''"
           :class="[
@@ -267,7 +257,6 @@
           <span v-if="expandido">Notificações</span>
         </button>
 
-        <!-- Sair -->
         <button
           :title="!expandido ? 'Sair' : ''"
           :class="[
@@ -282,7 +271,6 @@
       </div>
     </aside>
 
-    <!-- ===== PAINEL DE NOTIFICAÇÕES ===== -->
     <transition name="slide">
       <div
         v-if="painelAberto"
@@ -388,7 +376,6 @@
                   class="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-2"
                 ></div>
 
-                <!-- Apagar notificação -->
                 <button
                   title="Apagar notificação"
                   class="shrink-0 p-1 rounded-lg transition text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -423,7 +410,6 @@
 
     <div v-if="painelAberto" class="fixed inset-0 z-40" @click="painelAberto = false" />
 
-    <!-- ===== PAINEL DE ATALHOS ===== -->
     <transition name="slide">
       <div
         v-if="painelAtalhosAberto"
@@ -527,7 +513,6 @@
       @click="painelAtalhosAberto = false"
     />
 
-    <!-- ===== CONTEÚDO ===== -->
     <main class="flex-1 overflow-auto">
       <RouterView />
     </main>
@@ -611,7 +596,6 @@ const iniciaisDoUsuario = computed(() => {
 });
 
 const itensDoMenu = computed(() => {
-  // "grupo" só organiza a sidebar; a lista continua plana para a busca global
   const menus = [
     { nome: 'Dashboard', rota: '/dashboard', nomeRota: 'dashboard', icone: LayoutDashboard, grupo: null },
     { nome: 'Lotes', rota: '/lotes', nomeRota: 'lotes', icone: PackagePlus, grupo: 'Estoque' },
@@ -651,7 +635,6 @@ const itensDoMenu = computed(() => {
   return menusFiltrados;
 });
 
-// ===== Ordem do menu escolhida pelo usuário (só dentro de cada grupo) =====
 const CHAVE_ORDEM_MENU = 'sige:menu-ordem:v1';
 const organizandoMenu = ref(false);
 const itemArrastado = ref(null);
@@ -667,7 +650,6 @@ function lerOrdemMenu() {
 }
 const ordemMenu = ref(lerOrdemMenu());
 
-// ===== Grupos recolhíveis (dropdown) =====
 const CHAVE_GRUPOS_FECHADOS = 'sige:menu-grupos-fechados:v1';
 
 function lerGruposFechados() {
@@ -689,7 +671,6 @@ function salvarGruposFechados() {
   }
 }
 
-// Menu recolhido (só ícones), grupo sem título e modo organizar mostram sempre a lista inteira
 function grupoAberto(grupo) {
   if (!grupo.nome || !expandido.value || organizandoMenu.value) return true;
   return !gruposFechados.value.includes(grupo.nome);
@@ -702,7 +683,6 @@ function alternarGrupo(nome) {
   salvarGruposFechados();
 }
 
-// Grupo fechado que contém a página atual ganha um pontinho, para o usuário não se perder
 function grupoTemRotaAtual(grupo) {
   return grupo.itens.some((i) => rotaAtual.value === i.rota || rotaAtual.value.startsWith(`${i.rota}/`));
 }
@@ -715,7 +695,6 @@ function salvarOrdemMenu() {
   }
 }
 
-// Agrupa os itens já filtrados por permissão; grupos vazios nem aparecem
 const gruposDoMenu = computed(() => {
   const grupos = [];
   itensDoMenu.value.forEach((item) => {
@@ -726,7 +705,6 @@ const gruposDoMenu = computed(() => {
     }
     grupo.itens.push(item);
   });
-  // Itens sem posição salva (ex.: itens novos do sistema) ficam no fim do grupo, na ordem padrão
   const posicao = (rota) => {
     const p = ordemMenu.value.indexOf(rota);
     return p === -1 ? Infinity : p;
@@ -737,7 +715,6 @@ const gruposDoMenu = computed(() => {
 
 function guardarOrdem(grupos) {
   const visiveis = grupos.flatMap((g) => g.itens.map((i) => i.rota));
-  // mantém rotas de outros perfis que não aparecem agora, para não perder a escolha deles
   ordemMenu.value = [...visiveis, ...ordemMenu.value.filter((r) => !visiveis.includes(r))];
   salvarOrdemMenu();
 }
@@ -758,7 +735,6 @@ function moverItem(grupo, rotaOrigem, rotaDestino) {
   );
 }
 
-// Teclado: seta para cima/baixo na alça move o item uma posição
 function moverPorTeclado(evento, grupo, rota) {
   const delta = evento.key === 'ArrowUp' ? -1 : evento.key === 'ArrowDown' ? 1 : 0;
   if (!delta) return;
@@ -771,7 +747,7 @@ function moverPorTeclado(evento, grupo, rota) {
 function iniciarArraste(evento, rota) {
   itemArrastado.value = rota;
   evento.dataTransfer.effectAllowed = 'move';
-  evento.dataTransfer.setData('text/plain', rota); // o Firefox exige algum dado para iniciar o arraste
+  evento.dataTransfer.setData('text/plain', rota);
 }
 
 function passarSobre(evento, grupo, rota) {
@@ -796,12 +772,10 @@ function restaurarOrdemMenu() {
   salvarOrdemMenu();
 }
 
-// Menu recolhido não tem espaço para organizar
 watch(expandido, (aberto) => {
   if (!aberto) organizandoMenu.value = false;
 });
 
-// ===== ATALHOS =====
 const atalhosBusca = [{ acao: 'Abrir busca global', teclas: ['Ctrl+K'] }];
 const atalhoNavegacao = [
   { acao: 'Ir para Dashboard', teclas: ['Alt+D'] },
@@ -824,14 +798,11 @@ const totalAtalhos = computed(
   () => atalhosBusca.length + atalhoNavegacao.length + atalhosAcoes.length
 );
 
-// ===== NOTIFICAÇÕES =====
 const notificacoesFiltradas = computed(() =>
   aba.value === 'nao_lidas' ? notificacoes.value.filter((n) => !n.lida) : notificacoes.value
 );
 const totalNaoLidas = computed(() => notificacoes.value.filter((n) => !n.lida).length);
 
-// IDs das notificações apagadas ficam salvos no navegador, porque a lista
-// é recalculada a partir de /produtos toda vez que o painel abre.
 const CHAVE_APAGADAS = 'sige:notificacoes-apagadas';
 
 function lerApagadas() {
@@ -857,15 +828,12 @@ function apagarNotificacao(notif) {
 }
 
 function apagarTodas() {
-  // Apaga TODAS as notificações, seja qual for a aba aberta
   notificacoes.value.forEach((n) => apagadas.add(n.id));
   salvarApagadas(apagadas);
   notificacoes.value = [];
   aba.value = 'todas';
 }
 
-// Lê "YYYY-MM-DD" como data local (new Date("YYYY-MM-DD") interpreta como UTC
-// e, no Brasil, voltaria um dia).
 function paraDataLocal(dataString) {
   const [ano, mes, dia] = String(dataString).split('T')[0].split('-').map(Number);
   return new Date(ano, mes - 1, dia);
@@ -898,7 +866,6 @@ async function carregarNotificacoes() {
         const dias = diasParaVencer(item.data_validade);
         if (dias !== null && dias <= diasAlerta.value) {
           lista.push({
-            // A validade entra no ID: se a data do produto mudar, a notificação volta
             id: `venc-${item.id_produto}-${item.data_validade}`,
             tipo: 'vencimento',
             titulo:
@@ -945,7 +912,6 @@ function marcarTodasLidas() {
   notificacoes.value.forEach((n) => (n.lida = true));
 }
 
-// Se a janela de alerta mudar (30/60/90/120/personalizado), refaz a lista
 watch(diasAlerta, carregarNotificacoes);
 
 async function sair() {
@@ -965,7 +931,7 @@ function fecharPerfilAoClicarFora(e) {
 }
 
 function handleKeyboard(e) {
-  if (!e.key) return; // ← proteção contra e.key undefined
+  if (!e.key) return;
   const alt = e.altKey;
   const shift = e.shiftKey;
   const key = e.key.toLowerCase();

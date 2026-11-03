@@ -1,10 +1,8 @@
 <template>
-  <!-- Fundo escuro do modal (clica fora para fechar) -->
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="$emit('fechar')">
 
     <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg">
 
-      <!-- Título do modal -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-lg font-bold text-gray-800">
           {{ ehEdicao ? 'Editar Produto' : 'Novo Produto' }}
@@ -12,10 +10,8 @@
         <button class="text-gray-400 hover:text-gray-600 text-xl" @click="$emit('fechar')">✕</button>
       </div>
 
-      <!-- Formulário -->
       <form @submit.prevent="salvar">
 
-        <!-- Código e Nome -->
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Código *</label>
@@ -29,19 +25,16 @@
           </div>
         </div>
 
-        <!-- Nome completo -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
           <input v-model="formulario.nome" type="text" required class="campo-texto" />
         </div>
 
-        <!-- Descrição -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
           <textarea v-model="formulario.descricao" rows="2" class="campo-texto"></textarea>
         </div>
 
-        <!-- Categoria e Estoque Mínimo -->
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
@@ -56,12 +49,10 @@
           </div>
         </div>
 
-        <!-- Mensagem de erro -->
         <div v-if="erro" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
           {{ erro }}
         </div>
 
-        <!-- Botões -->
         <div class="flex justify-end gap-3">
           <button type="button" class="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50" @click="$emit('fechar')">
             Cancelar
@@ -80,15 +71,12 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/servicos/api'
 
-// Props: recebe o produto quando é edição (null quando é criação)
 const props = defineProps({
   produto: { type: Object, default: null },
 })
 
-// Eventos que este componente pode emitir para o pai
 const emit = defineEmits(['fechar', 'salvo'])
 
-// ---- Dados do formulário ----
 const formulario = ref({
   codigo:          props.produto?.codigo          || '',
   nome:            props.produto?.nome            || '',
@@ -102,48 +90,34 @@ const categorias = ref([])
 const salvando   = ref(false)
 const erro       = ref('')
 
-// Detecta se é edição ou criação
 const ehEdicao = computed(() => !!props.produto)
 
-// Lista de unidades disponíveis
 const unidades = ['UN', 'CX', 'PCT', 'KG', 'G', 'L', 'ML', 'FR', 'RL', 'KIT', 'EMB']
 
-/**
- * Carrega as categorias para o select
- */
 async function carregarCategorias() {
   try {
     const resposta = await api.get('/categorias')
     categorias.value = resposta.data
   } catch {
-    // Sem categorias não é crítico, só não vai preencher o select
   }
 }
 
-/**
- * Salva o produto (cria ou edita dependendo do caso)
- */
 async function salvar() {
   erro.value   = ''
   salvando.value = true
 
   try {
     if (ehEdicao.value) {
-      // Edição: usa PUT com o ID do produto
       await api.put(`/produtos/${props.produto.id}`, formulario.value)
     } else {
-      // Criação: usa POST
       await api.post('/produtos', formulario.value)
     }
 
-    // Avisa o componente pai que salvou com sucesso
     emit('salvo')
 
   } catch (erroHttp) {
-    // Pega os erros de validação do Laravel
     const errosValidacao = erroHttp.response?.data?.errors
     if (errosValidacao) {
-      // Junta todos os erros em uma mensagem só
       erro.value = Object.values(errosValidacao).flat().join('. ')
     } else {
       erro.value = erroHttp.response?.data?.message || 'Erro ao salvar produto.'
@@ -157,7 +131,6 @@ onMounted(carregarCategorias)
 </script>
 
 <style scoped>
-/* Estilo reutilizável para campos de formulário */
 .campo-texto {
   width: 100%;
   border: 1px solid #D1D5DB;

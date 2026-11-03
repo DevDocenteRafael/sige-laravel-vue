@@ -47,7 +47,6 @@
       <template #item="{ item }">
         <div class="relative h-full rounded-xl" :class="editando ? 'ring-2 ring-blue-500/40' : ''">
 
-          <!-- alça de arraste (só no modo personalizar) -->
           <div
             v-if="editando"
             class="drag-handle absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-md bg-blue-600 text-white text-xs cursor-move select-none"
@@ -55,7 +54,6 @@
             <GripVertical :size="14" /> mover
           </div>
 
-          <!-- TOTAL DE LOTES -->
           <div
             v-if="item.i === 'lotes'"
             class="h-full rounded-xl p-6 bg-slate-50 dark:bg-slate-900 border-2 border-blue-300 dark:border-blue-700 transition flex flex-col justify-between gap-4 overflow-hidden"
@@ -74,7 +72,6 @@
             <p class="text-xs text-blue-600 dark:text-blue-400">Clique para ver todos os lotes</p>
           </div>
 
-          <!-- TOTAL DE ITENS -->
           <div
             v-else-if="item.i === 'itens'"
             class="h-full rounded-xl p-6 bg-slate-50 dark:bg-slate-900 border-2 border-cyan-300 dark:border-cyan-700 transition flex flex-col justify-between gap-4 overflow-hidden"
@@ -93,7 +90,6 @@
             <p class="text-xs text-cyan-600 dark:text-cyan-400">Clique para ver todos os produtos</p>
           </div>
 
-          <!-- VENCENDO EM 30 DIAS -->
           <div
             v-else-if="item.i === 'vencendo'"
             class="h-full rounded-xl p-6 bg-slate-50 dark:bg-slate-900 border-2 border-amber-300 dark:border-amber-700 transition flex flex-col justify-between gap-4 overflow-hidden"
@@ -112,7 +108,6 @@
             <p class="text-xs text-amber-600 dark:text-amber-400">Clique para ver produtos vencendo</p>
           </div>
 
-          <!-- ESTOQUE BAIXO -->
           <div
             v-else-if="item.i === 'baixo'"
             class="h-full rounded-xl p-6 bg-slate-50 dark:bg-slate-900 border-2 border-red-300 dark:border-red-700 transition flex flex-col justify-between gap-4 overflow-hidden"
@@ -131,7 +126,6 @@
             <p class="text-xs text-red-600 dark:text-red-400">Clique para ver estoque baixo</p>
           </div>
 
-          <!-- NOTAS PENDENTES -->
           <div
             v-else-if="item.i === 'pendencias'"
             class="h-full rounded-xl p-6 bg-slate-50 dark:bg-slate-900 border-2 border-violet-300 dark:border-violet-700 transition flex flex-col justify-between gap-4 overflow-hidden"
@@ -150,7 +144,6 @@
             <p class="text-xs text-violet-600 dark:text-violet-400">Clique para ver notas e pedidos pendentes</p>
           </div>
 
-          <!-- DISTRIBUIÇÃO POR CATEGORIA -->
           <div
             v-else-if="item.i === 'categorias'"
             class="h-full flex flex-col rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6"
@@ -172,7 +165,6 @@
             </div>
           </div>
 
-          <!-- EVOLUÇÃO DO ESTOQUE -->
           <div
             v-else-if="item.i === 'evolucao'"
             class="h-full flex flex-col rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6"
@@ -191,7 +183,6 @@
             </div>
           </div>
 
-          <!-- ALERTAS CRÍTICOS -->
           <div
             v-else-if="item.i === 'alertas'"
             class="h-full flex flex-col rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6"
@@ -250,7 +241,6 @@
             </div>
           </div>
 
-          <!-- MOVIMENTOS RECENTES -->
           <div
             v-else-if="item.i === 'movimentos'"
             class="h-full flex flex-col rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6"
@@ -285,7 +275,6 @@
             </div>
           </div>
 
-          <!-- TOP PRODUTOS -->
           <div
             v-else-if="item.i === 'top'"
             class="h-full flex flex-col rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6"
@@ -301,7 +290,6 @@
                 </div>
               </div>
 
-              <!-- Filtros: quantidade e categoria -->
               <div class="flex items-center gap-3 flex-wrap">
                 <div class="flex items-center gap-2">
                   <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Mostrar</label>
@@ -404,10 +392,8 @@ const { temaClaro } = storeToRefs(temaStore)
 const autenticacaoStore = useAutenticacaoStore()
 const { perfil }        = storeToRefs(autenticacaoStore)
 
-// ===== Layout personalizável (arrastar / redimensionar) =====
-const CHAVE_LAYOUT = 'sige:dashboard-layout:v2' // suba o número se mudar os cards ou a grade no futuro
+const CHAVE_LAYOUT = 'sige:dashboard-layout:v2'
 
-// grade de 10 colunas (5 cards de resumo de 2 colunas), 1 unidade de altura = 30px
 const LAYOUT_PADRAO = [
   { i: 'lotes',      x: 0, y: 0,  w: 2,  h: 4,  minW: 2, minH: 3 },
   { i: 'itens',      x: 2, y: 0,  w: 2,  h: 4,  minW: 2, minH: 3 },
@@ -421,7 +407,6 @@ const LAYOUT_PADRAO = [
   { i: 'top',        x: 0, y: 26, w: 10, h: 11, minW: 4, minH: 6 },
 ]
 
-// Quem não pode abrir Pendências (ex.: visualizador) não vê o card
 const podeVerPendencias = perfilPodeAcessarRota(perfil.value, 'pendencias')
 const cardsDisponiveis = () =>
   LAYOUT_PADRAO.filter(item => item.i !== 'pendencias' || podeVerPendencias)
@@ -435,7 +420,6 @@ function carregarLayoutSalvo() {
     const salvo = JSON.parse(localStorage.getItem(CHAVE_LAYOUT) || 'null')
     if (!Array.isArray(salvo)) return clonarLayoutPadrao()
     const porId = new Map(salvo.map(s => [s.i, s]))
-    // ids desconhecidos são descartados; cards novos entram com a posição padrão
     return cardsDisponiveis().map(p => {
       const s = porId.get(p.i)
       return s ? { ...p, x: s.x, y: s.y, w: s.w, h: s.h } : { ...p }
@@ -461,12 +445,10 @@ function resetarLayout() {
   salvarLayout()
 }
 
-// no modo personalizar, clicar nos cards de resumo não navega
 function ir(rota) {
   if (!editando.value) router.push(rota)
 }
 
-// ===== Estado do dashboard =====
 const carregando             = ref(true)
 const graficoLinha           = ref(null)
 const graficoPizza           = ref(null)
@@ -477,10 +459,9 @@ const produtosVencendo       = ref([])
 const semDadosPizza          = ref(false)
 const resumoPendencias       = ref({ notas: 0, pedidos: 0 })
 
-// ===== Filtro do Top Produtos =====
-const opcoesLimite          = ref([5, 10, 20, 50, 100]) // opções fixas do select
-const opcaoLimite           = ref(10)     // sempre número, só as opções fixas
-const modoPersonalizado     = ref(false)  // toggle separado, sem misturar tipos no select
+const opcoesLimite          = ref([5, 10, 20, 50, 100])
+const opcaoLimite           = ref(10)
+const modoPersonalizado     = ref(false)
 const limitePersonalizado   = ref(50)
 const filtroCategoria       = ref('todas')
 const categoriasDisponiveis = ref([])
@@ -519,7 +500,6 @@ let chartPizza = null
 let ultimosDadosLinha = []
 let ultimosDadosPizza = []
 
-// --- Auto-refresh (somente para o perfil visualizador) ---
 const INTERVALO_POLLING_MS = 30000
 let idIntervaloPolling = null
 
@@ -550,7 +530,6 @@ function recortarDiasVazios(dados) {
   return dados.slice(primeiroIndiceComDado - 1)
 }
 
-// Contagem do card "Notas Pendentes". Falhar aqui não pode derrubar o resto do dashboard.
 async function carregarPendencias() {
   if (!podeVerPendencias) return
   try {
@@ -566,7 +545,7 @@ async function carregarPendencias() {
 
 async function carregarDashboard({ mostrarLoading = true } = {}) {
   if (mostrarLoading) carregando.value = true
-  carregarPendencias() // em paralelo, sem travar os demais cards
+  carregarPendencias()
   let dadosEvolucao = []
   let dadosDistribuicao = []
 
@@ -612,7 +591,6 @@ async function carregarTopProdutosFiltrado() {
   }
 }
 
-// Debounce manual — evita disparar uma requisição a cada tecla no campo personalizado
 let idDebounceTopProdutos = null
 function agendarCarregarTopProdutosFiltrado() {
   clearTimeout(idDebounceTopProdutos)
@@ -743,7 +721,6 @@ async function montarGraficoPizza(dados) {
   }
 
   semDadosPizza.value = false
-  // espera o <canvas> aparecer caso o estado "sem dados" estivesse ativo
   await nextTick()
   if (!graficoPizza.value) return
 

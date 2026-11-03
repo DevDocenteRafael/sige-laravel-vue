@@ -1,5 +1,3 @@
-// Converte "YYYY-MM-DD" em Date local, evitando o bug de fuso horário
-// (new Date("YYYY-MM-DD") interpreta como UTC e pode voltar 1 dia no Brasil)
 function paraDataLocal(dataString) {
   const [ano, mes, dia] = dataString.split('T')[0].split('-').map(Number)
   return new Date(ano, mes - 1, dia)

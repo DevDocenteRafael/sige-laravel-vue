@@ -1,7 +1,6 @@
 <template>
   <div class="p-6 min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white">
 
-    <!-- Cabeçalho -->
     <div class="flex justify-between items-start mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Centros de Custo</h1>
@@ -16,12 +15,10 @@
       </button>
     </div>
 
-    <!-- Carregando -->
     <div v-if="carregando" class="text-center py-12 text-slate-500 dark:text-slate-400">
       Carregando centros de custo...
     </div>
 
-    <!-- Sem centros cadastrados -->
     <div
       v-else-if="centros.length === 0"
       class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-16 text-center"
@@ -39,7 +36,6 @@
     </div>
 
     <template v-else>
-      <!-- Cards de resumo -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center gap-4">
           <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
@@ -72,7 +68,6 @@
         </div>
       </div>
 
-      <!-- Filtros -->
       <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 mb-4">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="md:col-span-2">
@@ -115,7 +110,6 @@
         </p>
       </div>
 
-      <!-- Tabela -->
       <div class="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 min-h-[200px]">
         <div v-if="centrosFiltrados.length === 0" class="text-center py-16">
           <Building2 class="mx-auto mb-3 text-slate-400 dark:text-slate-600" :size="40" />
@@ -192,7 +186,6 @@
       </div>
     </template>
 
-    <!-- ===== MODAL CRIAR / EDITAR ===== -->
     <div
       v-if="modalAberto"
       class="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
@@ -269,7 +262,6 @@
       </div>
     </div>
 
-    <!-- ===== MODAL CONFIRMAÇÃO EXCLUSÃO ===== -->
     <div
       v-if="modalExcluirAberto"
       class="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
@@ -330,16 +322,13 @@ const { sucesso, erro } = useNotificacao()
 
 const carregando = ref(false)
 
-// Formata números com separador de milhar no padrão brasileiro
 function formatNumero(valor) {
   return Number(valor ?? 0).toLocaleString('pt-BR')
 }
 
-// ===== Resumo =====
 const totalAtivos   = computed(() => centros.value.filter((c) => c.ativo).length)
 const totalInativos = computed(() => centros.value.filter((c) => !c.ativo).length)
 
-// ===== Filtros =====
 const busca = ref('')
 const filtroStatus = ref('todos')
 
@@ -358,7 +347,6 @@ function limparFiltros() {
   filtroStatus.value = 'todos'
 }
 
-// ===== Paginação =====
 const paginaAtual = ref(1)
 const porPagina = ref(10)
 
@@ -375,14 +363,12 @@ watch([busca, filtroStatus], () => {
   paginaAtual.value = 1
 })
 
-// evita ficar numa página vazia se a lista encolher (ex: exclusão do último item da página)
 watchEffect(() => {
   if (paginaAtual.value > totalPaginas.value) {
     paginaAtual.value = totalPaginas.value
   }
 })
 
-// ===== Criar / editar =====
 const modalAberto = ref(false)
 const editandoId = ref(null)
 const salvando = ref(false)
@@ -434,7 +420,6 @@ async function salvar() {
   }
 }
 
-// ===== Ativar / desativar =====
 async function alternarAtivo(c) {
   try {
     await api.put(`/centros-custo/${c.id_centro_custo}`, {
@@ -449,7 +434,6 @@ async function alternarAtivo(c) {
   }
 }
 
-// ===== Excluir =====
 const modalExcluirAberto = ref(false)
 const centroParaExcluir = ref(null)
 const excluindo = ref(false)

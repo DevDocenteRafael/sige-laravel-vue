@@ -1,13 +1,11 @@
 <template>
   <div class="p-6 bg-white dark:bg-black min-h-screen">
 
-    <!-- Cabeçalho -->
     <div class="flex justify-between items-center mb-1">
       <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Produtos</h1>
     </div>
     <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Visão geral de todos os produtos e seus lotes</p>
 
-    <!-- Filtros -->
     <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl p-4 mb-6 flex flex-col gap-3">
       <input
         v-model="termoDeBusca"
@@ -48,7 +46,6 @@
           </option>
         </select>
 
-        <!-- Filtro de saldo -->
         <select
           v-model="filtroSaldo"
           class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg px-4 py-2 text-sm font-medium border-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-slate-500"
@@ -58,7 +55,6 @@
           <option value="sem">Sem saldo</option>
         </select>
 
-        <!-- Janela de alerta de vencimento -->
         <div class="flex items-center gap-2 ml-auto">
           <span class="text-xs text-slate-500 dark:text-slate-400">Avisar vencimento em</span>
           <select
@@ -82,7 +78,6 @@
       </div>
     </div>
 
-    <!-- Aviso de itens vencendo -->
     <div
       v-if="totalVencendo > 0 && !avisoDispensado"
       class="mb-4 flex items-center justify-between gap-3 rounded-xl border border-orange-300 dark:border-orange-500/40 bg-orange-50 dark:bg-orange-500/10 px-4 py-3 text-sm text-orange-800 dark:text-orange-300"
@@ -95,7 +90,6 @@
       <button type="button" class="text-xs underline" @click="avisoDispensado = true">Dispensar</button>
     </div>
 
-    <!-- Cards de resumo -->
     <div class="grid grid-cols-3 gap-4 mb-6">
       <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl p-4">
         <p class="text-slate-500 dark:text-slate-400 text-xs mb-1">Total de Produtos Únicos</p>
@@ -111,17 +105,14 @@
       </div>
     </div>
 
-    <!-- Carregando -->
     <div v-if="carregando" class="text-center py-12 text-slate-500 dark:text-slate-400">
       Carregando produtos...
     </div>
 
-    <!-- Vazio -->
     <div v-else-if="produtosFiltrados.length === 0" class="text-center py-12 text-slate-500 dark:text-slate-400">
       Nenhum produto encontrado.
     </div>
 
-    <!-- Tabela -->
     <div v-else class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl overflow-visible">
       <table class="w-full text-sm">
         <thead>
@@ -150,7 +141,6 @@
               {{ formatNumero(item.quantidade) }} {{ item.unidade_medida }}
             </td>
 
-            <!-- Estoque mínimo editável -->
             <td class="px-4 py-3" @click.stop>
               <input
                 v-if="editandoMinimo === item.id_produto"
@@ -197,7 +187,6 @@
                   class="z-9999 min-w-40 max-h-56 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg p-2 flex flex-col gap-1"
                   @click.stop
                 >
-                  <!-- Busca dentro do dropdown (só aparece com 10+ lotes) -->
                   <input
                     v-if="item.lotes.length >= 10"
                     v-model="buscaLotePorProduto[item.id_produto]"
@@ -253,7 +242,6 @@
       />
     </div>
 
-    <!-- Submenu de ações rápidas do lote (único, fora do v-for, teleportado) -->
     <Teleport to="body">
       <div
         v-if="menuLoteAtivo"
@@ -334,23 +322,22 @@ const carregando          = ref(false)
 const termoDeBusca        = ref('')
 const filtroBaixo         = ref(false)
 const filtroCategoria     = ref('')
-const filtroCentro        = ref('') // '' = todos | 'sem' = sem centro | id
-const filtroSaldo         = ref('todos') // todos | com | sem
+const filtroCentro        = ref('')
+const filtroSaldo         = ref('todos')
 const produtoSelecionado  = ref(null)
 const loteDestaque        = ref(null)
 const dropdownAberto      = ref(null)
 const posicaoDropdown     = ref({ top: 0, left: 0 })
-const menuLoteAtivo       = ref(null) // { chave, item, numeroLote }
+const menuLoteAtivo       = ref(null)
 const posicaoMenuLote     = ref({ top: 0, left: 0 })
 const buscaLotePorProduto = ref({})
-const modalBaixa          = ref(null) // { id_item, nome, quantidade, unidade_medida }
-const modalTransferir     = ref(null) // { item: {...}, lotes: [...] }
+const modalBaixa          = ref(null)
+const modalTransferir     = ref(null)
 const paginaAtual         = ref(1)
 const porPagina           = ref(10)
 
 let temporizadorBusca = null
 
-// ===== Janela de alerta de vencimento (30/60/90/120/personalizado) =====
 const modoPersonalizado = ref(!PRESETS.includes(diasAlerta.value))
 const avisoDispensado   = ref(false)
 
@@ -374,10 +361,8 @@ const diasPersonalizado = computed({
   },
 })
 
-// Se a janela mudar, o aviso volta a aparecer
 watch(diasAlerta, () => { avisoDispensado.value = false })
 
-// ===== Estoque mínimo editável =====
 const vFocar = { mounted: (el) => { el.focus(); el.select() } }
 const editandoMinimo = ref(null)
 const valorMinimo    = ref(0)
@@ -450,13 +435,11 @@ const formatarData = (data) => {
   return dias !== null ? `${dataFmt} (${dias}d)` : dataFmt
 }
 
-// Versão curta (sem os dias entre parênteses), usada na lista compacta
 const formatarDataCurta = (data) => {
   if (!data) return '—'
   return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
-// Datas distintas de validade que esse produto tem entre os itens de lote
 const datasUnicas = (item) => {
   if (!item.validades || item.validades.length === 0) return []
   return [...new Set(item.validades.map(v => v.data_validade))]
@@ -498,14 +481,12 @@ const toggleLotes = (item, evento) => {
   menuLoteAtivo.value = null
 }
 
-// --- Filtro de busca dentro do dropdown (10+ lotes) ---
 const lotesFiltrados = (item) => {
   const termo = (buscaLotePorProduto.value[item.id_produto] || '').toLowerCase().trim()
   if (!termo) return item.lotes
   return item.lotes.filter(numeroLote => String(numeroLote).toLowerCase().includes(termo))
 }
 
-// --- Menu de ações rápidas por lote ---
 const chaveMenuLote = (item, numeroLote) => `${item.id_produto}-${numeroLote}`
 
 const toggleMenuLote = (item, numeroLote, evento) => {
@@ -528,7 +509,6 @@ const toggleMenuLote = (item, numeroLote, evento) => {
   menuLoteAtivo.value = { chave, item, numeroLote }
 }
 
-// Busca a entrada de validade (item_lote) correspondente ao número do lote clicado
 const encontrarValidade = (item, numeroLote) =>
   item.validades?.find(v => v.numero_lote === numeroLote)
 
@@ -543,7 +523,7 @@ const acionarTransferir = async (item, numeroLote) => {
   try {
     const { data } = await api.get('/lotes')
     todosOsLotes = data
-      .filter(l => l.id_lote !== validade.id_lote) // remove o lote de origem
+      .filter(l => l.id_lote !== validade.id_lote)
       .map(l => ({ id_lote: l.id_lote, numero_lote: l.numero_lote }))
   } catch {
     erro('Não foi possível carregar a lista de lotes.')
@@ -633,7 +613,6 @@ watch([termoDeBusca, filtroBaixo, filtroCategoria, filtroCentro, filtroSaldo], (
   paginaAtual.value = 1
 })
 
-// O filtro de centro de custo é feito no backend (recalcula quantidade/lotes/validades)
 watch(filtroCentro, () => carregarProdutos())
 
 const totalVencendo = computed(() =>
