@@ -34,16 +34,31 @@ class Produto extends Model {
             ->orderBy('data_validade', 'asc');
     }
 
+    /**
+     * Status do estoque. Valores: 'critico', 'atencao', 'ok', 'sem_estoque'.
+     *
+     * Usa a soma dos itens de lote quando ela foi carregada (withSum),
+     * para ficar consistente com o filtro da listagem; senão cai no estoque_atual.
+     */
     public function statusEstoque(): string
     {
-        if ($this->estoque_atual <= $this->estoque_minimo) {
+        $qtd = $this->itens_lote_sum_quantidade ?? $this->estoque_atual ?? 0;
+        $min = $this->estoque_minimo ?? 0;
+
+        // Sem mínimo definido não há limite a ser violado:
+        // não é "crítico", apenas zerado ou ok.
+        if ($min <= 0) {
+            return $qtd <= 0 ? 'sem_estoque' : 'ok';
+        }
+
+        if ($qtd <= $min) {
             return 'critico';
         }
 
-        $percentual = $this->percentual_alerta ?? 20;
-        $limiteAlerta = $this->estoque_minimo * (1 + $percentual / 100);
+        $percentual   = $this->percentual_alerta ?? 20;
+        $limiteAlerta = $min * (1 + $percentual / 100);
 
-        if ($this->estoque_atual <= $limiteAlerta) {
+        if ($qtd <= $limiteAlerta) {
             return 'atencao';
         }
 

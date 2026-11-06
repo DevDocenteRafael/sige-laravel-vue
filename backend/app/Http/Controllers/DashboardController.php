@@ -60,15 +60,21 @@ class DashboardController extends Controller
         );
     }
 
+    /**
+     * Estoque baixo: só produtos com mínimo definido (> 0) cujo saldo
+     * (soma dos itens de lote) é menor ou igual ao mínimo.
+     * Mesma regra e mesma fonte da página Produtos.
+     */
     private function buscarProdutosEstoqueCritico()
     {
-        return Produto::whereColumn('estoque_atual', '<=', 'estoque_minimo')
+        return Produto::withSum('itensLote as saldo', 'quantidade')
             ->where('estoque_minimo', '>', 0)
+            ->havingRaw('COALESCE(saldo, 0) <= estoque_minimo')
             ->get()
             ->map(fn($p) => [
                 'id'             => $p->id_produto,
                 'nome'           => $p->nome,
-                'quantidade'     => $p->estoque_atual,
+                'quantidade'     => $p->saldo ?? 0,
                 'estoque_minimo' => $p->estoque_minimo,
                 'unidade_medida' => $p->unidade_medida,
             ]);
@@ -175,9 +181,15 @@ class DashboardController extends Controller
         ])->sortByDesc('percentual')->values();
     }
 
+    /**
+     * Top produtos por saldo real (soma dos itens de lote),
+     * mantendo o mesmo formato de resposta de antes.
+     */
     private function buscarTopProdutos(int $limite = 10, ?string $categoria = null)
     {
-        $query = Produto::with('categoria')->orderByDesc('estoque_atual');
+        $query = Produto::with('categoria')
+            ->withSum('itensLote as saldo', 'quantidade')
+            ->orderByDesc('saldo');
 
         if (!empty($categoria)) {
             $query->whereHas('categoria', fn($q) => $q->where('nome', $categoria));
@@ -188,7 +200,7 @@ class DashboardController extends Controller
             ->map(fn($p) => [
                 'id_produto'     => $p->id_produto,
                 'nome'           => $p->nome,
-                'estoque_atual'  => $p->estoque_atual,
+                'estoque_atual'  => $p->saldo ?? 0,
                 'estoque_minimo' => $p->estoque_minimo,
                 'categoria'      => $p->categoria ? ['nome' => $p->categoria->nome] : null,
             ]);

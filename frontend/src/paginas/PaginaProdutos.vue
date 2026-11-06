@@ -221,12 +221,8 @@
               </span>
             </td>
             <td class="px-4 py-3">
-              <span
-                :class="estoqueBaixo(item)
-                  ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 px-2 py-1 rounded text-xs font-semibold'
-                  : 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 px-2 py-1 rounded text-xs font-semibold'"
-              >
-                {{ estoqueBaixo(item) ? '↓ Baixo' : 'OK' }}
+              <span :class="badgeStatusEstoque(item)">
+                {{ labelStatusEstoque(item) }}
               </span>
             </td>
           </tr>
@@ -401,7 +397,36 @@ async function salvarMinimo(item) {
   }
 }
 
-const estoqueBaixo = (item) => item.quantidade <= item.estoque_minimo
+// Status do estoque (mesma regra do card "Estoque Baixo" do Dashboard):
+// - 'baixo':       tem mínimo definido (> 0) e saldo <= mínimo
+// - 'sem_estoque': saldo zerado e sem mínimo definido (só cadastro)
+// - 'ok':          demais casos
+const statusEstoque = (item) => {
+  const min = Number(item.estoque_minimo ?? 0)
+  const qtd = Number(item.quantidade ?? 0)
+
+  if (min > 0 && qtd <= min) return 'baixo'
+  if (qtd <= 0) return 'sem_estoque'
+  return 'ok'
+}
+
+const estoqueBaixo = (item) => statusEstoque(item) === 'baixo'
+
+const labelStatusEstoque = (item) => ({
+  baixo: '↓ Baixo',
+  sem_estoque: 'Sem estoque',
+  ok: 'OK',
+}[statusEstoque(item)])
+
+const badgeStatusEstoque = (item) => {
+  const base = 'px-2 py-1 rounded text-xs font-semibold'
+  const cores = {
+    baixo:       'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400',
+    sem_estoque: 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+    ok:          'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400',
+  }
+  return `${base} ${cores[statusEstoque(item)]}`
+}
 
 const formatNumero = (valor) => Number(valor ?? 0).toLocaleString('pt-BR')
 

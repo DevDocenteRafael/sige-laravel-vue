@@ -321,7 +321,7 @@ class ImportacaoController extends Controller
             }
 
             $lote->increment('quantidade', $it['quantidade']);
-            $produto->increment('estoque_atual', $it['quantidade']);
+          ItemLote::sincronizarEstoque($produto->id_produto);
 
             Movimentacao::registrar('ENTRADA', $it['quantidade'], $lote->id_lote, $item->id_item ?? null, 'Importação via planilha Excel');
         }

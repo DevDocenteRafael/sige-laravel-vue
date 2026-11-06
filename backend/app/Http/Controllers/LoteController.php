@@ -2,7 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lote;
-use App\Models\Produto;
+use App\Models\ItemLote;
 use App\Helpers\AuditHelper;
 use App\Jobs\RecalcularAbcJob;
 use Illuminate\Http\Request;
@@ -36,56 +36,61 @@ class LoteController extends Controller
     }
 
     public function update(Request $request, int $id)
-{
-    $lote = Lote::findOrFail($id);
+    {
+        $lote = Lote::findOrFail($id);
 
-    $request->validate([
-        'numero'       => 'required|string|unique:lote,numero_lote,' . $id . ',id_lote',
-        'data_entrada' => 'required|date',
-        'descricao'    => 'nullable|string',
-    ]);
+        $request->validate([
+            'numero'       => 'required|string|unique:lote,numero_lote,' . $id . ',id_lote',
+            'data_entrada' => 'required|date',
+            'descricao'    => 'nullable|string',
+        ]);
 
-    $numeroAntigo = $lote->numero_lote;
+        $numeroAntigo = $lote->numero_lote;
 
-    $mudancas = [];
-    if ($lote->numero_lote !== $request->numero) {
-        $mudancas[] = "número: \"{$lote->numero_lote}\" → \"{$request->numero}\"";
+        $mudancas = [];
+        if ($lote->numero_lote !== $request->numero) {
+            $mudancas[] = "número: \"{$lote->numero_lote}\" → \"{$request->numero}\"";
+        }
+        if ((string) $lote->data_entrada !== (string) $request->data_entrada) {
+            $mudancas[] = "data de entrada: {$lote->data_entrada} → {$request->data_entrada}";
+        }
+        if ($lote->descricao !== $request->descricao) {
+            $mudancas[] = "descrição alterada";
+        }
+
+        $lote->update([
+            'numero_lote'  => $request->numero,
+            'data_entrada' => $request->data_entrada,
+            'descricao'    => $request->descricao,
+        ]);
+
+        $descricaoLog = count($mudancas) > 0
+            ? 'Lote "' . $numeroAntigo . '" atualizado (' . implode('; ', $mudancas) . ').'
+            : 'Lote "' . $numeroAntigo . '" atualizado (sem alterações detectadas).';
+
+        AuditHelper::log('Edicao', $descricaoLog);
+
+        return response()->json($lote);
     }
-    if ((string) $lote->data_entrada !== (string) $request->data_entrada) {
-        $mudancas[] = "data de entrada: {$lote->data_entrada} → {$request->data_entrada}";
-    }
-    if ($lote->descricao !== $request->descricao) {
-        $mudancas[] = "descrição alterada";
-    }
 
-    $lote->update([
-        'numero_lote'  => $request->numero,
-        'data_entrada' => $request->data_entrada,
-        'descricao'    => $request->descricao,
-    ]);
-
-    $descricaoLog = count($mudancas) > 0
-        ? 'Lote "' . $numeroAntigo . '" atualizado (' . implode('; ', $mudancas) . ').'
-        : 'Lote "' . $numeroAntigo . '" atualizado (sem alterações detectadas).';
-
-    AuditHelper::log('Edicao', $descricaoLog);
-
-    return response()->json($lote);
-}
     public function destroy(int $id)
     {
         $lote = Lote::with('itens')->findOrFail($id);
+        $idsProdutos = $lote->itens->pluck('id_produto')->unique();
 
-        DB::transaction(function () use ($lote, $id) {
-            foreach ($lote->itens as $item) {
-                Produto::whereKey($item->id_produto)->decrement('estoque_atual', $item->quantidade);
-            }
-
+        DB::transaction(function () use ($lote, $id, $idsProdutos) {
             DB::table('movimentacao')->where('id_lote', $id)->delete();
 
             AuditHelper::log('Exclusao', 'Lote "' . $lote->numero_lote . '" excluido.');
 
+            // Apaga os itens explicitamente (não depende de cascade do banco)
+            // e recalcula o estoque dos produtos afetados, em vez de decrementar.
+            ItemLote::where('id_lote', $id)->delete();
             $lote->delete();
+
+            foreach ($idsProdutos as $idProduto) {
+                ItemLote::sincronizarEstoque($idProduto);
+            }
         });
 
         RecalcularAbcJob::dispatchSync();
@@ -104,21 +109,22 @@ class LoteController extends Controller
         ]);
 
         $lotes = Lote::with('itens')->whereIn('id_lote', $request->ids)->get();
+        $idsProdutos = $lotes->flatMap(fn($l) => $l->itens->pluck('id_produto'))->unique();
 
-        DB::transaction(function () use ($request, $lotes) {
-            foreach ($lotes as $lote) {
-                foreach ($lote->itens as $item) {
-                    Produto::whereKey($item->id_produto)->decrement('estoque_atual', $item->quantidade);
-                }
-            }
-
+        DB::transaction(function () use ($request, $lotes, $idsProdutos) {
             DB::table('movimentacao')->whereIn('id_lote', $request->ids)->delete();
 
             foreach ($lotes as $lote) {
                 AuditHelper::log('Exclusao', 'Lote "' . $lote->numero_lote . '" excluído (exclusão em massa).');
             }
 
+            // Exclusão por query direta: o recálculo é chamado explicitamente.
+            ItemLote::whereIn('id_lote', $request->ids)->delete();
             Lote::whereIn('id_lote', $request->ids)->delete();
+
+            foreach ($idsProdutos as $idProduto) {
+                ItemLote::sincronizarEstoque($idProduto);
+            }
         });
 
         RecalcularAbcJob::dispatchSync();

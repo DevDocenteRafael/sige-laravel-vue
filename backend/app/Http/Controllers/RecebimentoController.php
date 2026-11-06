@@ -433,7 +433,7 @@ class RecebimentoController extends Controller
                     'prioridade_manual' => $prioridade !== null,
                 ]);
 
-                Produto::whereKey($produto->id_produto)->increment('estoque_atual', $qtdInt);
+                ItemLote::sincronizarEstoque($produto->id_produto);
 
                 Movimentacao::registrar(
                     'ENTRADA', $qtdInt, $lote->id_lote, $itemLote->id_item,

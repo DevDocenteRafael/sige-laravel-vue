@@ -128,7 +128,8 @@ class ItemLoteController extends Controller
                     'prioridade_manual' => $ehManual,
                 ]);
 
-                Produto::whereKey($idProduto)->increment('estoque_atual', $request->quantidade);
+                // estoque_atual é recalculado a partir dos itens (não soma mais por cima)
+                ItemLote::sincronizarEstoque($idProduto);
 
                 $numeroLote = \App\Models\Lote::whereKey($idLote)->value('numero_lote') ?? $idLote;
 
@@ -189,16 +190,13 @@ class ItemLoteController extends Controller
             $qtdAntiga = $item->quantidade;
             $ehManual  = $request->filled('prioridade_abc');
 
-             $dados = $request->only(['quantidade', 'unidade_medida', 'data_validade', 'localizacao', 'id_centro_custo']);
+            $dados = $request->only(['quantidade', 'unidade_medida', 'data_validade', 'localizacao', 'id_centro_custo']);
             $dados['prioridade_manual'] = $ehManual;
             $dados['prioridade_abc']    = $ehManual ? $request->prioridade_abc : null;
 
             $item->update($dados);
 
-            $diferenca = $item->quantidade - $qtdAntiga;
-            if ($diferenca !== 0) {
-                Produto::whereKey($item->id_produto)->increment('estoque_atual', $diferenca);
-            }
+            ItemLote::sincronizarEstoque($item->id_produto);
 
             AuditHelper::log(
                 'Edicao',
@@ -228,7 +226,7 @@ class ItemLoteController extends Controller
 
         DB::transaction(function () use ($request, $item) {
             $item->update(['quantidade' => $item->quantidade - $request->quantidade]);
-            Produto::whereKey($item->id_produto)->decrement('estoque_atual', $request->quantidade);
+            ItemLote::sincronizarEstoque($item->id_produto);
 
             Movimentacao::registrar('SAIDA', $request->quantidade, $item->id_lote, $item->id_item, $request->motivo);
 
@@ -263,7 +261,7 @@ class ItemLoteController extends Controller
             $item->quantidade += $request->quantidade;
             $item->save();
 
-            Produto::whereKey($item->id_produto)->increment('estoque_atual', $request->quantidade);
+            ItemLote::sincronizarEstoque($item->id_produto);
 
             Movimentacao::registrar('ENTRADA', $request->quantidade, $item->id_lote, $item->id_item, $request->motivo);
 
@@ -319,14 +317,15 @@ class ItemLoteController extends Controller
             $nomeProduto = $item->produto?->nome;
             $numeroLote = \App\Models\Lote::whereKey($item->id_lote)->value('numero_lote') ?? $item->id_lote;
 
-            Produto::whereKey($idProduto)->decrement('estoque_atual', $item->quantidade);
-
             AuditHelper::log(
                 'Exclusao',
                 "Item do produto \"{$nomeProduto}\" (qtd: {$item->quantidade}) excluído do lote {$numeroLote}."
             );
 
             $item->delete();
+
+            // Recalcula o estoque depois da exclusão (não subtrai mais manualmente)
+            ItemLote::sincronizarEstoque($idProduto);
 
             if (!ItemLote::where('id_produto', $idProduto)->exists()) {
                 Produto::whereKey($idProduto)->delete();
@@ -353,17 +352,20 @@ class ItemLoteController extends Controller
 
         DB::transaction(function () use ($itens, $idsProdutosAfetados) {
             foreach ($itens as $item) {
-                Produto::whereKey($item->id_produto)->decrement('estoque_atual', $item->quantidade);
-
                 $numeroLote = \App\Models\Lote::whereKey($item->id_lote)->value('numero_lote') ?? $item->id_lote;
                 AuditHelper::log(
                     'Exclusao',
                     "Item do produto \"{$item->produto?->nome}\" (qtd: {$item->quantidade}) excluído do lote {$numeroLote} (exclusão em massa)."
                 );
             }
+
+            // Exclusão por query direta: não dispara os eventos do model,
+            // por isso o recálculo é chamado explicitamente logo abaixo.
             ItemLote::whereIn('id_item', $itens->pluck('id_item'))->delete();
 
             foreach ($idsProdutosAfetados as $idProduto) {
+                ItemLote::sincronizarEstoque($idProduto);
+
                 if (!ItemLote::where('id_produto', $idProduto)->exists()) {
                     Produto::whereKey($idProduto)->delete();
                 }
@@ -492,6 +494,10 @@ class ItemLoteController extends Controller
             ]);
         }
 
+        // Transferência entre lotes do mesmo produto não altera o total do produto;
+        // o recálculo apenas garante que estoque_atual continue igual à soma dos itens.
+        ItemLote::sincronizarEstoque($itemOrigem->id_produto);
+
         $numeroLoteOrigem  = \App\Models\Lote::find($itemOrigem->id_lote)?->numero_lote ?? $itemOrigem->id_lote;
         $numeroLoteDestino = \App\Models\Lote::find($idLoteDestino)?->numero_lote ?? $idLoteDestino;
 
@@ -509,13 +515,13 @@ class ItemLoteController extends Controller
 
         return [
             'item_origem'  => $itemOrigem->refresh()->load(['produto.fornecedor', 'centroCusto']),
-           'item_destino' => $itemDestino->refresh()->load(['produto.fornecedor', 'centroCusto']),
+            'item_destino' => $itemDestino->refresh()->load(['produto.fornecedor', 'centroCusto']),
         ];
     }
 
     public function todos()
     {
-       $itens = ItemLote::with(['produto', 'lote', 'centroCusto'])
+        $itens = ItemLote::with(['produto', 'lote', 'centroCusto'])
             ->where('quantidade', '>', 0)
             ->orderBy('data_validade', 'asc')
             ->get();
