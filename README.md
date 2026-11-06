@@ -4,7 +4,7 @@ Sistema de almoxarifado com **Laravel** (backend), **Vue.js** (frontend) e **Doc
 
 ---
 
-## 📁 Estrutura do projeto
+## Estrutura do projeto
 
 ```
 sige-laravel-vue/
@@ -24,7 +24,7 @@ sige-laravel-vue/
 │   │   └── Models/             ← Representação das tabelas do banco
 │   ├── database/
 │   │   ├── migrations/         ← Criação das tabelas
-│   │   └── seeders/            ← Dados iniciais (admin, categorias)
+│   │   └── seeders/            ← Dados iniciais (admin)
 │   └── routes/api.php          ← Todas as rotas da API
 │
 └── frontend/                   ← Interface Vue.js
@@ -44,7 +44,9 @@ sige-laravel-vue/
         └── estilos/            ← CSS global
 ```
 
-## Como rodar o projeto (instalação limpa)
+---
+
+## Como rodar o projeto
 
 ### Pré-requisitos
 
@@ -54,156 +56,167 @@ sige-laravel-vue/
 - MySQL (recomendado: XAMPP no Windows ou MySQL Server)
 - Git
 
-### Passo a passo
+### Opção 1: rodar localmente
 
 ```bash
-# 1. Configurar PHP.INI
- Exclua o ponto e vírgula (;) da ";extension gd" e ";extension zip", depois salve (Abrir com bloco de notas)
+# 1. Configurar o PHP.INI
+#    Remova o ponto e vírgula (;) de ";extension=gd" e ";extension=zip" e salve
 
-# 2. Criar cache do bootstrap dentro do Backend
-Comando: "mkdir bootstrap\cache" 
+# 2. Criar a pasta de cache do bootstrap dentro do backend
+cd backend
+mkdir bootstrap\cache
 
-# 3. Instale as dependencias do Backend (PHP)
-cd Backend
+# 3. Instalar as dependências do backend
 composer install
 composer require barryvdh/laravel-dompdf
 
-# 4. Crie o arquivo de ambiente a partir do template
+# 4. Criar o arquivo de ambiente a partir do template
 copy .env.example .env
 
-# 5. Gere a chave da aplicacao
+# 5. Gerar a chave da aplicação
 php artisan key:generate
 
-# 6. Configure o banco de dados no arquivo .env
-#    Edite o arquivo Backend/.env com as seguintes configuracoes:
+# 6. Configurar o banco no backend/.env
 #    DB_CONNECTION=mysql
 #    DB_HOST=127.0.0.1
 #    DB_PORT=3307
 #    DB_DATABASE=sige
 #    DB_USERNAME=root
-#    DB_PASSWORD=       (deixe vazio se for XAMPP padrao)
+#    DB_PASSWORD=
 
-# 7. Crie o banco de dados no MySQL
-#    Acesse o MySQL e execute: CREATE DATABASE sige;
+# 7. Criar o banco no MySQL
+#    CREATE DATABASE sige;
 
-# 8. Limpe o cache de configuracao (importante em ambientes novos)
+# 8. Limpar o cache de configuração
 php artisan config:clear
 php artisan cache:clear
 
-# 9. Execute as migrations (cria as tabelas)
+# 9. Criar as tabelas
 php artisan migrate
 
-# 10. Execute os seeders (popula o banco com dados de desenvolvimento) - OBRIGATORIO!
+# 10. Criar o usuário admin inicial (obrigatório)
 php artisan db:seed
 
-# 11. Inicie o servidor Backend
+# 11. Iniciar o backend
 php artisan serve
-#    O servidor ira rodar em: http://localhost:8000
+#    Roda em http://localhost:8000
 
-# 12. Em outro terminal, instale as dependencias do Frontend
-cd ../Frontend
+# 12. Em outro terminal, instalar o frontend
+cd ../frontend
 npm install
 npm install lucide-vue-next marked dompurify exceljs grid-layout-plus
-# 13. Inicie o servidor de desenvolvimento do Frontend
+
+# 13. Iniciar o frontend
 npm run dev
-#    O frontend ira rodar em: http://localhost:5173
+#    Roda em http://localhost:3000
 ```
 
+### Opção 2: Docker (somente desenvolvimento)
 
-**5. Acesse o sistema**
+```bash
+docker compose up -d --build
 
-| Serviço   | Endereço                  |
-|-----------|---------------------------|
-| Frontend  | http://localhost:3000     |
-| Backend   | http://localhost:8000/api |
-| Banco     | localhost:3306            |
+# Na primeira vez, criar as tabelas e o admin
+docker compose exec backend php artisan migrate --seed
+```
 
----
+No `backend/.env`, use `DB_HOST=banco` quando rodar pelo Docker.
 
-## 👤 Usuários para teste
+O `docker-compose.yml` atual é para desenvolvimento (usa `npm run dev` e `APP_DEBUG=true`). Não use esta configuração em produção.
 
-| Perfil       | Email                  | Senha          |
-|--------------|-------------------------|----------------|
-| Admin        | admin@sige.com          | Admin@2024     |
-| Admin        | angel@sige.com          | Angel@2024     |
-| Admin        | natan@sige.com          | Natan@2024     |
-| Operador     | amanda@sige.com         | Operador@2024  |
-| Operador     | daniela@sige.com        | Operador@2024  |
-| Operador     | miguel@sige.com         | Operador@2024  |
-| Visualizador | visualizador@sige.com   | Visual@2024    |
+### Endereços
+
+| Serviço  | Endereço                  |
+|----------|---------------------------|
+| Frontend | http://localhost:3000     |
+| Backend  | http://localhost:8000/api |
+| Banco    | localhost:3306 (Docker)   |
 
 ---
 
-## 🔐 Perfis de acesso
+## Primeiro acesso
 
-| Ação                          | Admin | Operador | Visualizador |
-|-------------------------------|:-----:|:--------:|:------------:|
-| Ver produtos/lotes/movimentos |  ✅   |    ✅    |      ✅      |
-| Criar/editar produtos         |  ✅   |    ✅    |      ❌      |
-| Registrar entrada/saída       |  ✅   |    ✅    |      ❌      |
-| Gerenciar usuários            |  ✅   |    ❌    |      ❌      |
-| Remover produtos/categorias   |  ✅   |    ❌    |      ❌      |
+O `php artisan db:seed` cria apenas o usuário **admin** inicial (e-mail e senha definidos em `backend/database/seeders/DatabaseSeeder.php`).
+
+**Troque a senha do admin no primeiro login.** Os demais usuários (operadores e visualizadores) são criados pelo admin na tela de usuários.
 
 ---
 
-## 🌐 Rotas da API
+## Perfis de acesso
 
-### Públicas (sem login)
-| Método | Rota         | Descrição        |
-|--------|--------------|------------------|
-| POST   | /api/login   | Fazer login      |
-
-### Protegidas (precisam do token no header `Authorization: Bearer {token}`)
-
-| Método | Rota                        | Descrição                    |
-|--------|-----------------------------|------------------------------|
-| POST   | /api/logout                 | Fazer logout                 |
-| GET    | /api/me                     | Dados do usuário logado      |
-| GET    | /api/dashboard              | Resumo geral                 |
-| GET    | /api/produtos               | Listar produtos              |
-| POST   | /api/produtos               | Criar produto                |
-| PUT    | /api/produtos/{id}          | Editar produto               |
-| DELETE | /api/produtos/{id}          | Desativar produto            |
-| GET    | /api/lotes                  | Listar lotes com itens       |
-| POST   | /api/lotes                  | Criar lote com itens         |
-| GET    | /api/lotes/itens            | Itens disponíveis (p/ select)|
-| GET    | /api/movimentos             | Histórico de movimentos      |
-| POST   | /api/movimentos/entrada     | Registrar entrada            |
-| POST   | /api/movimentos/saida       | Registrar saída              |
-| GET    | /api/relatorios/estoque     | Relatório de estoque         |
-| GET    | /api/relatorios/vencimentos | Itens vencidos/vencendo      |
-| GET    | /api/relatorios/auditoria   | Log de auditoria             |
-| GET    | /api/usuarios               | Listar usuários (admin)      |
-| POST   | /api/usuarios               | Criar usuário (admin)        |
-| PUT    | /api/usuarios/{id}          | Editar usuário (admin)       |
-| DELETE | /api/usuarios/{id}          | Desativar usuário (admin)    |
+| Ação                                           | Admin | Operador | Visualizador |
+|------------------------------------------------|:-----:|:--------:|:------------:|
+| Ver produtos, lotes, itens, pedidos, relatórios|  ✅   |    ✅    |      ✅      |
+| Criar/editar lotes, itens, pedidos, perdas     |  ✅   |    ✅    |      ❌      |
+| Registrar entrada, baixa e transferência       |  ✅   |    ✅    |      ❌      |
+| Importar planilhas e XML de recebimento        |  ✅   |    ✅    |      ❌      |
+| Remover produtos, itens, lotes e pedidos       |  ✅   |    ✅    |      ❌      |
+| Remover centros de custo e movimentações       |  ✅   |    ❌    |      ❌      |
+| Exportar e restaurar backup                    |  ✅   |    ❌    |      ❌      |
+| Logs de auditoria                              |  ✅   |    ❌    |      ❌      |
+| Gerenciar usuários                             |  ✅   |    ❌    |      ❌      |
 
 ---
 
-## 🛑 Parar o projeto
+## Rotas da API
+
+### Públicas
+
+| Método | Rota       | Descrição                         |
+|--------|------------|-----------------------------------|
+| POST   | /api/login | Fazer login (limite: 5 por minuto)|
+
+### Protegidas
+
+Enviar o token no header `Authorization: Bearer {token}`.
+
+| Grupo           | Rotas principais                                                        |
+|-----------------|-------------------------------------------------------------------------|
+| Sessão          | `POST /logout`, `GET /user`                                             |
+| Dashboard       | `GET /dashboard`, `GET /dashboard/top-produtos`                         |
+| Produtos        | `GET /produtos`, `GET /produtos/buscar-por-sku`, `DELETE /produtos/{id}`|
+| Lotes           | `/lotes` (CRUD), `GET /lotes/{id}/itens`, `POST /lotes/{id}/itens`      |
+| Itens           | `GET /itens`, `PUT /itens/{id}`, `PATCH /itens/{id}/baixa`, `/entrada`, `/transferir`, `GET /itens/{id}/historico` |
+| Centros de custo| `/centros-custo`                                                        |
+| Pedidos         | `/pedidos` (CRUD, itens, importação e exportação)                       |
+| Recebimentos    | `/recebimentos` (importar XML, vincular itens, dar entrada)             |
+| Perdas          | `/perdas`, `/perdas/estatisticas`                                       |
+| Movimentações   | `GET /movimentacoes`                                                    |
+| Relatórios      | `/relatorios/*`, `/relatorios-avancados/*`                              |
+| Importação/Exportação | `/importacao-exportacao/*` (templates, preview, confirmar, CSV, XLSX, backup) |
+| Auditoria       | `GET /audit-logs`, `GET /audit-logs/export` (admin)                     |
+| Usuários        | `/usuarios` (admin)                                                     |
+| Chatbot         | `POST /chatbot`, `POST /chatbot/stream` (limite: 20 por minuto)         |
+
+A lista completa e as permissões de cada rota estão em `backend/routes/api.php`.
+
+---
+
+## Parar o projeto
 
 ```bash
 docker compose down
 ```
 
 Para parar **e apagar os dados do banco**:
+
 ```bash
 docker compose down -v
 ```
 
 ---
 
-## 🧰 Tecnologias usadas
+## Tecnologias usadas
 
-| Camada     | Tecnologia                          |
-|------------|-------------------------------------|
-| Backend    | PHP 8.2 + Laravel 11                |
-| Auth       | Laravel Sanctum (tokens)            |
-| Frontend   | Vue.js 3 + Vite                     |
-| Estado     | Pinia                               |
-| Rotas      | Vue Router 4                        |
-| HTTP       | Axios                               |
-| Estilo     | Tailwind CSS                        |
-| Banco      | MySQL 8                             |
-| Servidor   | Nginx + PHP-FPM                     |
-| Container  | Docker + Docker Compose             |
+| Camada    | Tecnologia                |
+|-----------|---------------------------|
+| Backend   | PHP 8.2 + Laravel 11      |
+| Auth      | Laravel Sanctum (tokens)  |
+| Frontend  | Vue.js 3 + Vite           |
+| Estado    | Pinia                     |
+| Rotas     | Vue Router 4              |
+| HTTP      | Axios                     |
+| Estilo    | Tailwind CSS              |
+| Banco     | MySQL 8                   |
+| Servidor  | Nginx + PHP-FPM           |
+| Container | Docker + Docker Compose   |

@@ -22,7 +22,8 @@ use App\Http\Controllers\CentroCustoController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\RecebimentoController;
 
-Route::post('/login', [AuthController::class, 'login']);
+
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -59,8 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/produtos',                [ProdutoController::class, 'index']);
     Route::get('/produtos/buscar-por-sku', [ProdutoController::class, 'buscarPorSku']);
-    Route::delete('/produtos/{id}',        [ProdutoController::class, 'destroy']);
-    Route::delete('/produtos',             [ProdutoController::class, 'destroyMultiplos']);
+    
+    Route::delete('/produtos/{id}',        [ProdutoController::class, 'destroy'])->middleware('perfil:admin,operador');
+    Route::delete('/produtos',             [ProdutoController::class, 'destroyMultiplos'])->middleware('perfil:admin,operador');
 
     Route::get('/pedidos',                    [PedidoController::class, 'index']);
     Route::get('/pedidos/exportar',           [PedidoController::class, 'exportar']);
@@ -104,7 +106,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/importacao-exportacao/stats',        [ImportacaoController::class, 'stats']);
     Route::get('/importacao-exportacao/template-csv', [ImportacaoController::class, 'downloadTemplate']);
     Route::get('/importacao-exportacao/template',     [ImportacaoController::class, 'downloadTemplate']);
-    Route::post('/importacao-exportacao/preview',     [ImportacaoController::class, 'previewImportacao']);
+    
+    Route::post('/importacao-exportacao/preview',     [ImportacaoController::class, 'previewImportacao'])->middleware('perfil:admin,operador');
     Route::post('/importacao-exportacao/confirmar',   [ImportacaoController::class, 'confirmarImportacao'])->middleware('perfil:admin,operador');
 
     Route::get('/importacao-exportacao/exportar/produtos-csv',       [ExportController::class, 'exportarProdutosCSV']);
@@ -112,7 +115,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/importacao-exportacao/exportar/movimentacoes-csv',  [ExportController::class, 'exportarMovimentacoesCSV']);
     Route::get('/importacao-exportacao/exportar/movimentacoes-xlsx', [ExportController::class, 'exportarMovimentacoesXLSX']);
 
-    Route::get('/importacao-exportacao/exportar/backup',   [BackupController::class, 'exportarBackup']);
+    
+    Route::get('/importacao-exportacao/exportar/backup',   [BackupController::class, 'exportarBackup'])->middleware('perfil:admin');
     Route::post('/importacao-exportacao/restaurar/backup', [BackupController::class, 'restaurarBackup'])->middleware('perfil:admin');
 
     Route::get('/audit-logs',        [AuditLogController::class, 'index'])->middleware('perfil:admin');
@@ -123,6 +127,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/usuarios/{id}',          [UsuarioController::class, 'update'])->middleware('perfil:admin');
     Route::patch('/usuarios/{id}/status', [UsuarioController::class, 'alternarStatus'])->middleware('perfil:admin');
 
-    Route::post('/chatbot', [ChatbotController::class, 'perguntar']);
-    Route::post('/chatbot/stream', [ChatbotController::class, 'perguntarStream']);
+    Route::post('/chatbot', [ChatbotController::class, 'perguntar'])->middleware('throttle:20,1');
+    Route::post('/chatbot/stream', [ChatbotController::class, 'perguntarStream'])->middleware('throttle:20,1');
 });
