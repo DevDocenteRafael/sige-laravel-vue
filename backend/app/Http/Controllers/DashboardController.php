@@ -61,15 +61,16 @@ class DashboardController extends Controller
     }
 
     /**
-     * Estoque baixo: só produtos com mínimo definido (> 0) cujo saldo
-     * (soma dos itens de lote) é menor ou igual ao mínimo.
+     * Estoque baixo: só produtos com mínimo definido (> 0) que TÊM saldo
+     * (soma dos itens de lote > 0) menor ou igual ao mínimo.
+     * Produto zerado não conta aqui: aparece como "Sem estoque".
      * Mesma regra e mesma fonte da página Produtos.
      */
     private function buscarProdutosEstoqueCritico()
     {
         return Produto::withSum('itensLote as saldo', 'quantidade')
             ->where('estoque_minimo', '>', 0)
-            ->havingRaw('COALESCE(saldo, 0) <= estoque_minimo')
+            ->havingRaw('COALESCE(saldo, 0) > 0 AND COALESCE(saldo, 0) <= estoque_minimo')
             ->get()
             ->map(fn($p) => [
                 'id'             => $p->id_produto,

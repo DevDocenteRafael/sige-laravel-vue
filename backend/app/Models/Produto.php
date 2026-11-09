@@ -45,10 +45,14 @@ class Produto extends Model {
         $qtd = $this->itens_lote_sum_quantidade ?? $this->estoque_atual ?? 0;
         $min = $this->estoque_minimo ?? 0;
 
-        // Sem mínimo definido não há limite a ser violado:
-        // não é "crítico", apenas zerado ou ok.
+        // Sem saldo não é "crítico": é produto sem estoque.
+        if ($qtd <= 0) {
+            return 'sem_estoque';
+        }
+
+        // Sem mínimo definido não há limite a ser violado.
         if ($min <= 0) {
-            return $qtd <= 0 ? 'sem_estoque' : 'ok';
+            return 'ok';
         }
 
         if ($qtd <= $min) {

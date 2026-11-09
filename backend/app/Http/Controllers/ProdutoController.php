@@ -36,11 +36,11 @@ class ProdutoController extends Controller
             $query->whereHas('itensLote', $aplicarCentro);
         }
 
-        // ESTOQUE BAIXO: só conta produtos com mínimo definido (> 0).
-        // Mesma regra do card do Dashboard.
+        // ESTOQUE BAIXO: mínimo definido (> 0) e saldo > 0 que não passa do mínimo.
+        // Produto zerado não entra (é "sem estoque"). Mesma regra do Dashboard.
         if ($request->boolean('estoque_baixo')) {
             $query->where('estoque_minimo', '>', 0)
-                  ->havingRaw('COALESCE(itens_lote_sum_quantidade, 0) <= estoque_minimo');
+                  ->havingRaw('COALESCE(itens_lote_sum_quantidade, 0) > 0 AND COALESCE(itens_lote_sum_quantidade, 0) <= estoque_minimo');
         }
 
         // SEM ESTOQUE: produtos cadastrados com saldo zerado (sem lotes).
