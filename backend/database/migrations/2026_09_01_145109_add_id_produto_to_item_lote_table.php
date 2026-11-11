@@ -41,12 +41,12 @@ return new class extends Migration
         }
 
         DB::statement('
-            UPDATE produto p
-            SET estoque_atual = (
-                SELECT COALESCE(SUM(il.quantidade), 0)
-                FROM item_lote il
-                WHERE il.id_produto = p.id_produto
-            )
+        UPDATE produto
+        SET estoque_atual = (
+        SELECT COALESCE(SUM(il.quantidade), 0)
+        FROM item_lote il
+        WHERE il.id_produto = produto.id_produto
+        )
         ');
 
         Schema::table('item_lote', function (Blueprint $table) {
