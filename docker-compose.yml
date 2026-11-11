@@ -1,13 +1,10 @@
 version: "3.8"
 
-# ============================================================
-# SIGE - Sistema de Gestão de Estoque
-# Docker Compose: sobe o banco, o backend e o frontend juntos
-# ============================================================
+
 
 services:
 
-  # ---- Banco de dados MySQL 8 ----
+  
   banco:
     image: mysql:8.0
     container_name: sige_banco
@@ -25,7 +22,7 @@ services:
     networks:
       - rede_sige
 
-  # ---- PHP-FPM (Laravel roda aqui) ----
+ 
   backend:
     build:
       context: ./backend
@@ -43,14 +40,14 @@ services:
     networks:
       - rede_sige
 
-  # ---- Nginx (serve o PHP e o Vue) ----
+  
   nginx:
     image: nginx:alpine
     container_name: sige_nginx
     restart: unless-stopped
     ports:
-      - "8000:80"   # backend Laravel em localhost:8000
-      - "5173:5173" # frontend Vue em localhost:5173
+      - "8000:80"   
+      - "5173:5173" 
     volumes:
       - ./backend:/var/www
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
@@ -59,7 +56,7 @@ services:
     networks:
       - rede_sige
 
-  # ---- Node.js (Vue.js roda aqui) ----
+  
   frontend:
     image: node:20-alpine
     container_name: sige_frontend
@@ -74,11 +71,11 @@ services:
     networks:
       - rede_sige
 
-# ---- Volume para salvar os dados do banco ----
+
 volumes:
   dados_banco:
 
-# ---- Rede interna entre os serviços ----
+
 networks:
   rede_sige:
     driver: bridge
