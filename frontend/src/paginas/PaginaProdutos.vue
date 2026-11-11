@@ -397,10 +397,6 @@ async function salvarMinimo(item) {
   }
 }
 
-// Status do estoque (mesma regra do card "Estoque Baixo" do Dashboard):
-// - 'sem_estoque': saldo zerado (produto cadastrado, sem lotes)
-// - 'baixo':       tem saldo (> 0), mínimo definido (> 0) e saldo <= mínimo
-// - 'ok':          demais casos
 const statusEstoque = (item) => {
   const min = Number(item.estoque_minimo ?? 0)
   const qtd = Number(item.quantidade ?? 0)

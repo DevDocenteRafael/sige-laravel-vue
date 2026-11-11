@@ -12,14 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Como o app é API-only, nunca tenta redirecionar pra 'login'
         $middleware->redirectGuestsTo(fn () => null);
         $middleware->alias([
             'perfil' => \App\Http\Middleware\EnsureUserHasProfile::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Garante resposta JSON (401) em qualquer erro de auth em rotas /api/*
         $exceptions->shouldRenderJsonWhen(function ($request, \Throwable $e) {
             return $request->is('api/*') || $request->expectsJson();
         });

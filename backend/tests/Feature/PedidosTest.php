@@ -10,12 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
-/**
- * ATENÇÃO: as migrations do projeto têm comandos específicos do MySQL (ALTER TABLE ... MODIFY),
- * então estes testes precisam de um banco MySQL de teste (ex.: DB_CONNECTION=mysql e um
- * DB_DATABASE separado de desenvolvimento). O phpunit.xml padrão usa sqlite em memória e
- * não consegue rodar todas as migrations.
- */
 class PedidosTest extends TestCase
 {
     use RefreshDatabase;
@@ -49,8 +43,8 @@ class PedidosTest extends TestCase
         $r = $this->postJson('/api/pedidos', $this->payload());
 
         $r->assertCreated()->assertJsonPath('numero', '036072')->assertJsonPath('editavel', true);
-        $this->assertEquals(80.0, Pedido::first()->valor_total);                 // 10*5,5 + 2,5*10
-        $this->assertSame('37937325000105', Pedido::first()->fornecedor_cnpj);   // pontuação removida
+        $this->assertEquals(80.0, Pedido::first()->valor_total);
+        $this->assertSame('37937325000105', Pedido::first()->fornecedor_cnpj);
         $this->assertSame('UN', PedidoItem::where('sku', 'ES001')->value('unidade'));
     }
 
@@ -70,7 +64,7 @@ class PedidosTest extends TestCase
         $this->postJson('/api/pedidos', $repetido)->assertStatus(422);
 
         $this->postJson('/api/pedidos', $this->payload())->assertCreated();
-        $this->postJson('/api/pedidos', $this->payload())->assertStatus(422)   // número já existe
+        $this->postJson('/api/pedidos', $this->payload())->assertStatus(422)
             ->assertJsonValidationErrors('numero');
     }
 
@@ -86,7 +80,6 @@ class PedidosTest extends TestCase
             ->assertOk();
         $this->deleteJson("/api/pedidos/{$id}/itens/" . PedidoItem::where('sku', 'ES003')->value('id_pedido_item'))->assertOk();
 
-        // Com nota vinculada, o pedido deixa de ser editável
         NotaRecebimento::create([
             'chave_acesso' => str_repeat('1', 44), 'numero' => '1', 'id_pedido' => $id, 'status' => 'pendente',
         ]);
@@ -125,7 +118,7 @@ class PedidosTest extends TestCase
         ]));
         $this->postJson('/api/pedidos/importar-planilha', ['arquivo' => $ok, 'previa' => 1])
             ->assertOk()->assertJsonPath('previa', true)->assertJsonPath('total_itens', 1);
-        $this->assertSame(0, Pedido::count());                                    // prévia não grava
+        $this->assertSame(0, Pedido::count());
 
         $this->postJson('/api/pedidos/importar-planilha', ['arquivo' => $ok])->assertCreated();
         $this->assertSame(1, Pedido::count());

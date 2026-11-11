@@ -83,8 +83,6 @@ class LoteController extends Controller
 
             AuditHelper::log('Exclusao', 'Lote "' . $lote->numero_lote . '" excluido.');
 
-            // Apaga os itens explicitamente (não depende de cascade do banco)
-            // e recalcula o estoque dos produtos afetados, em vez de decrementar.
             ItemLote::where('id_lote', $id)->delete();
             $lote->delete();
 
@@ -118,7 +116,6 @@ class LoteController extends Controller
                 AuditHelper::log('Exclusao', 'Lote "' . $lote->numero_lote . '" excluído (exclusão em massa).');
             }
 
-            // Exclusão por query direta: o recálculo é chamado explicitamente.
             ItemLote::whereIn('id_lote', $request->ids)->delete();
             Lote::whereIn('id_lote', $request->ids)->delete();
 

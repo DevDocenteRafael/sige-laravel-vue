@@ -8,9 +8,6 @@ use App\Services\PedidoPlanilha;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
 
-/**
- * Não usa banco: só o serviço que lê/gera a planilha (precisa do Laravel apenas por causa do config()).
- */
 class PedidoPlanilhaTest extends TestCase
 {
     private function pedidoDeExemplo(): Pedido
@@ -43,12 +40,12 @@ class PedidoPlanilhaTest extends TestCase
         $lido = (new PedidoPlanilha())->ler($this->salvarXlsx($this->pedidoDeExemplo()));
 
         $this->assertSame([], $lido['erros']);
-        $this->assertSame('036072', $lido['dados']['numero']);          // zero à esquerda preservado
+        $this->assertSame('036072', $lido['dados']['numero']);
         $this->assertSame('37937325000105', $lido['dados']['fornecedor_cnpj']);
         $this->assertSame('2026-10-16', $lido['dados']['data_emissao']);
         $this->assertCount(2, $lido['dados']['itens']);
         $this->assertSame('ES0260000000099', $lido['dados']['itens'][1]['sku']);
-        $this->assertEquals(20.5, $lido['dados']['itens'][1]['quantidade']);   // quantidade fracionada
+        $this->assertEquals(20.5, $lido['dados']['itens'][1]['quantidade']);
         $this->assertEquals(12.34, $lido['dados']['itens'][1]['valor_unitario']);
     }
 

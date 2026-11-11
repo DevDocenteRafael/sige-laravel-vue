@@ -9,11 +9,6 @@ class Lote extends Model {
     public $timestamps    = false;
     protected $fillable   = ['numero_lote', 'quantidade', 'status', 'data_entrada', 'data_validade', 'descricao', 'id_produto', 'id_localizacao'];
 
-    /**
-     * Guarda, antes da exclusão, quais produtos tinham itens neste lote,
-     * para recalcular o estoque_atual deles depois que os itens forem apagados
-     * (inclusive quando o banco apaga os itens em cascata).
-     */
     protected static array $produtosAfetados = [];
 
     protected static function booted()

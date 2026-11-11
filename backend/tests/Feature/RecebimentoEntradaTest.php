@@ -17,10 +17,6 @@ use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
-/**
- * Entrada de estoque a partir da conferência da nota.
- * Precisa de banco MySQL de teste (as migrations usam ALTER TABLE ... MODIFY).
- */
 class RecebimentoEntradaTest extends TestCase
 {
     use RefreshDatabase;
@@ -38,7 +34,6 @@ class RecebimentoEntradaTest extends TestCase
         Sanctum::actingAs(User::factory()->create(['perfil' => 'operador']));
     }
 
-    /** Monta produto + pedido (100 un.) + nota com um item conferido ("ok"). */
     private function montar(float $qtdNota = 10, string $cnpjNota = '37937325000105'): void
     {
         $this->produto = Produto::create([
@@ -93,7 +88,7 @@ class RecebimentoEntradaTest extends TestCase
         $this->assertEquals(10, $this->pedidoItem->fresh()->quantidade_recebida);
         $this->assertSame('entrou', $this->notaItem->fresh()->status);
         $this->assertSame('conferida', $this->nota->fresh()->status);
-        $this->assertSame('parcial', $this->pedido->fresh()->status);   // 10 de 100 recebidos
+        $this->assertSame('parcial', $this->pedido->fresh()->status);
         $this->assertSame(1, Movimentacao::where('tipo', 'ENTRADA')->count());
         Queue::assertPushed(RecalcularAbcJob::class);
     }
@@ -132,12 +127,12 @@ class RecebimentoEntradaTest extends TestCase
         $this->assertStringContainsString('fracionada', $r->json('entrada.ignorados.0.motivo'));
         $this->assertEquals(0, $this->produto->fresh()->estoque_atual);
         $this->assertSame(0, ItemLote::count());
-        $this->assertSame('ok', $this->notaItem->fresh()->status);   // continua aguardando decisão
+        $this->assertSame('ok', $this->notaItem->fresh()->status);
     }
 
     public function test_quantidade_acima_do_saldo_do_pedido_vira_divergente(): void
     {
-        $this->montar(150);   // pedido tem 100
+        $this->montar(150);
 
         $r = $this->entrada()->assertOk();
 

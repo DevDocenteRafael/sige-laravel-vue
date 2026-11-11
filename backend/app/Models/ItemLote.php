@@ -18,22 +18,15 @@ class ItemLote extends Model {
         'data_validade' => 'date',
     ];
 
-    /**
-     * Mantém produto.estoque_atual sempre igual à soma dos itens de lote.
-     * O valor é recalculado do zero (não incrementa/decrementa), então não
-     * há risco de contar duas vezes mesmo que um controller também atualize.
-     */
     protected static function booted()
     {
         static::created(function (ItemLote $item) {
             static::sincronizarEstoque($item->id_produto);
         });
 
-        // "updated" também cobre $item->increment()/decrement(), que não disparam "saved".
         static::updated(function (ItemLote $item) {
             static::sincronizarEstoque($item->id_produto);
 
-            // Se o item mudou de produto, recalcula o produto antigo também.
             if ($item->wasChanged('id_produto')) {
                 static::sincronizarEstoque($item->getOriginal('id_produto'));
             }
@@ -52,7 +45,6 @@ class ItemLote extends Model {
 
         $soma = static::where('id_produto', $idProduto)->sum('quantidade');
 
-        // Query direta: não dispara eventos do model Produto.
         Produto::where('id_produto', $idProduto)->update(['estoque_atual' => $soma]);
     }
 

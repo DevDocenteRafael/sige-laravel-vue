@@ -11,6 +11,14 @@ module.exports = {
   },
   extends: ['eslint:recommended', 'plugin:vue/vue3-recommended', 'prettier'],
   plugins: ['vue'],
+  overrides: [
+    {
+      files: ['src/componentes/ui/ChatbotWidget.vue'],
+      rules: {
+        'vue/no-v-html': 'off',
+      },
+    },
+  ],
   rules: {
     'no-console': 'off',
     'vue/html-self-closing': [

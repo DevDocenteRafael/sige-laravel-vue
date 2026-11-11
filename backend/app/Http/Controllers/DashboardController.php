@@ -60,12 +60,6 @@ class DashboardController extends Controller
         );
     }
 
-    /**
-     * Estoque baixo: só produtos com mínimo definido (> 0) que TÊM saldo
-     * (soma dos itens de lote > 0) menor ou igual ao mínimo.
-     * Produto zerado não conta aqui: aparece como "Sem estoque".
-     * Mesma regra e mesma fonte da página Produtos.
-     */
     private function buscarProdutosEstoqueCritico()
     {
         return Produto::withSum('itensLote as saldo', 'quantidade')
@@ -182,10 +176,6 @@ class DashboardController extends Controller
         ])->sortByDesc('percentual')->values();
     }
 
-    /**
-     * Top produtos por saldo real (soma dos itens de lote),
-     * mantendo o mesmo formato de resposta de antes.
-     */
     private function buscarTopProdutos(int $limite = 10, ?string $categoria = null)
     {
         $query = Produto::with('categoria')

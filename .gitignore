@@ -1,34 +1,27 @@
-# Dependências
 node_modules/
 vendor/
 
-# Configurações e caches locais
 .env
 *.log
 .DS_Store
 /.idea
 /.vscode
 
-# Build
 /dist
 /build
 
-# Laravel
 /backend/vendor/
 /backend/node_modules/
 /backend/.env
 /backend/storage/
 /backend/bootstrap/cache/
 
-# Vue / Node
 /frontend/node_modules/
 /frontend/dist/
 /frontend/.env
 
-# Docker
 docker-compose.override.yml
 
-# Sistema operacional
 Thumbs.db
 ehthumbs.db
 Desktop.ini

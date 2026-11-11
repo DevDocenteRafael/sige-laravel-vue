@@ -128,7 +128,6 @@ class ItemLoteController extends Controller
                     'prioridade_manual' => $ehManual,
                 ]);
 
-                // estoque_atual é recalculado a partir dos itens (não soma mais por cima)
                 ItemLote::sincronizarEstoque($idProduto);
 
                 $numeroLote = \App\Models\Lote::whereKey($idLote)->value('numero_lote') ?? $idLote;
@@ -324,7 +323,6 @@ class ItemLoteController extends Controller
 
             $item->delete();
 
-            // Recalcula o estoque depois da exclusão (não subtrai mais manualmente)
             ItemLote::sincronizarEstoque($idProduto);
 
             if (!ItemLote::where('id_produto', $idProduto)->exists()) {
@@ -359,8 +357,6 @@ class ItemLoteController extends Controller
                 );
             }
 
-            // Exclusão por query direta: não dispara os eventos do model,
-            // por isso o recálculo é chamado explicitamente logo abaixo.
             ItemLote::whereIn('id_item', $itens->pluck('id_item'))->delete();
 
             foreach ($idsProdutosAfetados as $idProduto) {
@@ -494,8 +490,6 @@ class ItemLoteController extends Controller
             ]);
         }
 
-        // Transferência entre lotes do mesmo produto não altera o total do produto;
-        // o recálculo apenas garante que estoque_atual continue igual à soma dos itens.
         ItemLote::sincronizarEstoque($itemOrigem->id_produto);
 
         $numeroLoteOrigem  = \App\Models\Lote::find($itemOrigem->id_lote)?->numero_lote ?? $itemOrigem->id_lote;
