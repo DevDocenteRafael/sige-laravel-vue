@@ -21,6 +21,10 @@ export default ({ mode }) => {
           target: apiBaseUrl,
           changeOrigin: true,
         },
+        '/sanctum': {
+          target: apiBaseUrl,
+          changeOrigin: true,
+        },
       },
     },
   })

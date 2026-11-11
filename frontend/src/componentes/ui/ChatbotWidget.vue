@@ -110,9 +110,8 @@
 <script setup>
 import { ref, reactive, nextTick, onMounted, watch } from 'vue'
 import { Bot, X, Send, Trash2 } from 'lucide-vue-next'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
-import api from '@/servicos/api'
+import api, { obterTokenCsrf } from '@/servicos/api'
+import { renderizarMarkdownSeguro as renderizarMarkdown } from '@/servicos/markdownSeguro'
 
 const CHAVE_HISTORICO = 'sige_chat_historico'
 const LIMITE_HISTORICO = 50
@@ -137,13 +136,6 @@ const sugestoes = [
   { rotulo: '📉 Perdas do mês', texto: 'Quais foram as perdas do último mês?' },
   { rotulo: '🔄 Últimas movimentações', texto: 'Quais foram as últimas movimentações?' },
 ]
-
-marked.setOptions({ breaks: true })
-
-function renderizarMarkdown(texto) {
-  if (!texto) return ''
-  return DOMPurify.sanitize(marked.parse(texto))
-}
 
 function formatarHora(iso) {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -204,13 +196,13 @@ async function enviarMensagem(textoForcado) {
 
   try {
     const baseURL = api.defaults.baseURL || ''
-    const token = localStorage.getItem('token')
+    const tokenCsrf = obterTokenCsrf()
     const resposta = await fetch(`${baseURL}/chatbot/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(tokenCsrf ? { 'X-XSRF-TOKEN': tokenCsrf } : {}),
       },
       body: JSON.stringify({ mensagem: texto }),
       credentials: 'include',

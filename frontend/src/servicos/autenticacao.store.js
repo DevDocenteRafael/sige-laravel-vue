@@ -1,14 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import api from '@/servicos/api'
+import api, { prepararCsrf } from '@/servicos/api'
 
 export const useAutenticacaoStore = defineStore('autenticacao', () => {
-
-  const usuario = ref(JSON.parse(localStorage.getItem('usuario')) || null)
-
-  const token = ref(localStorage.getItem('token') || null)
-
-  const estaLogado = computed(() => !!token.value)
+  const usuario = ref(null)
+  const estaLogado = computed(() => !!usuario.value)
 
   const perfil = computed(() => usuario.value?.perfil || null)
 
@@ -17,14 +13,22 @@ export const useAutenticacaoStore = defineStore('autenticacao', () => {
   const podeCadastrar  = computed(() => ['admin', 'operador'].includes(perfil.value))
   const podeGerenciarUsuarios = computed(() => perfil.value === 'admin')
 
+  async function carregarUsuario() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('usuario')
+
+    try {
+      usuario.value = (await api.get('/user')).data
+    } catch (erro) {
+      if (erro.response?.status !== 401) throw erro
+      usuario.value = null
+    }
+  }
+
   async function fazerLogin(email, senha) {
+    await prepararCsrf()
     const resposta = await api.post('/login', { email, senha })
-
-    token.value   = resposta.data.token
     usuario.value = resposta.data.usuario
-
-    localStorage.setItem('token', token.value)
-    localStorage.setItem('usuario', JSON.stringify(usuario.value))
 
     return resposta.data
   }
@@ -32,13 +36,11 @@ export const useAutenticacaoStore = defineStore('autenticacao', () => {
   async function fazerLogout() {
     try {
       await api.post('/logout')
-    } catch {
+    } catch (erro) {
+      if (erro.response?.status !== 401) throw erro
     } finally {
-      token.value   = null
       usuario.value = null
 
-      localStorage.removeItem('token')
-      localStorage.removeItem('usuario')
       localStorage.removeItem('sige_chat_historico')
       sessionStorage.removeItem('lotes_pin_valido')
     }
@@ -46,13 +48,13 @@ export const useAutenticacaoStore = defineStore('autenticacao', () => {
 
   return {
     usuario,
-    token,
     estaLogado,
     perfil,
     ehAdmin,
     podeMovimentar,
     podeCadastrar,
     podeGerenciarUsuarios,
+    carregarUsuario,
     fazerLogin,
     fazerLogout,
   }

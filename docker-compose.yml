@@ -1,7 +1,3 @@
-version: "3.8"
-
-
-
 services:
 
   
@@ -10,12 +6,12 @@ services:
     container_name: sige_banco
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: sige
-      MYSQL_USER: sige_user
-      MYSQL_PASSWORD: sige_pass
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?Configure DB_ROOT_PASSWORD no .env da raiz}"
+      MYSQL_DATABASE: "${DB_DATABASE:-sige}"
+      MYSQL_USER: "${DB_USERNAME:-sige_user}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:?Configure DB_PASSWORD no .env da raiz}"
     ports:
-      - "3306:3306"
+      - "127.0.0.1:${DB_FORWARD_PORT:-3307}:3306"
     volumes:
       - dados_banco:/var/lib/mysql
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -32,9 +28,17 @@ services:
     working_dir: /var/www
     volumes:
       - ./backend:/var/www
+      - backend_vendor:/var/www/vendor
     environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
+      APP_ENV: "${APP_ENV:-local}"
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      APP_KEY: "${APP_KEY:?Configure APP_KEY no .env da raiz}"
+      DB_CONNECTION: mysql
+      DB_HOST: banco
+      DB_PORT: 3306
+      DB_DATABASE: "${DB_DATABASE:-sige}"
+      DB_USERNAME: "${DB_USERNAME:-sige_user}"
+      DB_PASSWORD: "${DB_PASSWORD:?Configure DB_PASSWORD no .env da raiz}"
     depends_on:
       - banco
     networks:
@@ -46,8 +50,8 @@ services:
     container_name: sige_nginx
     restart: unless-stopped
     ports:
-      - "8000:80"   
-      - "5173:5173" 
+      - "127.0.0.1:8000:80"
+      - "127.0.0.1:5173:5173"
     volumes:
       - ./backend:/var/www
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
@@ -63,9 +67,12 @@ services:
     working_dir: /app
     volumes:
       - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
     ports:
-      - "3000:3000"
-    command: sh -c "npm install && npm run dev -- --host"
+      - "127.0.0.1:3000:3000"
+    environment:
+      VITE_API_BASE_URL: http://nginx:80
+    command: sh -c "npm ci && npm run dev -- --host"
     depends_on:
       - nginx
     networks:
@@ -74,6 +81,8 @@ services:
 
 volumes:
   dados_banco:
+  backend_vendor:
+  frontend_node_modules:
 
 
 networks:

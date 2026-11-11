@@ -62,8 +62,15 @@ const router = createRouter({
   routes: rotas,
 })
 
-router.beforeEach((rotaDestino) => {
+let sessaoInicializada = false
+
+router.beforeEach(async (rotaDestino) => {
   const autenticacao = useAutenticacaoStore()
+
+  if (!sessaoInicializada) {
+    await autenticacao.carregarUsuario()
+    sessaoInicializada = true
+  }
 
   if (rotaDestino.meta.requerLogin && !autenticacao.estaLogado) return { name: 'login' }
   if (rotaDestino.meta.requerPerfil && autenticacao.perfil !== rotaDestino.meta.requerPerfil) return { name: 'dashboard' }

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Helpers\AuditHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -29,15 +29,17 @@ class AuthController extends Controller
 
         if (!$user->ativo) {
             Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
             return response()->json(['message' => 'Usuário inativo. Procure um administrador.'], 403);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $request->session()->regenerate();
 
         AuditHelper::log('Login', 'Usuário ' . $user->name . ' (' . $user->email . ') realizou login');
 
         return response()->json([
-            'token'   => $token,
             'usuario' => [
                 'id'      => $user->id,
                 'name'    => $user->name,
@@ -56,7 +58,15 @@ class AuthController extends Controller
 
         AuditHelper::log('Logout', 'Usuário ' . $user->name . ' (' . $user->email . ') realizou logout');
 
-        $user->currentAccessToken()->delete();
+        $token = $user->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        } else {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
         return response()->json(['message' => 'Logout realizado com sucesso']);
     }
 }

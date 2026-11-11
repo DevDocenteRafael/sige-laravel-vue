@@ -28,8 +28,8 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
           <div>
-            <p class="text-slate-900 dark:text-white font-semibold">Backup Completo</p>
-            <p class="text-slate-500 dark:text-gray-400 text-sm">Exporta todos os dados do sistema em formato JSON</p>
+            <p class="text-slate-900 dark:text-white font-semibold">Backup de Estoque</p>
+            <p class="text-slate-500 dark:text-gray-400 text-sm">Exporta produtos, lotes, itens e movimentações de estoque (JSON)</p>
           </div>
           <button
             :disabled="loadingExport.backup"
@@ -37,7 +37,7 @@
             @click="exportar('backup')"
           >
             <i :class="loadingExport.backup ? 'fas fa-spinner fa-spin' : 'fas fa-database'"></i>
-            Exportar Tudo
+            Exportar Estoque
           </button>
         </div>
 
@@ -133,7 +133,7 @@
         <div class="bg-white dark:bg-[#1e1e2e] border border-slate-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
           <div>
             <p class="text-slate-900 dark:text-white font-semibold">Restaurar Backup</p>
-            <p class="text-slate-500 dark:text-gray-400 text-sm">Restaura backup completo do sistema (JSON)</p>
+            <p class="text-slate-500 dark:text-gray-400 text-sm">Restaura produtos, lotes, itens e movimentações de estoque (JSON)</p>
           </div>
           <div class="space-y-2">
             <label class="text-slate-500 dark:text-gray-400 text-xs">Selecione o arquivo JSON</label>
@@ -146,7 +146,7 @@
             </label>
             <div class="bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 flex items-center gap-2 text-red-600 dark:text-red-400 text-xs">
               <i class="fas fa-triangle-exclamation"></i>
-              Substitui todos os dados atuais
+              Substitui os dados de estoque; usuários, pedidos e recebimentos são preservados
             </div>
             <button
               :disabled="!arquivoJSON || loadingImport.backup"
@@ -193,7 +193,7 @@
           Atenção!
         </p>
         <p class="text-slate-600 dark:text-gray-300 text-sm">
-          Esta ação irá <strong class="text-red-600 dark:text-red-400">apagar todos os dados atuais</strong> e substituir pelo backup selecionado. Essa ação não pode ser desfeita.
+          Esta ação irá substituir <strong class="text-red-600 dark:text-red-400">produtos, lotes, itens e movimentações de estoque</strong> pelos dados do arquivo. Usuários, pedidos e recebimentos não são incluídos nem alterados. Faça um backup do banco antes de continuar.
         </p>
         <div class="flex gap-3">
           <button

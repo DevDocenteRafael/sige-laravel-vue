@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Pedido;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -104,7 +105,12 @@ class PedidoPlanilha
         $erros = [];
 
         try {
-            $planilha = IOFactory::load($caminho);
+            $leitor = IOFactory::createReaderForFile($caminho);
+            if ($leitor instanceof Csv) {
+                $leitor->setInputEncoding('UTF-8');
+                $leitor->setDelimiter($this->detectarDelimitador($caminho));
+            }
+            $planilha = $leitor->load($caminho);
         } catch (\Throwable $e) {
             return ['dados' => [], 'erros' => ['Não foi possível ler a planilha. Envie um arquivo .xlsx, .xls ou .csv válido.']];
         }
@@ -255,6 +261,7 @@ class PedidoPlanilha
         if (is_int($valor) || is_float($valor)) {
             return (float) $valor;
         }
+
         $t = trim((string) $valor);
         if ($t === '') {
             return null;
@@ -265,6 +272,26 @@ class PedidoPlanilha
             $t = str_replace(',', '.', $t);
         }
         return is_numeric($t) ? (float) $t : null;
+    }
+
+    private function detectarDelimitador(string $caminho): string
+    {
+        $linhas = file($caminho, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $delimitadores = [',', ';', "\t"];
+        $melhor = ',';
+        $maiorNumeroColunas = 1;
+
+        foreach (array_slice($linhas ?: [], 0, 20) as $linha) {
+            foreach ($delimitadores as $delimitador) {
+                $numeroColunas = count(str_getcsv($linha, $delimitador));
+                if ($numeroColunas > $maiorNumeroColunas) {
+                    $maiorNumeroColunas = $numeroColunas;
+                    $melhor = $delimitador;
+                }
+            }
+        }
+
+        return $melhor;
     }
 
     private function data(string $texto): ?string

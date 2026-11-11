@@ -14,7 +14,7 @@ sige-laravel-vue/
 │   ├── nginx/default.conf      ← Configuração do servidor web
 │   └── mysql/init.sql          ← Script inicial do banco
 │
-├── backend/                    ← API Laravel (PHP)
+├── backend/                    ← Aplicação oficial da API Laravel (PHP)
 │   ├── Dockerfile
 │   ├── .env.example            ← Copie para .env e configure
 │   ├── app/
@@ -44,13 +44,17 @@ sige-laravel-vue/
         └── estilos/            ← CSS global
 ```
 
+`backend_backup/` é uma cópia de referência legada e não faz parte da aplicação em execução. Os manifestos oficiais são `backend/composer.json` e `frontend/package.json`; os manifestos na raiz são arquivos legados e não devem ser usados para instalar dependências. Eles e a cópia de referência só devem ser removidos após validação com a equipe.
+
+O índice das migrations está em [`backend/database/migrations/README.md`](./backend/database/migrations/README.md). Todas foram renomeadas por tabela e finalidade. Em bancos que já executaram os nomes antigos, faça backup e rode `php artisan migrations:sync-renamed-history` antes de `php artisan migrate`; o comando atualiza apenas o histórico, preservando os lotes, para evitar a reexecução das migrations.
+
 ---
 
 ## Como rodar o projeto
 
 ### Pré-requisitos
 
-- PHP >= 8.1
+- PHP >= 8.2
 - Composer
 - Node.js >= 18
 - MySQL (recomendado: XAMPP no Windows ou MySQL Server)
@@ -66,9 +70,8 @@ sige-laravel-vue/
 cd backend
 mkdir bootstrap\cache
 
-# 3. Instalar as dependências do backend
+# 3. Instalar as dependências travadas do backend
 composer install
-composer require barryvdh/laravel-dompdf
 
 # 4. Criar o arquivo de ambiente a partir do template
 copy .env.example .env
@@ -91,38 +94,55 @@ php artisan key:generate
 php artisan config:clear
 php artisan cache:clear
 
-# 9. Criar as tabelas
+# 9. Sincronizar nomes antigos no histórico (necessário em bancos já migrados)
+php artisan migrations:sync-renamed-history
+
+# 10. Criar as tabelas
 php artisan migrate
 
-# 10. Criar o usuário admin inicial (obrigatório)
+# 11. Criar o usuário admin inicial (obrigatório)
 php artisan db:seed
 
-# 11. Iniciar o backend
+# 12. Iniciar o backend
 php artisan serve
 #    Roda em http://localhost:8000
 
-# 12. Em outro terminal, instalar o frontend
+# 13. Em outro terminal, instalar as dependências travadas do frontend
 cd ../frontend
-npm install
-npm install lucide-vue-next marked dompurify exceljs grid-layout-plus
+npm ci
 
-# 13. Iniciar o frontend
+# 14. Iniciar o frontend
 npm run dev
 #    Roda em http://localhost:3000
 ```
 
 ### Opção 2: Docker (somente desenvolvimento)
 
+Crie o arquivo `.env` da raiz a partir de `.env.example` e defina valores aleatórios para `APP_KEY`, `DB_PASSWORD` e `DB_ROOT_PASSWORD` antes de iniciar os serviços. O `.env` do backend permanece separado e local.
+
 ```bash
 docker compose up -d --build
 
-# Na primeira vez, criar as tabelas e o admin
+# Sincronizar nomes antigos (não altera instalações novas)
+docker compose exec backend php artisan migrations:sync-renamed-history
+
+# Criar as tabelas e o admin
 docker compose exec backend php artisan migrate --seed
 ```
 
 No `backend/.env`, use `DB_HOST=banco` quando rodar pelo Docker.
 
-O `docker-compose.yml` atual é para desenvolvimento (usa `npm run dev` e `APP_DEBUG=true`). Não use esta configuração em produção.
+O `docker-compose.yml` é exclusivamente para desenvolvimento e executa o Vite. Debug fica desligado por padrão e o banco não publica uma porta para a rede. Não use essa configuração em produção. Em produção, use imagens de aplicação próprias, HTTPS, cookies seguros (`SESSION_SECURE_COOKIE=true`), uma CSP restritiva com nonce/hash, chaves e senhas fornecidas pelo gerenciador de segredos, rede privada para o banco e `APP_DEBUG=false`.
+
+### Distribuição do projeto
+
+Não compacte a pasta de trabalho, pois ela pode conter `.env` e logs locais ignorados pelo Git. Gere um pacote apenas com arquivos versionados:
+
+```bash
+git archive --format=zip --output=sige-release.zip HEAD
+```
+
+Rotacione qualquer chave ou senha que já tenha sido incluída em um pacote compartilhado.
 
 ### Endereços
 
@@ -130,7 +150,7 @@ O `docker-compose.yml` atual é para desenvolvimento (usa `npm run dev` e `APP_D
 |----------|---------------------------|
 | Frontend | http://localhost:3000     |
 | Backend  | http://localhost:8000/api |
-| Banco    | localhost:3306 (Docker)   |
+| Banco    | localhost:3307 (Docker, somente loopback) |
 
 ---
 
@@ -168,7 +188,7 @@ O `php artisan db:seed` cria apenas o usuário **admin** inicial (e-mail e senha
 
 ### Protegidas
 
-Enviar o token no header `Authorization: Bearer {token}`.
+O navegador envia o cookie de sessão HttpOnly automaticamente; operações de escrita usam o cookie de proteção CSRF.
 
 | Grupo           | Rotas principais                                                        |
 |-----------------|-------------------------------------------------------------------------|
@@ -192,6 +212,10 @@ A lista completa e as permissões de cada rota estão em `backend/routes/api.php
 
 ---
 
+## Testes
+
+No backend, execute `php artisan test` dentro de `backend/`. Para a verificação de sanitização do chatbot, execute `npm test` dentro de `frontend/`.
+
 ## Parar o projeto
 
 ```bash
@@ -210,8 +234,8 @@ docker compose down -v
 
 | Camada    | Tecnologia                |
 |-----------|---------------------------|
-| Backend   | PHP 8.2 + Laravel 11      |
-| Auth      | Laravel Sanctum (tokens)  |
+| Backend   | PHP 8.2 + Laravel 12      |
+| Auth      | Laravel Sanctum (sessão e cookie HttpOnly) |
 | Frontend  | Vue.js 3 + Vite           |
 | Estado    | Pinia                     |
 | Rotas     | Vue Router 4              |

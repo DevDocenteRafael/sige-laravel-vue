@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->statefulApi();
         $middleware->redirectGuestsTo(fn () => null);
         $middleware->alias([
             'perfil' => \App\Http\Middleware\EnsureUserHasProfile::class,
