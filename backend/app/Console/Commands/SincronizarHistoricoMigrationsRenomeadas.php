@@ -21,9 +21,10 @@ class SincronizarHistoricoMigrationsRenomeadas extends Command
         }
 
         $renames = config('migration_renames');
-        $migrationNames = array_merge(array_keys($renames), array_values($renames));
+        $targets = array_values(array_unique(array_values($renames)));
+        $migrationNames = array_merge(array_keys($renames), $targets);
 
-        $updated = DB::transaction(function () use ($renames, $migrationNames): ?int {
+        $updated = DB::transaction(function () use ($renames, $targets, $migrationNames): ?int {
             $records = DB::table('migrations')
                 ->whereIn('migration', $migrationNames)
                 ->lockForUpdate()
@@ -32,16 +33,24 @@ class SincronizarHistoricoMigrationsRenomeadas extends Command
 
             $pendingRenames = [];
 
-            foreach ($renames as $oldName => $newName) {
-                $oldRecords = $records->get($oldName, collect());
-                $newRecords = $records->get($newName, collect());
+            foreach ($targets as $newName) {
+                $aliases = array_keys(array_filter(
+                    $renames,
+                    fn (string $target): bool => $target === $newName
+                ));
+                $existingNames = array_merge($aliases, [$newName]);
+                $existingRecords = collect($existingNames)
+                    ->flatMap(fn (string $name) => $records->get($name, collect()));
 
-                if ($oldRecords->count() > 1 || $newRecords->count() > 1 || ($oldRecords->isNotEmpty() && $newRecords->isNotEmpty())) {
-                    $this->error("Histórico conflitante para a migration {$oldName}.");
+                if ($existingRecords->count() > 1) {
+                    $this->error("Histórico conflitante para a migration {$newName}.");
                     return null;
                 }
 
-                if ($oldRecords->isNotEmpty()) {
+                $oldName = collect($aliases)
+                    ->first(fn (string $name): bool => $records->has($name));
+
+                if ($oldName !== null) {
                     $pendingRenames[$oldName] = $newName;
                 }
             }
