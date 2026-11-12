@@ -8,6 +8,7 @@ use App\Models\Lote;
 use App\Models\ItemLote;
 use App\Models\Movimentacao;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -202,8 +203,15 @@ class ImportacaoController extends Controller
                 'total'     => count($itens),
             ]);
 
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao ler planilha: ' . $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            Log::error('Falha ao pré-visualizar importação de planilha.', [
+                'exception' => $e,
+                'arquivo' => $request->file('arquivo')?->getClientOriginalName(),
+            ]);
+
+            return response()->json([
+                'message' => 'Não foi possível concluir a leitura da planilha. Verifique o arquivo enviado e tente novamente.',
+            ], 500);
         }
     }
 
@@ -261,9 +269,17 @@ class ImportacaoController extends Controller
                 'lotes_criados' => $lotesCriados,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Erro na importação: ' . $e->getMessage()], 500);
+            Log::error('Falha ao confirmar importação de planilha.', [
+                'exception' => $e,
+                'modo' => $request->modo,
+                'quantidade_itens' => $request->input('itens') ? count($request->input('itens')) : 0,
+            ]);
+
+            return response()->json([
+                'message' => 'Não foi possível concluir a importação. Verifique o arquivo enviado e tente novamente.',
+            ], 500);
         }
     }
 

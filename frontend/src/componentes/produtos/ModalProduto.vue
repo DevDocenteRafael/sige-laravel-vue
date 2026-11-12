@@ -98,7 +98,8 @@ async function carregarCategorias() {
   try {
     const resposta = await api.get('/categorias')
     categorias.value = resposta.data
-  } catch {
+  } catch (erro) {
+    console.warn('Não foi possível carregar as categorias do produto.', erro)
   }
 }
 
