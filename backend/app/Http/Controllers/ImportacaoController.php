@@ -368,6 +368,10 @@ class ImportacaoController extends Controller
                 return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float)$valor)
                     ->format('Y-m-d');
             } catch (\Exception $e) {
+                Log::warning('Falha ao converter data de validade na importação.', [
+                    'exception' => $e,
+                ]);
+
                 return null;
             }
         }
@@ -384,6 +388,10 @@ class ImportacaoController extends Controller
             try {
                 return Carbon::createFromFormat('d/m/Y', "{$m[1]}/{$m[2]}/{$m[3]}")->format('Y-m-d');
             } catch (\Exception $e) {
+                Log::warning('Falha ao converter data de validade na importação.', [
+                    'exception' => $e,
+                ]);
+
                 return null;
             }
         }
@@ -391,6 +399,10 @@ class ImportacaoController extends Controller
         try {
             return Carbon::parse((string)$valor)->format('Y-m-d');
         } catch (\Exception $e) {
+            Log::warning('Falha ao converter data de validade na importação.', [
+                'exception' => $e,
+            ]);
+
             return null;
         }
     }
