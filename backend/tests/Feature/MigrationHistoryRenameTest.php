@@ -59,10 +59,30 @@ class MigrationHistoryRenameTest extends TestCase
             ->values();
         $mappedFiles = collect(config('migration_renames'))
             ->values()
+            ->unique()
             ->sort()
             ->values();
 
         $this->assertCount(44, $mappedFiles);
         $this->assertEquals($migrationFiles, $mappedFiles);
+    }
+
+    public function test_it_syncs_names_from_the_previous_timestamped_migrations(): void
+    {
+        $previousName = '2026_06_22_180001_criar_tabela_categoria';
+        $newName = config("migration_renames.{$previousName}");
+        $record = DB::table('migrations')->where('migration', $newName)->first();
+
+        $this->assertNotNull($record);
+        DB::table('migrations')->where('migration', $newName)->update(['migration' => $previousName]);
+
+        $this->artisan('migrations:sync-renamed-history')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('migrations', [
+            'migration' => $newName,
+            'batch' => $record->batch,
+        ]);
+        $this->assertDatabaseMissing('migrations', ['migration' => $previousName]);
     }
 }
