@@ -21,7 +21,8 @@ export function useBotaoFlutuanteArrastavel({ chave = 'sige:posicao-botao-suport
   function salvar() {
     try {
       localStorage.setItem(chave, JSON.stringify(posicao.value))
-    } catch {
+    } catch (erro) {
+      console.warn('Não foi possível salvar a posição do botão flutuante.', erro)
     }
   }
 
@@ -31,7 +32,8 @@ export function useBotaoFlutuanteArrastavel({ chave = 'sige:posicao-botao-suport
       if (salvo && typeof salvo.direita === 'number' && typeof salvo.baixo === 'number') {
         posicao.value = limitar(salvo.direita, salvo.baixo)
       }
-    } catch {
+    } catch (erro) {
+      console.warn('Não foi possível carregar a posição do botão flutuante.', erro)
     }
   }
 

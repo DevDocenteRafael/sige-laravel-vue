@@ -85,7 +85,6 @@ import api from '@/servicos/api'
 const autenticacao = useAutenticacaoStore()
 const usuario = autenticacao.usuario
 
-
 const sucesso      = ref('')
 const erro         = ref('')
 const salvando     = ref(false)
@@ -155,8 +154,7 @@ formData.append('email', form.email)
    autenticacao.usuario.name     = resposta.data.usuario.name
 autenticacao.usuario.email    = resposta.data.usuario.email
 autenticacao.usuario.foto_url = resposta.data.usuario.foto_url
-    localStorage.setItem('usuario', JSON.stringify(autenticacao.usuario))
-    imagemPreview.value = resposta.data.usuario.foto_url || ''
+   imagemPreview.value = resposta.data.usuario.foto_url || ''
     arquivoFoto.value   = null
     removerFoto.value   = false
 

@@ -13,7 +13,8 @@ function lerSalvo() {
   try {
     const salvo = localStorage.getItem(CHAVE)
     return MODOS_CONTRASTE.some((m) => m.valor === salvo) ? salvo : 'normal'
-  } catch {
+  } catch (erro) {
+    console.warn('Não foi possível ler a preferência de contraste no armazenamento local.', erro)
     return 'normal'
   }
 }
@@ -37,7 +38,8 @@ export function useContraste() {
     aplicar(valor)
     try {
       localStorage.setItem(CHAVE, valor)
-    } catch {
+    } catch (erro) {
+      console.warn('Não foi possível salvar a preferência de contraste.', erro)
     }
   }
 
